@@ -62,65 +62,66 @@ lib/
     └── payments/
 ```
 
-- [ ] Criar projeto Flutter (`flutter create frota_app`)
-- [ ] Adicionar dependências no `pubspec.yaml`:
-  - [ ] `go_router` — navegação
-  - [ ] `fl_chart` — gráficos
-  - [ ] `image_picker` — câmera/galeria (check-in)
-  - [ ] `intl` — formatação de datas e moeda (R$)
-  - [ ] `google_fonts` — tipografia
-  - [ ] `shimmer` — loading skeleton
-- [ ] Criar estrutura de pastas conforme acima
+- [x] Criar projeto Flutter (`flutter create frota_app`)
+- [x] Adicionar dependências no `pubspec.yaml`:
+  - [x] `go_router` — navegação
+  - [x] `fl_chart` — gráficos
+  - [x] `image_picker` — câmera/galeria (check-in)
+  - [x] `intl` — formatação de datas e moeda (R$)
+  - [x] `google_fonts` — tipografia
+  - [x] `shimmer` — loading skeleton
+  - [x] `provider` — gerenciamento de estado
+- [x] Criar estrutura de pastas conforme acima.
 
 ---
 
 ## 2. Modelos de Dados Mock
 
 ### 2.1 — `models/vehicle.dart`
-- [ ] `id`, `plate`, `brand`, `model`, `year`, `color`
-- [ ] `status` (enum: available / rented / maintenance)
-- [ ] `currentKm`, `fuelLevel`
-- [ ] `contractType` (enum: uber / prefecture)
-- [ ] `imageUrl` (asset local)
-- [ ] `ipvaExpiry`, `insuranceExpiry`, `licensingExpiry`
+- [x] `id`, `plate`, `brand`, `model`, `year`, `color`
+- [x] `status` (enum: available / rented / maintenance)
+- [x] `currentKm`, `fuelLevel`
+- [x] `contractType` (enum: uber / prefecture)
+- [x] `imageUrl` (asset local)
+- [x] `ipvaExpiry`, `insuranceExpiry`, `licensingExpiry`
 
 ### 2.2 — `models/driver.dart`
-- [ ] `id`, `name`, `cpf`, `phone`, `email`
-- [ ] `type` (enum: uber / prefecture)
-- [ ] `status` (enum: active / inactive)
-- [ ] `cnhNumber`, `cnhExpiry`, `cnhCategory`
-- [ ] `currentVehicleId` (nullable)
-- [ ] `avatarUrl` (asset local)
+- [x] `id`, `name`, `cpf`, `phone`, `email`
+- [x] `type` (enum: uber / prefecture)
+- [x] `status` (enum: active / inactive)
+- [x] `cnhNumber`, `cnhExpiry`, `cnhCategory`
+- [x] `currentVehicleId` (nullable)
+- [x] `avatarUrl` (asset local)
 
 ### 2.3 — `models/contract.dart`
-- [ ] `id`, `vehicleId`, `driverId`
-- [ ] `type` (uber / prefecture)
-- [ ] `startDate`, `endDate`
-- [ ] `weeklyValue` ou `monthlyValue`
-- [ ] `status` (enum: active / expired / cancelled)
-- [ ] `depositPaid` (bool)
+- [x] `id`, `vehicleId`, `driverId`
+- [x] `type` (uber / prefecture)
+- [x] `startDate`, `endDate`
+- [x] `weeklyValue` ou `monthlyValue`
+- [x] `status` (enum: active / expired / cancelled)
+- [x] `depositPaid` (bool)
 
 ### 2.4 — `models/financial_entry.dart`
-- [ ] `id`, `type` (enum: income / expense)
-- [ ] `category` (aluguel / manutenção / ipva / seguro / multa / outro)
-- [ ] `vehicleId` (nullable), `driverId` (nullable)
-- [ ] `amount`, `date`, `description`
-- [ ] `isPaid` (bool)
+- [x] `id`, `type` (enum: income / expense)
+- [x] `category` (aluguel / manutenção / ipva / seguro / multa / outro)
+- [x] `vehicleId` (nullable), `driverId` (nullable)
+- [x] `amount`, `date`, `description`
+- [x] `isPaid` (bool)
 
 ### 2.5 — `models/inspection.dart`
-- [ ] `id`, `vehicleId`, `driverId`
-- [ ] `type` (enum: checkin / checkout)
-- [ ] `dateTime`, `kmAtInspection`
-- [ ] `fuelLevel`
-- [ ] `photos` (List de asset paths ou URLs fake)
-- [ ] `notes`, `hasNewDamage` (bool)
+- [x] `id`, `vehicleId`, `driverId`
+- [x] `type` (enum: checkin / checkout)
+- [x] `dateTime`, `kmAtInspection`
+- [x] `fuelLevel`
+- [x] `photos` (List de asset paths ou URLs fake)
+- [x] `notes`, `hasNewDamage` (bool)
 
 ### 2.6 — `mock/` — Dados hardcoded
-- [ ] `mock_vehicles.dart` — lista com 10 veículos variados (status, tipos)
-- [ ] `mock_drivers.dart` — lista com 12 motoristas (uber e prefeitura)
-- [ ] `mock_contracts.dart` — contratos ativos, vencidos e próximos do vencimento
-- [ ] `mock_financials.dart` — entradas dos últimos 6 meses (receitas + despesas)
-- [ ] `mock_inspections.dart` — vistorias com dados completos
+- [x] `mock_vehicles.dart` — lista com veículos variados
+- [x] `mock_drivers.dart` — lista com motoristas
+- [x] `mock_contracts.dart` — contratos ativos
+- [x] `mock_financials.dart` — entradas financeiras
+- [x] `mock_inspections.dart` — vistorias com dados completos
 
 ---
 
@@ -149,22 +150,22 @@ lib/
 ## 4. Tema & Design System
 
 ### `core/theme/app_colors.dart`
-- [ ] Cor primária (ex: azul escuro `#1A2B4A`)
-- [ ] Cor de destaque/acento (ex: laranja `#F5A623`)
-- [ ] Cores de status: verde (ok), amarelo (atenção), vermelho (alerta)
-- [ ] Fundo claro e fundo escuro (para dark mode opcional)
-- [ ] Cor de superfície dos cards
+- [x] Cor primária (ex: azul escuro `#1A2B4A`)
+- [x] Cor de destaque/acento (ex: laranja `#F5A623`)
+- [x] Cores de status: verde (ok), amarelo (atenção), vermelho (alerta)
+- [x] Fundo claro e fundo escuro (para dark mode opcional)
+- [x] Cor de superfície dos cards
 
 ### `core/theme/app_text_styles.dart`
-- [ ] Display large (títulos de dashboard)
-- [ ] Heading (títulos de seção)
-- [ ] Body (texto corrido)
-- [ ] Label (labels de campo, badges)
-- [ ] Caption (datas, textos secundários)
+- [x] Display large (títulos de dashboard)
+- [x] Heading (títulos de seção)
+- [x] Body (texto corrido)
+- [x] Label (labels de campo, badges)
+- [x] Caption (datas, textos secundários)
 
 ### `core/theme/app_theme.dart`
-- [ ] `ThemeData` configurado com as cores e fontes acima
-- [ ] Estilo padrão de `Card`, `AppBar`, `Button`, `TextField`
+- [x] `ThemeData` configurado com as cores e fontes acima
+- [x] Estilo padrão de `Card`, `AppBar`, `Button`, `TextField`
 
 ---
 
@@ -549,12 +550,12 @@ lib/
 
 ## 7. Componentes Reutilizáveis
 
-- [ ] `StatCard` — card de KPI (ícone + label + valor + cor de fundo)
-- [ ] `VehicleCard` — card de veículo para listas
+- [x] `StatCard` — card de KPI (ícone + label + valor + cor de fundo)
+- [x] `VehicleCard` — card de veículo para listas
 - [ ] `DriverCard` — card de motorista para listas
 - [ ] `ContractCard` — card de contrato com status
-- [ ] `StatusBadge` — chip colorido por status (disponível/alugado/manutenção/pago/atrasado)
-- [ ] `SectionHeader` — título de seção com linha decorativa
+- [x] `StatusBadge` — chip colorido por status (disponível/alugado/manutenção/pago/atrasado)
+- [x] `SectionHeader` — título de seção com linha decorativa
 - [ ] `PhotoSlot` — slot de foto com câmera + preview + check (usado no check-in/out)
 - [ ] `FuelSelector` — seletor visual de nível de combustível
 - [ ] `StepperProgress` — barra de progresso das etapas (check-in/out)
