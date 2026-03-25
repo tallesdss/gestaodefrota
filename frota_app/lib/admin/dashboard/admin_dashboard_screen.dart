@@ -146,6 +146,16 @@ class AdminDashboardScreen extends StatelessWidget {
                   icon: Icons.money_off_csred_outlined,
                   color: AppColors.error,
                 ),
+                const SizedBox(height: AppSpacing.md),
+                GestureDetector(
+                  onTap: () => context.push(AppRoutes.adminRegistrationAudit),
+                  child: const AlertCard(
+                    title: 'Auditoria de Cadastro',
+                    subtitle: 'Existem 02 novos cadastros aguardando aprovação',
+                    icon: Icons.admin_panel_settings_outlined,
+                    color: Colors.blue,
+                  ),
+                ),
                 
                 const SizedBox(height: AppSpacing.xxl),
                 
@@ -271,10 +281,38 @@ class _ManagementMenu extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         _MenuItem(
+          title: 'Gestores',
+          count: '03 cadastrados',
+          icon: Icons.assignment_ind_outlined,
+          onTap: () => context.push(AppRoutes.adminManagerList),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _MenuItem(
           title: 'Contratos',
           count: '35 vigentes',
           icon: Icons.article_outlined,
-          onTap: () {},
+          onTap: () => context.push(AppRoutes.adminContractList),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _MenuItem(
+          title: 'Manutenções',
+          count: '02 agendadas',
+          icon: Icons.build_outlined,
+          onTap: () => context.push(AppRoutes.adminMaintenanceList),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _MenuItem(
+          title: 'Vistorias',
+          count: '08 pendentes',
+          icon: Icons.fact_check_outlined,
+          onTap: () => context.push(AppRoutes.adminInspectionAudit),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _MenuItem(
+          title: 'Financeiro',
+          count: 'Extrato Completo',
+          icon: Icons.account_balance_wallet_outlined,
+          onTap: () => context.push(AppRoutes.adminFinancialList),
         ),
       ],
     );
@@ -307,7 +345,10 @@ class _MenuItem extends StatelessWidget {
           color: AppColors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: AppColors.primary),
+        child: Hero(
+          tag: 'menu_icon_$title',
+          child: Icon(icon, color: AppColors.primary),
+        ),
       ),
       title: Text(title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
       subtitle: Text(count, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),

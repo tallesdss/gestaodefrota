@@ -4,6 +4,7 @@ class AppColors {
   // Primary
   static const Color primary = Color(0xFF00236F);
   static const Color primaryContainer = Color(0xFF1E3A8A);
+  static const Color onPrimary = Color(0xFFFFFFFF);
   
   // Surfaces
   static const Color surface = Color(0xFFF8F9FF);

@@ -43,4 +43,18 @@ List<Driver> mockDrivers = [
     currentVehicleId: null,
     avatarUrl: 'https://i.pravatar.cc/150?u=d3',
   ),
+  Driver(
+    id: 'd4',
+    name: 'Ana Sousa',
+    cpf: '789.123.456-78',
+    phone: '(11) 95555-4444',
+    email: 'ana.sousa@email.com',
+    type: DriverType.uber,
+    status: DriverStatus.active,
+    cnhNumber: '78901234567',
+    cnhExpiry: DateTime(2029, 01, 15),
+    cnhCategory: 'B',
+    avatarUrl: 'https://i.pravatar.cc/150?u=d4',
+    isApproved: false,
+  ),
 ];

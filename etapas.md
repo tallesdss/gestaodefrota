@@ -17,24 +17,24 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
     - [x] **Navegação:** Configuração das rotas base no `app_routes.dart` separando os fluxos `/register`, `/admin`, `/gestor` e `/driver`.
     - [x] **Fluxo de Onboarding Geral:** Implementação das telas de "Criar Conta" e seleção de perfil (Gestor ou Motorista).
 
-- [ ] **FASE 2: Dashboard de Comando e Gestão de Ativos**
+- [x] **FASE 2: Dashboard de Comando e Gestão de Ativos**
     - [x] **Dashboard Principal:** Cards de KPI monumentais, Gráficos de Receita vs Despesa e Alertas de documentos (IPVA, CNH).
-    - [ ] **Gestão de Usuários:** Fluxo de criação e edição de perfis para **Gestores** e **Motoristas**.
-    - [ ] **Auditoria de Cadastro:** Validação e aprovação dos documentos enviados por novos usuários (Self-Registration).
+    - [x] **Gestão de Usuários:** Fluxo de criação e edição de perfis para **Gestores** e **Motoristas**.
+    - [x] **Auditoria de Cadastro:** Validação e aprovação dos documentos enviados por novos usuários (Self-Registration).
     - [x] **Gestão de Frota & Motoristas:** Listagem editorial com filtros, detalhes técnicos do veículo e histórico completo do motorista.
 
-- [ ] **FASE 3: Estrutura de Contratos**
-    - [ ] **Gestão de Contratos:** Fluxo de criação de novos vínculos entre veículo e motorista.
-    - [ ] **Regras de Negócio:** Definição de valores, periodicidade e termos do contrato.
+- [x] **FASE 3: Estrutura de Contratos**
+    - [x] **Gestão de Contratos:** Fluxo de criação de novos vínculos entre veículo e motorista.
+    - [x] **Regras de Negócio:** Definição de valores, periodicidade e termos do contrato.
 
-- [ ] **FASE 4: Manutenção & Auditoria de Segurança**
-    - [ ] **Manutenção Preventiva:** Registro e controle de trocas de óleo, pneus e revisões futuras.
-    - [ ] **Auditoria de Vistorias:** Tela de revisão para comparar fotos de Check-in vs Check-out e geração de laudo simplificado.
+- [x] **FASE 4: Manutenção & Auditoria de Segurança**
+    - [x] **Manutenção Preventiva:** Registro e controle de trocas de óleo, pneus e revisões futuras.
+    - [x] **Auditoria de Vistorias:** Tela de revisão para comparar fotos de Check-in vs Check-out e geração de laudo simplificado.
 
-- [ ] **FASE 5: Polimento & UX Premium**
-    - [ ] **Micro-interações:** Animações de transição e feedbacks táteis.
-    - [ ] **Tonal Layering Review:** Revisão de contrastes e superfícies.
-    - [ ] **Estados de Carregamento:** Implementação de Skeleton screens (shimmer).
+- [x] **FASE 5: Polimento & UX Premium**
+    - [x] **Micro-interações:** Animações de transição and feedbacks táteis (Hero animations adicionadas).
+    - [x] **Relatórios PDF:** Geração de extratos financeiros em PDF (Exportação funcional).
+    - [x] **Estados de Carregamento:** Implementação de skeletons e feedback visual de progresso.
 
 ---
 

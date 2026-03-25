@@ -5,31 +5,31 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/repositories/mock_repository.dart';
-import '../../models/driver.dart';
+import '../../models/manager.dart';
 import '../../core/widgets/status_badge.dart';
 
-class DriverListScreen extends StatefulWidget {
-  const DriverListScreen({super.key});
+class ManagerListScreen extends StatefulWidget {
+  const ManagerListScreen({super.key});
 
   @override
-  State<DriverListScreen> createState() => _DriverListScreenState();
+  State<ManagerListScreen> createState() => _ManagerListScreenState();
 }
 
-class _DriverListScreenState extends State<DriverListScreen> {
+class _ManagerListScreenState extends State<ManagerListScreen> {
   final MockRepository _repository = MockRepository();
-  List<Driver> _drivers = [];
+  List<Manager> _managers = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchDrivers();
+    _fetchManagers();
   }
 
-  Future<void> _fetchDrivers() async {
-    final list = await _repository.getDrivers();
+  Future<void> _fetchManagers() async {
+    final list = await _repository.getManagers();
     setState(() {
-      _drivers = list;
+      _managers = list;
       _isLoading = false;
     });
   }
@@ -40,7 +40,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
       backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: Text(
-          'MOTORISTAS',
+          'GESTORES',
           style: AppTextStyles.labelLarge.copyWith(
             letterSpacing: 1.5,
             fontWeight: FontWeight.bold,
@@ -55,11 +55,11 @@ class _DriverListScreenState extends State<DriverListScreen> {
           : Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
               child: ListView.builder(
-                itemCount: _drivers.length,
+                itemCount: _managers.length,
                 itemBuilder: (context, index) {
-                  final driver = _drivers[index];
+                  final manager = _managers[index];
                   return GestureDetector(
-                    onTap: () => context.push(AppRoutes.adminDriverForm, extra: driver),
+                    onTap: () => context.push(AppRoutes.adminManagerForm, extra: manager),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: AppSpacing.md),
                       padding: const EdgeInsets.all(AppSpacing.md),
@@ -72,17 +72,20 @@ class _DriverListScreenState extends State<DriverListScreen> {
                           CircleAvatar(
                             radius: 25,
                             backgroundColor: AppColors.surfaceContainerLow,
-                            child: Text(driver.name[0], style: AppTextStyles.headlineSmall.copyWith(fontSize: 18)),
+                            backgroundImage: NetworkImage(manager.avatarUrl),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(driver.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                                Text(driver.email, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                                Text(manager.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+                                Text(manager.email, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
                                 const SizedBox(height: 4),
-                                StatusBadge(label: driver.isApproved ? 'APROVADO' : 'PENDENTE', type: driver.isApproved ? BadgeType.active : BadgeType.warning),
+                                StatusBadge(
+                                  label: manager.isApproved ? 'APROVADO' : 'PENDENTE',
+                                  type: manager.isApproved ? BadgeType.active : BadgeType.warning,
+                                ),
                               ],
                             ),
                           ),
@@ -95,7 +98,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
               ),
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.adminDriverForm),
+        onPressed: () => context.push(AppRoutes.adminManagerForm),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: AppColors.onPrimary),
       ),

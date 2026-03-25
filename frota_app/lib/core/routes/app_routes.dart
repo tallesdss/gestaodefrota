@@ -7,6 +7,18 @@ import '../../admin/dashboard/admin_dashboard_screen.dart';
 import '../../admin/vehicles/vehicle_list_screen.dart';
 import '../../admin/vehicles/vehicle_detail_screen.dart';
 import '../../admin/drivers/driver_list_screen.dart';
+import '../../admin/drivers/driver_form_screen.dart';
+import '../../admin/managers/manager_list_screen.dart';
+import '../../admin/managers/manager_form_screen.dart';
+import '../../admin/users/registration_audit_screen.dart';
+import '../../admin/contracts/contract_list_screen.dart';
+import '../../admin/contracts/contract_form_screen.dart';
+import '../../admin/maintenance/maintenance_list_screen.dart';
+import '../../admin/inspections/inspection_audit_screen.dart';
+import '../../admin/financial/financial_list_screen.dart';
+import '../../models/driver.dart';
+import '../../models/manager.dart';
+import '../../models/contract.dart';
 
 class AppRoutes {
   static const String root = '/selection';
@@ -16,6 +28,15 @@ class AppRoutes {
   static const String adminVehicleList = '/admin/vehicles';
   static const String adminVehicleDetail = '/admin/vehicles/detail/:id';
   static const String adminDriverList = '/admin/drivers';
+  static const String adminDriverForm = '/admin/drivers/form';
+  static const String adminManagerList = '/admin/managers';
+  static const String adminManagerForm = '/admin/managers/form';
+  static const String adminRegistrationAudit = '/admin/audit';
+  static const String adminContractList = '/admin/contracts';
+  static const String adminContractForm = '/admin/contracts/form';
+  static const String adminMaintenanceList = '/admin/maintenance';
+  static const String adminInspectionAudit = '/admin/inspections';
+  static const String adminFinancialList = '/admin/financial';
   static const String driverHome = '/driver/home';
 
   static final router = GoRouter(
@@ -51,6 +72,51 @@ class AppRoutes {
       GoRoute(
         path: adminDriverList,
         builder: (context, state) => const DriverListScreen(),
+      ),
+      GoRoute(
+        path: adminDriverForm,
+        builder: (context, state) {
+          final driver = state.extra as Driver?;
+          return DriverFormScreen(driver: driver);
+        },
+      ),
+      GoRoute(
+        path: adminManagerList,
+        builder: (context, state) => const ManagerListScreen(),
+      ),
+      GoRoute(
+        path: adminManagerForm,
+        builder: (context, state) {
+          final manager = state.extra as Manager?;
+          return ManagerFormScreen(manager: manager);
+        },
+      ),
+      GoRoute(
+        path: adminRegistrationAudit,
+        builder: (context, state) => const RegistrationAuditScreen(),
+      ),
+      GoRoute(
+        path: adminContractList,
+        builder: (context, state) => const ContractListScreen(),
+      ),
+      GoRoute(
+        path: adminContractForm,
+        builder: (context, state) {
+          final contract = state.extra as Contract?;
+          return ContractFormScreen(contract: contract);
+        },
+      ),
+      GoRoute(
+        path: adminMaintenanceList,
+        builder: (context, state) => const MaintenanceListScreen(),
+      ),
+      GoRoute(
+        path: adminInspectionAudit,
+        builder: (context, state) => const InspectionAuditScreen(),
+      ),
+      GoRoute(
+        path: adminFinancialList,
+        builder: (context, state) => const FinancialListScreen(),
       ),
       GoRoute(
         path: '/gestor',
