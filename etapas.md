@@ -8,7 +8,7 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
 ---
 
 ## 👑 Etapas: Administrador (Proprietário)
-*Controle total da operação, infraestrutura e auditoria.*
+*Controle total da operação, infraestrutura, auditoria e supervisão de todas as funções de Gestor e Motorista.*
 
 - [x] **FASE 1: Fundação & Design System**
     - [x] **Ambiente:** Inicialização do Flutter e configuração do `pubspec.yaml` (go_router, fl_chart, google_fonts, image_picker).
@@ -67,7 +67,7 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
 ---
 
 ### 📝 Resumo das Responsabilidades Técnicas:
-*   **Administrador:** Define a estrutura, audita vistorias e monitora a saúde global da frota.
-*   **Gestor:** Foca no fluxo de caixa e na regularização manual de pagamentos.
+*   **Administrador:** Perfil "Superuser". Define a estrutura, possui acesso irrestrito a todas as funcionalidades do Gestor, audita vistorias e monitora a saúde global da frota.
+*   **Gestor:** Foca no fluxo de caixa, regularização manual de pagamentos e gestão direta da equipe de motoristas, com permissões limitadas em relação ao Administrador.
 *   **Motorista:** Responsável pela integridade física do veículo (vistorias) e pontualidade financeira.
 *   **Sistema:** Garante a consistência dos dados mockados e a transição suave entre os estados da aplicação.
