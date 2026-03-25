@@ -51,7 +51,7 @@ class SelectionProfileScreen extends StatelessWidget {
                 title: 'Gestor',
                 subtitle: 'Operação financeira e supervisão',
                 icon: Icons.business_outlined,
-                onTap: () => context.go('/gestor'),
+                onTap: () => context.go(AppRoutes.gestorDashboard),
               ),
               const SizedBox(height: AppSpacing.md),
               _ProfileCard(

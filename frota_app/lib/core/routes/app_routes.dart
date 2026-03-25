@@ -17,6 +17,8 @@ import '../../admin/maintenance/maintenance_list_screen.dart';
 import '../../admin/inspections/inspection_audit_screen.dart';
 import '../../admin/financial/financial_list_screen.dart';
 import '../../admin/admin_scaffold.dart';
+import '../../manager/dashboard/manager_dashboard_screen.dart';
+import '../../manager/widgets/manager_scaffold.dart';
 import '../../models/driver.dart';
 import '../../models/manager.dart';
 import '../../models/contract.dart';
@@ -38,6 +40,10 @@ class AppRoutes {
   static const String adminMaintenanceList = '/admin/maintenance';
   static const String adminInspectionAudit = '/admin/inspections';
   static const String adminFinancialList = '/admin/financial';
+  static const String gestorDashboard = '/gestor/dashboard';
+  static const String gestorFinancialList = '/gestor/financial';
+  static const String gestorDriverList = '/gestor/drivers';
+  static const String gestorInspectionAudit = '/gestor/inspections';
   static const String driverHome = '/driver/home';
 
   static final router = GoRouter(
@@ -127,12 +133,29 @@ class AppRoutes {
         ],
       ),
 
-      GoRoute(
-        path: '/gestor',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Gestor Dashboard (Work in Progress)')),
-        ),
+      // Gestor Shell
+      ShellRoute(
+        builder: (context, state, child) => ManagerScaffold(child: child),
+        routes: [
+          GoRoute(
+            path: gestorDashboard,
+            builder: (context, state) => const ManagerDashboardScreen(),
+          ),
+          GoRoute(
+            path: gestorFinancialList,
+            builder: (context, state) => const FinancialListScreen(),
+          ),
+          GoRoute(
+            path: gestorDriverList,
+            builder: (context, state) => const DriverListScreen(),
+          ),
+          GoRoute(
+            path: gestorInspectionAudit,
+            builder: (context, state) => const InspectionAuditScreen(),
+          ),
+        ],
       ),
+
       GoRoute(
         path: driverHome,
         builder: (context, state) => const Scaffold(
