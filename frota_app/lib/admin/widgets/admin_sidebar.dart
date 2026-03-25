@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/routes/app_routes.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/routes/app_routes.dart';
 
 class AdminSidebar extends StatelessWidget {
   final String activeRoute;
@@ -54,25 +54,25 @@ class AdminSidebar extends StatelessWidget {
           _SidebarItem(
             icon: Icons.directions_car_outlined,
             label: 'Veículos',
-            isActive: activeRoute == AppRoutes.adminVehicleList,
+            isActive: activeRoute.startsWith(AppRoutes.adminVehicleList),
             onTap: () => context.go(AppRoutes.adminVehicleList),
           ),
           _SidebarItem(
             icon: Icons.people_outline,
             label: 'Motoristas',
-            isActive: activeRoute == AppRoutes.adminDriverList,
+            isActive: activeRoute.startsWith(AppRoutes.adminDriverList),
             onTap: () => context.go(AppRoutes.adminDriverList),
           ),
           _SidebarItem(
             icon: Icons.account_balance_wallet_outlined,
             label: 'Financeiro',
-            isActive: activeRoute == AppRoutes.adminFinancialList,
+            isActive: activeRoute.startsWith(AppRoutes.adminFinancialList),
             onTap: () => context.go(AppRoutes.adminFinancialList),
           ),
           _SidebarItem(
             icon: Icons.task_outlined,
             label: 'Vistorias',
-            isActive: activeRoute == AppRoutes.adminInspectionAudit,
+            isActive: activeRoute.startsWith(AppRoutes.adminInspectionAudit),
             onTap: () => context.go(AppRoutes.adminInspectionAudit),
           ),
           const Spacer(),

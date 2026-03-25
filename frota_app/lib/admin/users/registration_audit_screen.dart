@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/repositories/mock_repository.dart';
 import '../../models/driver.dart';
-import '../../models/manager.dart';
 import '../../core/widgets/status_badge.dart';
 
 class RegistrationAuditScreen extends StatefulWidget {
@@ -41,34 +39,32 @@ class _RegistrationAuditScreenState extends State<RegistrationAuditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: Text(
-          'AUDITORIA DE CADASTRO',
-          style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _pendingUsers.isEmpty
-              ? _buildEmptyState()
-              : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                  child: ListView.builder(
-                    itemCount: _pendingUsers.length,
-                    itemBuilder: (context, index) {
-                      final user = _pendingUsers[index];
-                      final isDriver = user is Driver;
-                      
-                      return _buildAuditItem(user, isDriver);
-                    },
-                  ),
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            children: [
+              Text(
+                'Auditoria de Cadastro',
+                style: AppTextStyles.headlineLarge.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
                 ),
-    );
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Analise e aprove novos usuários e motoristas',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              if (_pendingUsers.isEmpty)
+                _buildEmptyState()
+              else
+                ..._pendingUsers.map((user) => _buildAuditItem(user, user is Driver)),
+            ],
+          );
   }
 
   Widget _buildEmptyState() {

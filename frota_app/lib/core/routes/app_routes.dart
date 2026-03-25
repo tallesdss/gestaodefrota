@@ -16,6 +16,7 @@ import '../../admin/contracts/contract_form_screen.dart';
 import '../../admin/maintenance/maintenance_list_screen.dart';
 import '../../admin/inspections/inspection_audit_screen.dart';
 import '../../admin/financial/financial_list_screen.dart';
+import '../../admin/admin_scaffold.dart';
 import '../../models/driver.dart';
 import '../../models/manager.dart';
 import '../../models/contract.dart';
@@ -54,70 +55,78 @@ class AppRoutes {
         path: root,
         builder: (context, state) => const SelectionProfileScreen(),
       ),
-      GoRoute(
-        path: adminDashboard,
-        builder: (context, state) => const AdminDashboardScreen(),
+      
+      // Admin Shell
+      ShellRoute(
+        builder: (context, state, child) => AdminScaffold(child: child),
+        routes: [
+          GoRoute(
+            path: adminDashboard,
+            builder: (context, state) => const AdminDashboardScreen(),
+          ),
+          GoRoute(
+            path: adminVehicleList,
+            builder: (context, state) => const VehicleListScreen(),
+          ),
+          GoRoute(
+            path: adminVehicleDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return VehicleDetailScreen(vehicleId: id);
+            },
+          ),
+          GoRoute(
+            path: adminDriverList,
+            builder: (context, state) => const DriverListScreen(),
+          ),
+          GoRoute(
+            path: adminDriverForm,
+            builder: (context, state) {
+              final driver = state.extra as Driver?;
+              return DriverFormScreen(driver: driver);
+            },
+          ),
+          GoRoute(
+            path: adminManagerList,
+            builder: (context, state) => const ManagerListScreen(),
+          ),
+          GoRoute(
+            path: adminManagerForm,
+            builder: (context, state) {
+              final manager = state.extra as Manager?;
+              return ManagerFormScreen(manager: manager);
+            },
+          ),
+          GoRoute(
+            path: adminRegistrationAudit,
+            builder: (context, state) => const RegistrationAuditScreen(),
+          ),
+          GoRoute(
+            path: adminContractList,
+            builder: (context, state) => const ContractListScreen(),
+          ),
+          GoRoute(
+            path: adminContractForm,
+            builder: (context, state) {
+              final contract = state.extra as Contract?;
+              return ContractFormScreen(contract: contract);
+            },
+          ),
+          GoRoute(
+            path: adminMaintenanceList,
+            builder: (context, state) => const MaintenanceListScreen(),
+          ),
+          GoRoute(
+            path: adminInspectionAudit,
+            builder: (context, state) => const InspectionAuditScreen(),
+          ),
+          GoRoute(
+            path: adminFinancialList,
+            builder: (context, state) => const FinancialListScreen(),
+          ),
+        ],
       ),
-      GoRoute(
-        path: adminVehicleList,
-        builder: (context, state) => const VehicleListScreen(),
-      ),
-      GoRoute(
-        path: adminVehicleDetail,
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return VehicleDetailScreen(vehicleId: id);
-        },
-      ),
-      GoRoute(
-        path: adminDriverList,
-        builder: (context, state) => const DriverListScreen(),
-      ),
-      GoRoute(
-        path: adminDriverForm,
-        builder: (context, state) {
-          final driver = state.extra as Driver?;
-          return DriverFormScreen(driver: driver);
-        },
-      ),
-      GoRoute(
-        path: adminManagerList,
-        builder: (context, state) => const ManagerListScreen(),
-      ),
-      GoRoute(
-        path: adminManagerForm,
-        builder: (context, state) {
-          final manager = state.extra as Manager?;
-          return ManagerFormScreen(manager: manager);
-        },
-      ),
-      GoRoute(
-        path: adminRegistrationAudit,
-        builder: (context, state) => const RegistrationAuditScreen(),
-      ),
-      GoRoute(
-        path: adminContractList,
-        builder: (context, state) => const ContractListScreen(),
-      ),
-      GoRoute(
-        path: adminContractForm,
-        builder: (context, state) {
-          final contract = state.extra as Contract?;
-          return ContractFormScreen(contract: contract);
-        },
-      ),
-      GoRoute(
-        path: adminMaintenanceList,
-        builder: (context, state) => const MaintenanceListScreen(),
-      ),
-      GoRoute(
-        path: adminInspectionAudit,
-        builder: (context, state) => const InspectionAuditScreen(),
-      ),
-      GoRoute(
-        path: adminFinancialList,
-        builder: (context, state) => const FinancialListScreen(),
-      ),
+
       GoRoute(
         path: '/gestor',
         builder: (context, state) => const Scaffold(
