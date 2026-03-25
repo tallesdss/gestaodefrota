@@ -15,7 +15,8 @@
 
 * **Nunca codar "rápido" quebrando padrão.**
 
-* **Somente Frontend:** Este projeto deve ser desenvolvido utilizando **apenas** o frontend com dados fictícios (mocks). Nenhuma integração com backend real ou banco de dados externo deve ser feita. Toda a lógica de persistência deve ser simulada localmente.
+* **Somente Frontend (Fase Inicial):** Este projeto deve ser desenvolvido utilizando **apenas** o frontend com dados fictícios (mocks). 
+* **Migração Planejada:** A integração com backend real e banco de dados externo só será iniciada **após o frontend estar 100% pronto e validado**. Toda a lógica de persistência deve ser simulada localmente até lá.
 
 ---
 
