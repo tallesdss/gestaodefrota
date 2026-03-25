@@ -1,0 +1,179 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/routes/app_routes.dart';
+
+class AdminSidebar extends StatelessWidget {
+  final String activeRoute;
+
+  const AdminSidebar({
+    super.key,
+    required this.activeRoute,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 260,
+      color: AppColors.surfaceContainerLowest,
+      child: Column(
+        children: [
+          const SizedBox(height: AppSpacing.xxl),
+          // Logo Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Architect Fleet',
+                  style: AppTextStyles.headlineSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '65 Veículos Ativos',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxxl),
+          // Navigation Items
+          _SidebarItem(
+            icon: Icons.dashboard_outlined,
+            label: 'Dashboard',
+            isActive: activeRoute == AppRoutes.adminDashboard,
+            onTap: () => context.go(AppRoutes.adminDashboard),
+          ),
+          _SidebarItem(
+            icon: Icons.directions_car_outlined,
+            label: 'Veículos',
+            isActive: activeRoute == AppRoutes.adminVehicleList,
+            onTap: () => context.go(AppRoutes.adminVehicleList),
+          ),
+          _SidebarItem(
+            icon: Icons.people_outline,
+            label: 'Motoristas',
+            isActive: activeRoute == AppRoutes.adminDriverList,
+            onTap: () => context.go(AppRoutes.adminDriverList),
+          ),
+          _SidebarItem(
+            icon: Icons.account_balance_wallet_outlined,
+            label: 'Financeiro',
+            isActive: activeRoute == AppRoutes.adminFinancialList,
+            onTap: () => context.go(AppRoutes.adminFinancialList),
+          ),
+          _SidebarItem(
+            icon: Icons.task_outlined,
+            label: 'Vistorias',
+            isActive: activeRoute == AppRoutes.adminInspectionAudit,
+            onTap: () => context.go(AppRoutes.adminInspectionAudit),
+          ),
+          const Spacer(),
+          // Premium Support Card
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'SUPORTE PREMIUM',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      minimumSize: const Size(double.infinity, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text('Contatar Consultor'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+        ],
+      ),
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _SidebarItem({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              border: isActive
+                  ? const Border(
+                      left: BorderSide(
+                        color: AppColors.primary,
+                        width: 4,
+                      ),
+                    )
+                  : null,
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: AppSpacing.xl),
+                Icon(
+                  icon,
+                  color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Text(
+                  label,
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

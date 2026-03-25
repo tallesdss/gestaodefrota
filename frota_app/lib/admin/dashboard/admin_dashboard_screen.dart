@@ -3,9 +3,13 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/widgets/stat_card.dart';
 import '../../core/routes/app_routes.dart';
-import 'widgets/dashboard_chart.dart';
+import 'widgets/admin_sidebar.dart';
+import 'widgets/admin_header.dart';
+import 'widgets/kpi_card.dart';
+import 'widgets/delay_list_item.dart';
+import 'widgets/fleet_status_chart.dart';
+import 'widgets/dashboard_cta_card.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -14,345 +18,263 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      body: CustomScrollView(
-        slivers: [
-          // Header with profile
-          SliverAppBar(
-            expandedHeight: 180,
-            floating: false,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: AppColors.primary,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundColor: Colors.white24,
-                          child: Icon(Icons.person, color: Colors.white, size: 32),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
+      body: Row(
+        children: [
+          // Left Sidebar
+          const AdminSidebar(activeRoute: AppRoutes.adminDashboard),
+          
+          // Main Content
+          Expanded(
+            child: Column(
+              children: [
+                // Top Header
+                const AdminHeader(),
+                
+                // Content Body
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xxl,
+                      vertical: AppSpacing.xl,
+                    ),
+                    children: [
+                      // Page Title & Action
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Olá, Administrador',
-                                style: AppTextStyles.labelMedium.copyWith(
-                                  color: Colors.white70,
+                                'Visão Geral da Frota',
+                                style: AppTextStyles.headlineLarge.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              const SizedBox(height: AppSpacing.xs),
                               Text(
-                                'João Silva',
-                                style: AppTextStyles.headlineSmall.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                                'Relatório atualizado em tempo real • 24 Out 2023',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.onSurfaceVariant,
                                 ),
                               ),
                             ],
                           ),
+                          ElevatedButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.add_circle_outline, size: 20),
+                            label: const Text('Nova Vistoria'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
+                              minimumSize: const Size(180, 48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: AppSpacing.xl),
+                      
+                      // KPI Row
+                      const SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            KpiCard(
+                              title: 'Capacidade',
+                              value: '65',
+                              subtitle: 'Total de Veículos',
+                              icon: Icons.directions_car_outlined,
+                              accentColor: Colors.indigo,
+                            ),
+                            SizedBox(width: AppSpacing.md),
+                            KpiCard(
+                              title: 'Ocupação',
+                              value: '58',
+                              subtitle: 'Veículos Alugados',
+                              icon: Icons.vpn_key_outlined,
+                              accentColor: Colors.blueAccent,
+                              hasProgressBar: true,
+                              progress: 0.89,
+                            ),
+                            SizedBox(width: AppSpacing.md),
+                            KpiCard(
+                              title: 'Financeiro',
+                              value: 'R$ 42.000',
+                              subtitle: 'Receita do Mês',
+                              icon: Icons.account_balance_wallet_outlined,
+                              accentColor: Colors.green,
+                            ),
+                            SizedBox(width: AppSpacing.md),
+                            KpiCard(
+                              title: 'Atenção',
+                              value: 'R$ 3.500',
+                              subtitle: 'Inadimplência',
+                              icon: Icons.error_outline,
+                              accentColor: Colors.redAccent,
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: Icon(Icons.notifications_outlined, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          
-          // Dashboard Content
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // KPI Section
-                _SectionTitle(title: 'Visão Geral da Frota'),
-                const SizedBox(height: AppSpacing.md),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: AppSpacing.md,
-                  crossAxisSpacing: AppSpacing.md,
-                  childAspectRatio: 1.5,
-                  children: const [
-                    StatCard(
-                      title: 'Ativos Totais',
-                      value: '42',
-                      icon: Icons.directions_car_outlined,
-                    ),
-                    StatCard(
-                      title: 'Locados',
-                      value: '35',
-                      icon: Icons.check_circle_outline,
-                      iconColor: AppColors.primary,
-                    ),
-                    StatCard(
-                      title: 'Disponíveis',
-                      value: '05',
-                      icon: Icons.event_available_outlined,
-                      iconColor: Colors.green,
-                    ),
-                    StatCard(
-                      title: 'Manutenção',
-                      value: '02',
-                      icon: Icons.build_outlined,
-                      iconColor: AppColors.tertiary,
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: AppSpacing.xxl),
-                
-                // Chart Section
-                const DashboardChart(),
-                
-                const SizedBox(height: AppSpacing.xxl),
-                
-                // Critical Alerts Section
-                _SectionTitle(title: 'Alertas Prioritários'),
-                const SizedBox(height: AppSpacing.md),
-                const AlertCard(
-                  title: 'Documentação Vencendo',
-                  subtitle: 'Veículo ABC-1234: IPVA em 3 dias',
-                  icon: Icons.warning_amber_rounded,
-                  color: AppColors.tertiary,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const AlertCard(
-                  title: 'Manutenção Preventiva',
-                  subtitle: 'Corolla GHI-9012: Troca de Óleo Pendente',
-                  icon: Icons.build_circle_outlined,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const AlertCard(
-                  title: 'Pendência Financeira',
-                  subtitle: 'Motorista Maria Santos: Mensalidade Atrasada',
-                  icon: Icons.money_off_csred_outlined,
-                  color: AppColors.error,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                GestureDetector(
-                  onTap: () => context.push(AppRoutes.adminRegistrationAudit),
-                  child: const AlertCard(
-                    title: 'Auditoria de Cadastro',
-                    subtitle: 'Existem 02 novos cadastros aguardando aprovação',
-                    icon: Icons.admin_panel_settings_outlined,
-                    color: Colors.blue,
+                      ),
+                      
+                      const SizedBox(height: AppSpacing.xl),
+                      
+                      // Middle Section: Status Chart + Recent Delays
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Left: Fleet Status (320px fixed)
+                          const SizedBox(
+                            width: 320,
+                            child: FleetStatusChart(),
+                          ),
+                          const SizedBox(width: AppSpacing.xl),
+                          // Right: Recent Delays
+                          Expanded(
+                            child: _RecentDelaysSection(),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: AppSpacing.xl),
+                      
+                      // Bottom Section: CTA Cards
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DashboardCtaCard(
+                              title: 'Monitoramento Ativo',
+                              description: 'Acompanhe a localização e o comportamento de condução em tempo real.',
+                              buttonText: 'Abrir Mapa da Frota',
+                              icon: Icons.map_outlined,
+                              onTap: () {},
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xl),
+                          Expanded(
+                            child: DashboardCtaCard(
+                              title: 'Relatórios Automáticos',
+                              description: 'Gere o fechamento mensal e notas fiscais com apenas um clique.',
+                              buttonText: 'Configurar Agendamento',
+                              icon: Icons.bar_chart_outlined,
+                              isSecondary: true,
+                              onTap: () {},
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: AppSpacing.xxxl),
+                    ],
                   ),
-                ),
-                
-                const SizedBox(height: AppSpacing.xxl),
-                
-                // Navigation to management screens
-                _SectionTitle(title: 'Gestão de Ativos'),
-                const SizedBox(height: AppSpacing.md),
-                _ManagementMenu(),
-                
-                const SizedBox(height: AppSpacing.xxl),
-              ]),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  const _SectionTitle({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: AppTextStyles.headlineSmall.copyWith(
-            fontSize: 20,
-            color: AppColors.onSurface,
-          ),
-        ),
-        TextButton(
-          onPressed: () {},
-          child: Text(
-            'Ver Tudo',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class AlertCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-
-  const AlertCard({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withAlpha((0.1 * 255).toInt()), width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withAlpha((0.1 * 255).toInt()),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  subtitle,
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
         ],
       ),
     );
   }
 }
 
-class _ManagementMenu extends StatelessWidget {
+class _RecentDelaysSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _MenuItem(
-          title: 'Veículos',
-          count: '42 ativos',
-          icon: Icons.directions_car_filled_outlined,
-          onTap: () => context.push(AppRoutes.adminVehicleList),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _MenuItem(
-          title: 'Motoristas',
-          count: '38 cadastrados',
-          icon: Icons.people_outline,
-          onTap: () => context.push(AppRoutes.adminDriverList),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _MenuItem(
-          title: 'Gestores',
-          count: '03 cadastrados',
-          icon: Icons.assignment_ind_outlined,
-          onTap: () => context.push(AppRoutes.adminManagerList),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _MenuItem(
-          title: 'Contratos',
-          count: '35 vigentes',
-          icon: Icons.article_outlined,
-          onTap: () => context.push(AppRoutes.adminContractList),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _MenuItem(
-          title: 'Manutenções',
-          count: '02 agendadas',
-          icon: Icons.build_outlined,
-          onTap: () => context.push(AppRoutes.adminMaintenanceList),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _MenuItem(
-          title: 'Vistorias',
-          count: '08 pendentes',
-          icon: Icons.fact_check_outlined,
-          onTap: () => context.push(AppRoutes.adminInspectionAudit),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _MenuItem(
-          title: 'Financeiro',
-          count: 'Extrato Completo',
-          icon: Icons.account_balance_wallet_outlined,
-          onTap: () => context.push(AppRoutes.adminFinancialList),
-        ),
-      ],
-    );
-  }
-}
-
-class _MenuItem extends StatelessWidget {
-  final String title;
-  final String count;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _MenuItem({
-    required this.title,
-    required this.count,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.all(AppSpacing.sm),
-      tileColor: AppColors.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Hero(
-          tag: 'menu_icon_$title',
-          child: Icon(icon, color: AppColors.primary),
-        ),
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
       ),
-      title: Text(title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-      subtitle: Text(count, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.outlineVariant),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Atrasos Recentes',
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      fontSize: 20,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  Text(
+                    'Últimos 5 registros com pendência financeira',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () {},
+                child: Text(
+                  'Ver Financeiro Completo',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          DelayListItem(
+            imageUrl: 'https://img.freepik.com/fotos-premium/carro-branco-elegante-sobre-fundo-branco-isolado-em-fundo-branco-com-reflexo-sob-o-carro-generative-ai_438099-22341.jpg',
+            model: 'Volkswagen Virtus 2023',
+            plate: 'ABC-1D23',
+            client: 'João Silva',
+            value: 'R$ 1.250,00',
+            delay: '3 dias de atraso',
+            onTap: () {},
+          ),
+          DelayListItem(
+            imageUrl: 'https://img.freepik.com/fotos-premium/carro-sedan-preto-compacto-carro-sedan-preto-compacto-em-fundo-branco_1082121-654.jpg',
+            model: 'Chevrolet Onix Turbo',
+            plate: 'XYZ-9A87',
+            client: 'Maria Oliveira',
+            value: 'R$ 890,00',
+            delay: '2 dias de atraso',
+            onTap: () {},
+          ),
+          DelayListItem(
+            imageUrl: 'https://img.freepik.com/fotos-premium/carro-sedan-preto-compacto-carro-sedan-preto-compacto-em-fundo-branco_1082121-654.jpg',
+            model: 'Fiat Cronos Precision',
+            plate: 'FGH-5J44',
+            client: 'Pedro Santos',
+            value: 'R$ 1.100,00',
+            delay: '1 dia de atraso',
+            onTap: () {},
+          ),
+          DelayListItem(
+            imageUrl: 'https://img.freepik.com/premium-photo/modern-subcompact-city-car_244243-233.jpg',
+            model: 'Renault Kwid Zen',
+            plate: 'QWE-2R34',
+            client: 'Carla Dias',
+            value: 'R$ 560,00',
+            delay: '5 dias de atraso',
+            onTap: () {},
+          ),
+          DelayListItem(
+            imageUrl: 'https://img.freepik.com/premium-photo/compact-red-car_244243-228.jpg',
+            model: 'Toyota Corolla XEi',
+            plate: 'TYU-0P12',
+            client: 'Roberto Lima',
+            value: 'R$ 2.450,00',
+            delay: '2 dias de atraso',
+            onTap: () {},
+          ),
+        ],
+      ),
     );
   }
 }

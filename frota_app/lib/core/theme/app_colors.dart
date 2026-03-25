@@ -18,9 +18,12 @@ class AppColors {
   
   // Functional
   static const Color tertiary = Color(0xFF4B1C00); // Alerts (e.g. Brake Pad Wear)
+  static const Color tertiaryContainer = Color(0xFFFFDBCA); // Light Orange for badges
   static const Color accent = Color(0xFFF5A623);   // Dashboard accent
   static const Color error = Color(0xFFBA1A1A);
+  static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color success = Color(0xFF2E7D32);  
+  static const Color successContainer = Color(0xFFB1F0AC);
   
   // Variants
   static const Color outlineVariant = Color(0xFFC5C5D3);
