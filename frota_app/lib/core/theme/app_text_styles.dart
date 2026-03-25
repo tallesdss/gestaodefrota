@@ -59,4 +59,10 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
     color: AppColors.onSurface,
   );
+
+  static TextStyle labelSmall = GoogleFonts.inter(
+    fontSize: 10,
+    fontWeight: FontWeight.w500,
+    color: AppColors.onSurface,
+  );
 }

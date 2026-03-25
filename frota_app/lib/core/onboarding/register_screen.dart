@@ -131,7 +131,7 @@ class _InputField extends StatelessWidget {
           obscureText: obscureText,
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(icon, color: AppColors.primary.withOpacity(0.5)),
+            prefixIcon: Icon(icon, color: AppColors.primary.withAlpha((0.5 * 255).toInt())),
             filled: true,
             fillColor: AppColors.surfaceContainerLow,
             border: OutlineInputBorder(

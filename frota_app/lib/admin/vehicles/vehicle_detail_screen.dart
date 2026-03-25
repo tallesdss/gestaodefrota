@@ -272,6 +272,6 @@ class _HistoryItem extends StatelessWidget {
 class _DividerLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Divider(height: 16, color: AppColors.outlineVariant.withOpacity(0.1));
+    return Divider(height: 16, color: AppColors.outlineVariant.withAlpha((0.1 * 255).toInt()));
   }
 }

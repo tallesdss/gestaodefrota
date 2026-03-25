@@ -42,7 +42,7 @@ class DashboardChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: AppColors.outlineVariant.withOpacity(0.1),
+                    color: AppColors.outlineVariant.withAlpha((0.1 * 255).toInt()),
                     strokeWidth: 1,
                   ),
                 ),
@@ -100,7 +100,7 @@ class DashboardChart extends StatelessWidget {
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
-                        colors: [AppColors.primary.withOpacity(0.1), AppColors.primary.withOpacity(0)],
+                        colors: [AppColors.primary.withAlpha((0.1 * 255).toInt()), AppColors.primary.withAlpha(0)],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
