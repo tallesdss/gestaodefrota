@@ -10,18 +10,18 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
 ## 👑 Etapas: Administrador (Proprietário)
 *Controle total da operação, infraestrutura e auditoria.*
 
-- [ ] **FASE 1: Fundação & Design System**
-    - [ ] **Ambiente:** Inicialização do Flutter e configuração do `pubspec.yaml` (go_router, fl_chart, google_fonts, image_picker).
-    - [ ] **Design System:** Implementação de `AppColors`, `AppTextStyles` e `AppSpacing` seguindo a filosofia de camadas tonais.
-    - [ ] **Camada de Dados Mock:** Criação dos modelos e repositórios com dados fictícios para Veículos, Motoristas, Contratos e Financeiro.
-    - [ ] **Navegação:** Configuração das rotas base no `app_routes.dart` separando os fluxos `/register`, `/admin`, `/gestor` e `/driver`.
-    - [ ] **Fluxo de Onboarding Geral:** Implementação das telas de "Criar Conta" e seleção de perfil (Gestor ou Motorista).
+- [x] **FASE 1: Fundação & Design System**
+    - [x] **Ambiente:** Inicialização do Flutter e configuração do `pubspec.yaml` (go_router, fl_chart, google_fonts, image_picker).
+    - [x] **Design System:** Implementação de `AppColors`, `AppTextStyles` e `AppSpacing` seguindo a filosofia de camadas tonais.
+    - [x] **Camada de Dados Mock:** Criação dos modelos e repositórios com dados fictícios para Veículos, Motoristas, Contratos e Financeiro.
+    - [x] **Navegação:** Configuração das rotas base no `app_routes.dart` separando os fluxos `/register`, `/admin`, `/gestor` e `/driver`.
+    - [x] **Fluxo de Onboarding Geral:** Implementação das telas de "Criar Conta" e seleção de perfil (Gestor ou Motorista).
 
 - [ ] **FASE 2: Dashboard de Comando e Gestão de Ativos**
-    - [ ] **Dashboard Principal:** Cards de KPI monumentais, Gráficos de Receita vs Despesa e Alertas de documentos (IPVA, CNH).
+    - [x] **Dashboard Principal:** Cards de KPI monumentais, Gráficos de Receita vs Despesa e Alertas de documentos (IPVA, CNH).
     - [ ] **Gestão de Usuários:** Fluxo de criação e edição de perfis para **Gestores** e **Motoristas**.
     - [ ] **Auditoria de Cadastro:** Validação e aprovação dos documentos enviados por novos usuários (Self-Registration).
-    - [ ] **Gestão de Frota & Motoristas:** Listagem editorial com filtros, detalhes técnicos do veículo e histórico completo do motorista.
+    - [x] **Gestão de Frota & Motoristas:** Listagem editorial com filtros, detalhes técnicos do veículo e histórico completo do motorista.
 
 - [ ] **FASE 3: Estrutura de Contratos**
     - [ ] **Gestão de Contratos:** Fluxo de criação de novos vínculos entre veículo e motorista.
