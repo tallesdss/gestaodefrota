@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../onboarding/login_screen.dart';
+import '../onboarding/register_screen.dart';
 import '../onboarding/selection_profile_screen.dart';
 import '../../admin/dashboard/admin_dashboard_screen.dart';
 import '../../admin/vehicles/vehicle_list_screen.dart';
@@ -7,8 +9,9 @@ import '../../admin/vehicles/vehicle_detail_screen.dart';
 import '../../admin/drivers/driver_list_screen.dart';
 
 class AppRoutes {
-  static const String root = '/';
-  static const String login = '/login';
+  static const String root = '/selection';
+  static const String login = '/';
+  static const String register = '/register';
   static const String adminDashboard = '/admin/dashboard';
   static const String adminVehicleList = '/admin/vehicles';
   static const String adminVehicleDetail = '/admin/vehicles/detail/:id';
@@ -16,17 +19,19 @@ class AppRoutes {
   static const String driverHome = '/driver/home';
 
   static final router = GoRouter(
-    initialLocation: root,
+    initialLocation: login,
     routes: [
+      GoRoute(
+        path: login,
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: register,
+        builder: (context, state) => const RegisterScreen(),
+      ),
       GoRoute(
         path: root,
         builder: (context, state) => const SelectionProfileScreen(),
-      ),
-      GoRoute(
-        path: login,
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Login Screen (Work in Progress)')),
-        ),
       ),
       GoRoute(
         path: adminDashboard,
