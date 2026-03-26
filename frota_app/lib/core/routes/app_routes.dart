@@ -105,7 +105,10 @@ class AppRoutes {
           ),
           GoRoute(
             path: adminRegistrationAudit,
-            builder: (context, state) => const RegistrationAuditScreen(),
+            builder: (context, state) {
+               final id = state.uri.queryParameters['id'];
+               return RegistrationAuditScreen(initialSelectedId: id);
+            },
           ),
           GoRoute(
             path: adminContractList,

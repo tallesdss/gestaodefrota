@@ -58,10 +58,16 @@ class AdminSidebar extends StatelessWidget {
             onTap: () => context.go(AppRoutes.adminVehicleList),
           ),
           _SidebarItem(
-            icon: Icons.people_outline,
+            icon: Icons.person_search_outlined,
             label: 'Motoristas',
             isActive: activeRoute.startsWith(AppRoutes.adminDriverList),
             onTap: () => context.go(AppRoutes.adminDriverList),
+          ),
+          _SidebarItem(
+            icon: Icons.fact_check_outlined,
+            label: 'Auditoria',
+            isActive: activeRoute == AppRoutes.adminRegistrationAudit,
+            onTap: () => context.go(AppRoutes.adminRegistrationAudit),
           ),
           _SidebarItem(
             icon: Icons.account_balance_wallet_outlined,

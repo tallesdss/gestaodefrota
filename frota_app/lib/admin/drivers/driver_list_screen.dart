@@ -59,7 +59,13 @@ class _DriverListScreenState extends State<DriverListScreen> {
                 itemBuilder: (context, index) {
                   final driver = _drivers[index];
                   return GestureDetector(
-                    onTap: () => context.push(AppRoutes.adminDriverForm, extra: driver),
+                    onTap: () {
+                      if (driver.isApproved) {
+                        context.push(AppRoutes.adminDriverForm, extra: driver);
+                      } else {
+                        context.push('${AppRoutes.adminRegistrationAudit}?id=${driver.id}');
+                      }
+                    },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: AppSpacing.md),
                       padding: const EdgeInsets.all(AppSpacing.md),

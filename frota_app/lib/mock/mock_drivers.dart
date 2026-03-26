@@ -57,4 +57,18 @@ List<Driver> mockDrivers = [
     avatarUrl: 'https://i.pravatar.cc/150?u=d4',
     isApproved: false,
   ),
+  Driver(
+    id: 'd5',
+    name: 'Ricardo Mendonça',
+    cpf: '111.222.333-44',
+    phone: '(11) 90000-1111',
+    email: 'ricardo.mendonca@email.com',
+    type: DriverType.prefecture,
+    status: DriverStatus.active,
+    cnhNumber: '00000000000',
+    cnhExpiry: DateTime(2026, 04, 12),
+    cnhCategory: 'D',
+    avatarUrl: 'https://i.pravatar.cc/150?u=d5',
+    isApproved: false,
+  ),
 ];
