@@ -61,7 +61,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
                   return GestureDetector(
                     onTap: () {
                       if (driver.isApproved) {
-                        context.push(AppRoutes.adminDriverForm, extra: driver);
+                        context.push(AppRoutes.adminDriverProfile.replaceFirst(':id', driver.id));
                       } else {
                         context.push('${AppRoutes.adminRegistrationAudit}?id=${driver.id}');
                       }

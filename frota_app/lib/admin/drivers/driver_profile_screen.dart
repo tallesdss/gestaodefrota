@@ -1,0 +1,422 @@
+import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/stat_card.dart';
+import '../../core/widgets/status_badge.dart';
+import '../../core/widgets/section_header.dart';
+import '../../core/repositories/mock_repository.dart';
+import '../../models/driver.dart';
+import '../../models/vehicle.dart';
+
+class DriverProfileScreen extends StatefulWidget {
+  final String driverId;
+
+  const DriverProfileScreen({super.key, required this.driverId});
+
+  @override
+  State<DriverProfileScreen> createState() => _DriverProfileScreenState();
+}
+
+class _DriverProfileScreenState extends State<DriverProfileScreen> {
+  final MockRepository _repository = MockRepository();
+  Driver? _driver;
+  Vehicle? _currentVehicle;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final drivers = await _repository.getDrivers();
+    final driver = drivers.firstWhere((d) => d.id == widget.driverId);
+    
+    Vehicle? vehicle;
+    if (driver.currentVehicleId != null) {
+      final vehicles = await _repository.getVehicles();
+      vehicle = vehicles.firstWhere((v) => v.id == driver.currentVehicleId);
+    }
+
+    setState(() {
+      _driver = driver;
+      _currentVehicle = vehicle;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_driver == null) {
+      return const Scaffold(
+        body: Center(child: Text('Motorista não encontrado')),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: BackButton(color: AppColors.onSurface),
+        title: Text(
+          'PERFIL DO MOTORISTA',
+          style: AppTextStyles.labelLarge.copyWith(
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: AppSpacing.xl),
+            
+            _buildFinanceStats(),
+            const SizedBox(height: AppSpacing.xl),
+            
+            _buildVehicleUsage(),
+            const SizedBox(height: AppSpacing.xl),
+            
+            _buildDocumentsAndContracts(),
+            const SizedBox(height: AppSpacing.xl),
+
+            _buildActivityTimeline(),
+            const SizedBox(height: AppSpacing.xl),
+
+            _buildInspectionHistory(),
+            const SizedBox(height: AppSpacing.xl * 2),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 40,
+            backgroundImage: NetworkImage(_driver!.avatarUrl),
+            backgroundColor: AppColors.surfaceContainerLow,
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _driver!.name,
+                  style: AppTextStyles.headlineSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                Text(
+                  _driver!.email,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    StatusBadge(
+                      label: _driver!.isApproved ? 'APROVADO' : 'PENDENTE',
+                      type: _driver!.isApproved ? BadgeType.active : BadgeType.warning,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    StatusBadge(
+                      label: _driver!.type.name.toUpperCase(),
+                      type: BadgeType.secondary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinanceStats() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DESEMPENHO FINANCEIRO'),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: StatCard(
+                title: 'TOTAL RENDIDO',
+                value: 'R$ 12.450,00',
+                icon: Icons.payments_outlined,
+                iconColor: AppColors.success,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: StatCard(
+                title: 'SALDO DEVEDOR',
+                value: 'R$ 450,00',
+                icon: Icons.warning_amber_rounded,
+                iconColor: AppColors.error,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVehicleUsage() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'VEÍCULO ATUAL & HISTÓRICO'),
+        const SizedBox(height: AppSpacing.md),
+        if (_currentVehicle != null)
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.directions_car, color: AppColors.primary),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_currentVehicle!.brand} ${_currentVehicle!.model}',
+                        style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Placa: ${_currentVehicle!.plate}',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'DESDE',
+                      style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                    ),
+                    Text(
+                      '12/03/2026',
+                      style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              'Nenhum veículo vinculado atualmente',
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+              textAlign: Center,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDocumentsAndContracts() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'DOCUMENTAÇÃO & CONTRATOS'),
+        const SizedBox(height: AppSpacing.md),
+        Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: [
+            _buildDocItem('CNH Digital', Icons.badge_outlined),
+            _buildDocItem('Comprovante Residência', Icons.home_outlined),
+            _buildDocItem('Contrato Assinado', Icons.description_outlined),
+            _buildDocItem('Termos de Uso', Icons.gavel_outlined),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDocItem(String label, IconData icon) {
+    return Container(
+      width: (MediaQuery.of(context).size.width - (AppSpacing.xl * 2) - AppSpacing.md) / 2,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const Icon(Icons.open_in_new, size: 14, color: AppColors.outlineVariant),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityTimeline() {
+    final activities = [
+      {'date': '25/03/2026', 'title': 'Troca de Óleo Realizada', 'desc': 'Veículo: ${_currentVehicle?.model ?? "N/A"}'},
+      {'date': '12/03/2026', 'title': 'Novo Veículo Vinculado', 'desc': '${_currentVehicle?.brand} ${_currentVehicle?.model}'},
+      {'date': '01/03/2026', 'title': 'Pagamento Mensalidade', 'desc': 'Referente a Fevereiro - R$ 2.400,00'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'LINHA DO TEMPO'),
+        const SizedBox(height: AppSpacing.md),
+        ...activities.map((a) => _buildTimelineItem(a['date']!, a['title']!, a['desc']!)).toList(),
+      ],
+    );
+  }
+
+  Widget _buildTimelineItem(String date, String title, String desc) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+            Container(
+              width: 2,
+              height: 40,
+              color: AppColors.outlineVariant.withValues(alpha: 0.3),
+            ),
+          ],
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(title, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+                  Text(date, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                ],
+              ),
+              Text(desc, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              const SizedBox(height: AppSpacing.md),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInspectionHistory() {
+    final inspections = [
+      {'type': 'CHECK-IN', 'date': '12/03/2026', 'km': '15.420', 'status': 'APROVADO'},
+      {'type': 'CHECK-OUT', 'date': '12/03/2026', 'km': '12.100', 'status': 'APROVADO'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'HISTÓRICO DE VISTORIAS'),
+        const SizedBox(height: AppSpacing.md),
+        ...inspections.map((i) => Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                i['type'] == 'CHECK-IN' ? Icons.login_rounded : Icons.logout_rounded,
+                color: i['type'] == 'CHECK-IN' ? AppColors.success : AppColors.secondary,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(i['type']!, style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold)),
+                    Text('KM: ${i['km']}', style: AppTextStyles.bodySmall),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(i['date']!, style: AppTextStyles.labelSmall),
+                  Text(
+                    i['status']!,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        )).toList(),
+      ],
+    );
+  }
+}

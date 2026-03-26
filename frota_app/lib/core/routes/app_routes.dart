@@ -10,6 +10,7 @@ import '../../admin/drivers/driver_list_screen.dart';
 import '../../admin/drivers/driver_form_screen.dart';
 import '../../admin/managers/manager_list_screen.dart';
 import '../../admin/managers/manager_form_screen.dart';
+import '../../admin/drivers/driver_profile_screen.dart';
 import '../../admin/users/registration_audit_screen.dart';
 import '../../admin/users/profile_screen.dart';
 import '../../admin/users/settings_screen.dart';
@@ -36,6 +37,7 @@ class AppRoutes {
   static const String adminVehicleDetail = '/admin/vehicles/detail/:id';
   static const String adminDriverList = '/admin/drivers';
   static const String adminDriverForm = '/admin/drivers/form';
+  static const String adminDriverProfile = '/admin/drivers/profile/:id';
   static const String adminManagerList = '/admin/managers';
   static const String adminManagerForm = '/admin/managers/form';
   static const String adminRegistrationAudit = '/admin/audit';
@@ -98,6 +100,13 @@ class AppRoutes {
             builder: (context, state) {
               final driver = state.extra as Driver?;
               return DriverFormScreen(driver: driver);
+            },
+          ),
+          GoRoute(
+            path: adminDriverProfile,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return DriverProfileScreen(driverId: id);
             },
           ),
           GoRoute(

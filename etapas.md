@@ -23,6 +23,12 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
     - [x] **Gestão de Usuários e Equipe:** Fluxo de criação e edição de perfis para **Gestores** e **Motoristas**.
     - [x] **Auditoria de Cadastro:** Validação e aprovação dos documentos enviados por novos usuários (Self-Registration).
     - [x] **Gestão de Frota:** Listagem editorial com filtros, detalhes técnicos do veículo e histórico de utilização.
+    - [x] **Detalhamento do Perfil do Motorista (Visualização 360º):**
+        - [x] **Análise Financeira:** KPI de total rendido (LTV) e saldo devedor atual (Inadimplência).
+        - [x] **Histórico de Ativos:** Lista cronológica de veículos alugados e períodos de posse.
+        - [x] **Central de Documentos:** Atalhos rápidos para CNH, Contrato Digital e Residência.
+        - [x] **Timeline de Atividades:** Histórico completo de eventos, multas e ocorrências.
+        - [x] **Histórico de Vistorias:** Resumo de check-ins e check-outs vinculados ao motorista.
 
 - [x] **FASE 3: Estrutura de Contratos & Ativos**
     - [x] **Gestão de Contratos:** Fluxo de criação de novos vínculos entre veículo e motorista.
