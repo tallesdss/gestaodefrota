@@ -135,7 +135,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
         color: useGradient ? null : color,
         gradient: useGradient ? AppColors.primaryGradient : null,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: useGradient ? [BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))] : null,
+        boxShadow: useGradient ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2))] : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -269,7 +269,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
         border: Border(top: BorderSide(color: color, width: 4)),
       ),
       child: Column(
@@ -310,7 +310,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +346,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: rank == '01' ? AppColors.primary.withOpacity(0.1) : AppColors.surfaceContainerLow,
+                color: rank == '01' ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surfaceContainerLow,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -381,7 +381,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: Column(
         children: [
@@ -430,7 +430,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
 
   Widget _buildTableHeader() {
     return Container(
-      color: AppColors.surfaceContainerLow.withOpacity(0.5),
+      color: AppColors.surfaceContainerLow.withValues(alpha: 0.5),
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
       child: Row(
         children: [
@@ -505,7 +505,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: entry.isPaid ? AppColors.primaryContainer.withOpacity(0.1) : AppColors.errorContainer.withOpacity(0.5),
+                color: entry.isPaid ? AppColors.primaryContainer.withValues(alpha: 0.1) : AppColors.errorContainer.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(20),
               ),
               alignment: Alignment.center,
@@ -529,7 +529,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
   Widget _buildTableFooter() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-      color: AppColors.surfaceContainerLow.withOpacity(0.5),
+      color: AppColors.surfaceContainerLow.withValues(alpha: 0.5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -564,7 +564,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       ),
       alignment: Alignment.center,
       child: icon != null
-          ? Icon(icon, size: 16, color: enabled ? (active ? Colors.white : AppColors.onSurfaceVariant) : AppColors.onSurfaceVariant.withOpacity(0.3))
+          ? Icon(icon, size: 16, color: enabled ? (active ? Colors.white : AppColors.onSurfaceVariant) : AppColors.onSurfaceVariant.withValues(alpha: 0.3))
           : Text(
               text!,
               style: AppTextStyles.labelSmall.copyWith(

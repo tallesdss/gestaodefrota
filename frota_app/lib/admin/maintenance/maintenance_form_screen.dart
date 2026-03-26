@@ -90,7 +90,7 @@ class _MaintenanceFormScreenState extends State<MaintenanceFormScreen> {
                       const SizedBox(height: AppSpacing.md),
                       _buildDropdown<MaintenanceType>(
                         label: 'Tipo de Serviço',
-                        value: _selectedType,
+                        initialValue: _selectedType,
                         items: MaintenanceType.values,
                         onChanged: (val) => setState(() => _selectedType = val!),
                       ),
@@ -151,7 +151,7 @@ class _MaintenanceFormScreenState extends State<MaintenanceFormScreen> {
 
   Widget _buildVehicleDropdown() {
     return DropdownButtonFormField<String>(
-      value: _selectedVehicleId,
+      initialValue: _selectedVehicleId,
       hint: const Text('Selecione um Veículo'),
       items: _vehicles.map((v) {
         return DropdownMenuItem<String>(
@@ -194,12 +194,12 @@ class _MaintenanceFormScreenState extends State<MaintenanceFormScreen> {
 
   Widget _buildDropdown<T>({
     required String label,
-    required T value,
+    required T initialValue,
     required List<T> items,
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: initialValue,
       items: items.map((e) {
         return DropdownMenuItem<T>(
           value: e,

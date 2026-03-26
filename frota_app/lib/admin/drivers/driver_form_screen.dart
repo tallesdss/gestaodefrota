@@ -172,7 +172,7 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items.map((e) {
         return DropdownMenuItem<T>(
           value: e,

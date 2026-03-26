@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/repositories/mock_repository.dart';
 import '../../core/widgets/vehicle_card.dart';
 import '../../models/vehicle.dart';
+import '../../core/routes/app_routes.dart';
 
 class VehicleListScreen extends StatefulWidget {
   const VehicleListScreen({super.key});
@@ -74,7 +75,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
               ),
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => context.go(AppRoutes.adminVehicleForm),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),

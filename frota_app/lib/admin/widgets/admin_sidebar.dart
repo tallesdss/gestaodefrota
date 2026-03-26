@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/widgets/app_dialogs.dart';
 
 class AdminSidebar extends StatelessWidget {
   final String activeRoute;
@@ -103,7 +104,7 @@ class AdminSidebar extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () => _showSupportModal(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.onPrimary,
@@ -120,6 +121,34 @@ class AdminSidebar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
+        ],
+      ),
+    );
+  }
+
+  void _showSupportModal(BuildContext context) {
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Suporte Premium',
+      content: Column(
+        children: [
+          const Text('Como podemos ajudar hoje? Nosso time de especialistas está online.'),
+          const SizedBox(height: 24),
+          ListTile(
+            leading: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+            title: const Text('Chat em Tempo Real'),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.phone_outlined, color: AppColors.primary),
+            title: const Text('Suporte Telefônico'),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.mail_outline, color: AppColors.primary),
+            title: const Text('E-mail Prioritário'),
+            onTap: () {},
+          ),
         ],
       ),
     );

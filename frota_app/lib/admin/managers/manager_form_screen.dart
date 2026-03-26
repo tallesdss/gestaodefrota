@@ -147,7 +147,7 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items.map((e) {
         return DropdownMenuItem<T>(
           value: e,

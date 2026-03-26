@@ -11,6 +11,9 @@ import '../../admin/drivers/driver_form_screen.dart';
 import '../../admin/managers/manager_list_screen.dart';
 import '../../admin/managers/manager_form_screen.dart';
 import '../../admin/users/registration_audit_screen.dart';
+import '../../admin/users/profile_screen.dart';
+import '../../admin/users/settings_screen.dart';
+import '../../admin/users/notifications_screen.dart';
 import '../../admin/contracts/contract_list_screen.dart';
 import '../../admin/contracts/contract_form_screen.dart';
 import '../../admin/maintenance/maintenance_list_screen.dart';
@@ -22,6 +25,7 @@ import '../../manager/widgets/manager_scaffold.dart';
 import '../../models/driver.dart';
 import '../../models/manager.dart';
 import '../../models/contract.dart';
+import '../../admin/vehicles/vehicle_form_screen.dart';
 
 class AppRoutes {
   static const String root = '/selection';
@@ -40,6 +44,10 @@ class AppRoutes {
   static const String adminMaintenanceList = '/admin/maintenance';
   static const String adminInspectionAudit = '/admin/inspections';
   static const String adminFinancialList = '/admin/financial';
+  static const String adminNotifications = '/admin/notifications';
+  static const String adminSettings = '/admin/settings';
+  static const String adminProfile = '/admin/profile';
+  static const String adminVehicleForm = '/admin/vehicles/form';
   static const String gestorDashboard = '/gestor/dashboard';
   static const String gestorFinancialList = '/gestor/financial';
   static const String gestorDriverList = '/gestor/drivers';
@@ -132,6 +140,22 @@ class AppRoutes {
           GoRoute(
             path: adminFinancialList,
             builder: (context, state) => const FinancialListScreen(),
+          ),
+          GoRoute(
+            path: adminNotifications,
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: adminSettings,
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: adminProfile,
+            builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: adminVehicleForm,
+            builder: (context, state) => const VehicleFormScreen(),
           ),
         ],
       ),

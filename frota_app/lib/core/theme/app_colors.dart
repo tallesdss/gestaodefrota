@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary
+  // Primary - Autoridade e Comando
   static const Color primary = Color(0xFF00236F);
   static const Color primaryContainer = Color(0xFF1E3A8A);
   static const Color onPrimary = Color(0xFFFFFFFF);
   
-  // Surfaces
-  static const Color surface = Color(0xFFF8F9FF);
-  static const Color surfaceContainerLow = Color(0xFFEFF4FF);
-  static const Color surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color surfaceContainerHigh = Color(0xFFDCE9FF);
+  // Secondary - Funcionalidade e Calma
+  static const Color secondary = Color(0xFF425E91);
+  static const Color secondaryContainer = Color(0xFFD7E2FF);
+  static const Color onSecondaryContainer = Color(0xFF001A40);
+  
+  // Surfaces - Filosofia de Camadas Tonais
+  static const Color surface = Color(0xFFF8F9FF); // Base canvas
+  static const Color surfaceContainerLow = Color(0xFFEFF4FF); // Logical groups
+  static const Color surfaceContainerLowest = Color(0xFFFFFFFF); // Interaction/Cards
+  static const Color surfaceContainerHigh = Color(0xFFDCE9FF); // Fly-outs/Tooltips
+  static const Color surfaceVariant = Color(0xFFE1E2EC); // Glassmorphism base
   
   // Content
-  static const Color onSurface = Color(0xFF0B1C30);
+  static const Color onSurface = Color(0xFF0B1C30); // Pure black is avoided
   static const Color onSurfaceVariant = Color(0xFF44474E); // Typo label color
   
-  // Functional
+  // Functional - Triggers e Alertas
   static const Color tertiary = Color(0xFF4B1C00); // Alerts (e.g. Brake Pad Wear)
   static const Color tertiaryContainer = Color(0xFFFFDBCA); // Light Orange for badges
   static const Color accent = Color(0xFFF5A623);   // Dashboard accent
@@ -28,12 +34,14 @@ class AppColors {
   // Variants
   static const Color outlineVariant = Color(0xFFC5C5D3);
   
-  // Gradients
+  // Ambient Shadows
+  static Color get ambientShadow => onSurface.withValues(alpha: 0.06);
+  
+  // Gradients - The "Glass & Gradient" Rule
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primary, primaryContainer],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     stops: [0.0, 1.0],
-    transform: GradientRotation(2.35619), // 135 degrees
   );
 }

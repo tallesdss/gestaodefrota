@@ -19,7 +19,6 @@ class ContractFormScreen extends StatefulWidget {
 class _ContractFormScreenState extends State<ContractFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final MockRepository _repository = MockRepository();
-  final _formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   List<Vehicle> _vehicles = [];
   List<Driver> _drivers = [];
@@ -110,7 +109,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                       const SizedBox(height: AppSpacing.md),
                       _buildDropdown<String>(
                         label: 'Tipo de Contrato',
-                        value: _selectedType,
+                        initialValue: _selectedType,
                         items: ['UBER', 'PREFEITURA'],
                         onChanged: (val) => setState(() => _selectedType = val!),
                       ),
@@ -129,7 +128,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                       const SizedBox(height: AppSpacing.md),
                       _buildDropdown<ContractStatus>(
                         label: 'Status do Contrato',
-                        value: _selectedStatus,
+                        initialValue: _selectedStatus,
                         items: ContractStatus.values,
                         onChanged: (val) => setState(() => _selectedStatus = val!),
                       ),
@@ -187,7 +186,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
 
   Widget _buildVehicleDropdown() {
     return DropdownButtonFormField<String>(
-      value: _selectedVehicleId,
+      initialValue: _selectedVehicleId,
       hint: const Text('Selecione um Veículo'),
       items: _vehicles.map((v) {
         return DropdownMenuItem<String>(
@@ -202,7 +201,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
 
   Widget _buildDriverDropdown() {
     return DropdownButtonFormField<String>(
-      value: _selectedDriverId,
+      initialValue: _selectedDriverId,
       hint: const Text('Selecione um Motorista'),
       items: _drivers.map((d) {
         return DropdownMenuItem<String>(
@@ -244,12 +243,12 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
 
   Widget _buildDropdown<T>({
     required String label,
-    required T value,
+    required T initialValue,
     required List<T> items,
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      initialValue: value,
+      initialValue: initialValue,
       items: items.map((e) {
         return DropdownMenuItem<T>(
           value: e,
