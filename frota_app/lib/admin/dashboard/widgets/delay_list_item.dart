@@ -35,13 +35,40 @@ class DelayListItem extends StatelessWidget {
       child: Row(
         children: [
           // Car Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
-              width: 50,
-              height: 40,
-              fit: BoxFit.cover,
+          SizedBox(
+            width: 50,
+            height: 40,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: AppColors.surfaceContainerHigh,
+                    child: const Icon(
+                      Icons.directions_car,
+                      size: 20,
+                      color: AppColors.outlineVariant,
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: AppColors.surfaceContainerHigh,
+                    child: const Center(
+                      child: SizedBox(
+                        width: 15,
+                        height: 15,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -56,19 +83,30 @@ class DelayListItem extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: AppColors.primaryContainer,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2),
                 Row(
                   children: [
-                    Text(
-                      'Placa: $plate • ',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                    Flexible(
+                      child: Text(
+                        'Placa: $plate • ',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Text(
-                      'Cliente: $client',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.onSurfaceVariant,
+                    Flexible(
+                      child: Text(
+                        'Cliente: $client',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -76,10 +114,11 @@ class DelayListItem extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.xl),
+          const SizedBox(width: AppSpacing.md),
           // Value & Delay
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 value,
@@ -98,9 +137,11 @@ class DelayListItem extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(width: AppSpacing.lg),
+          const SizedBox(width: AppSpacing.md),
           IconButton(
             onPressed: onTap,
+            constraints: const BoxConstraints(),
+            padding: const EdgeInsets.all(AppSpacing.xs),
             icon: const Icon(
               Icons.send_outlined,
               color: AppColors.outlineVariant,

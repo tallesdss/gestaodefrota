@@ -202,7 +202,7 @@ class _RecentDelaysSection extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           DelayListItem(
-            imageUrl: 'https://img.freepik.com/fotos-premium/carro-branco-elegante-sobre-fundo-branco-isolado-em-fundo-branco-com-reflexo-sob-o-carro-generative-ai_438099-22341.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=200&auto=format&fit=crop',
             model: 'Volkswagen Virtus 2023',
             plate: 'ABC-1D23',
             client: 'João Silva',
@@ -211,7 +211,7 @@ class _RecentDelaysSection extends StatelessWidget {
             onTap: () {},
           ),
           DelayListItem(
-            imageUrl: 'https://img.freepik.com/fotos-premium/carro-sedan-preto-compacto-carro-sedan-preto-compacto-em-fundo-branco_1082121-654.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1550355291-bbee04a92027?q=80&w=200&auto=format&fit=crop',
             model: 'Chevrolet Onix Turbo',
             plate: 'XYZ-9A87',
             client: 'Maria Oliveira',
@@ -220,7 +220,7 @@ class _RecentDelaysSection extends StatelessWidget {
             onTap: () {},
           ),
           DelayListItem(
-            imageUrl: 'https://img.freepik.com/fotos-premium/carro-sedan-preto-compacto-carro-sedan-preto-compacto-em-fundo-branco_1082121-654.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=200&auto=format&fit=crop',
             model: 'Fiat Cronos Precision',
             plate: 'FGH-5J44',
             client: 'Pedro Santos',
@@ -229,7 +229,7 @@ class _RecentDelaysSection extends StatelessWidget {
             onTap: () {},
           ),
           DelayListItem(
-            imageUrl: 'https://img.freepik.com/premium-photo/modern-subcompact-city-car_244243-233.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=200&auto=format&fit=crop',
             model: 'Renault Kwid Zen',
             plate: 'QWE-2R34',
             client: 'Carla Dias',
@@ -238,7 +238,7 @@ class _RecentDelaysSection extends StatelessWidget {
             onTap: () {},
           ),
           DelayListItem(
-            imageUrl: 'https://img.freepik.com/premium-photo/compact-red-car_244243-228.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1542362567-b055034193b4?q=80&w=200&auto=format&fit=crop',
             model: 'Toyota Corolla XEi',
             plate: 'TYU-0P12',
             client: 'Roberto Lima',

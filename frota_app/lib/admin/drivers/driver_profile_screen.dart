@@ -5,6 +5,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/app_dialogs.dart';
 import '../../core/repositories/mock_repository.dart';
 import '../../models/driver.dart';
 import '../../models/vehicle.dart';
@@ -152,6 +153,25 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               ],
             ),
           ),
+          const SizedBox(width: AppSpacing.lg),
+          OutlinedButton.icon(
+            onPressed: () {
+              // TODO: Implement edit functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Funcionalidade de edição em desenvolvimento...')),
+              );
+            },
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: const Text('EDITAR PERFIL'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              side: const BorderSide(color: AppColors.outlineVariant),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              foregroundColor: AppColors.primary,
+            ),
+          ),
         ],
       ),
     );
@@ -272,38 +292,159 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           spacing: AppSpacing.md,
           runSpacing: AppSpacing.md,
           children: [
-            _buildDocItem('CNH Digital', Icons.badge_outlined),
-            _buildDocItem('Comprovante Residência', Icons.home_outlined),
-            _buildDocItem('Contrato Assinado', Icons.description_outlined),
-            _buildDocItem('Termos de Uso', Icons.gavel_outlined),
+            _buildDocItem(
+              'CNH Digital', 
+              Icons.badge_outlined,
+              onTap: () => _showDocumentDialog(
+                'CNH Digital',
+                'https://images.unsplash.com/photo-1633113088453-125367b49ca4?q=80&w=800&auto=format&fit=crop',
+                isEditable: true,
+              ),
+            ),
+            _buildDocItem(
+              'Comprovante Residência', 
+              Icons.home_outlined,
+              onTap: () => _showDocumentDialog(
+                'Comprovante Residência',
+                'https://images.unsplash.com/photo-1586769852836-bc069f19e1b6?q=80&w=800&auto=format&fit=crop',
+                isEditable: true,
+              ),
+            ),
+            _buildDocItem(
+              'Contrato Assinado', 
+              Icons.description_outlined,
+              onTap: null, // Futuro
+            ),
+            _buildDocItem(
+              'Termos de Uso', 
+              Icons.gavel_outlined,
+              onTap: () => _showTermsOfUseDialog(),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildDocItem(String label, IconData icon) {
-    return Container(
-      width: (MediaQuery.of(context).size.width - (AppSpacing.xl * 2) - AppSpacing.md) / 2,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
+  Widget _buildDocItem(String label, IconData icon, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: (MediaQuery.of(context).size.width - (AppSpacing.xl * 2) - AppSpacing.md) / 2,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon, 
+              color: onTap != null ? AppColors.primary : AppColors.outlineVariant, 
+              size: 20,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: onTap != null ? AppColors.onSurface : AppColors.outlineVariant,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (onTap != null)
+              const Icon(Icons.open_in_new, size: 14, color: AppColors.outlineVariant),
+          ],
+        ),
       ),
-      child: Row(
+    );
+  }
+
+  void _showDocumentDialog(String title, String imageUrl, {bool isEditable = false}) {
+    AppDialogs.showModal(
+      context: context,
+      title: title,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.primary, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              label,
-              style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              color: AppColors.surfaceContainerLow,
+              child: Image.network(
+                imageUrl,
+                height: 300,
+                width: double.infinity,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Icon(Icons.broken_image_outlined, size: 48, color: AppColors.outlineVariant),
+                  ),
+                ),
+              ),
             ),
           ),
-          const Icon(Icons.open_in_new, size: 14, color: AppColors.outlineVariant),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Arquivo visualizado em modo de conferência. Certifique-se da validade das informações.',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
+      actions: [
+        if (isEditable)
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Selecione um novo arquivo para substituir...')),
+              );
+            },
+            icon: const Icon(Icons.upload_file_rounded),
+            label: const Text('Substituir'),
+          ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.onPrimary,
+          ),
+          child: const Text('Fechar'),
+        ),
+      ],
+    );
+  }
+
+  void _showTermsOfUseDialog() {
+    AppDialogs.showModal(
+      context: context,
+      title: 'Termos de Uso',
+      content: SizedBox(
+        height: 300,
+        child: SingleChildScrollView(
+          child: Text(
+            'Ao utilizar a plataforma Architect Fleet, o motorista concorda com os seguintes termos:\n\n'
+            '1. Responsabilidade pelo Veículo: O motorista é integralmente responsável pela conservação, limpeza e manutenção básica do veículo locado.\n\n'
+            '2. Pagamentos e Repasses: As mensalidades e seguros devem ser quitados rigorosamente nas datas previstas no contrato de locação.\n\n'
+            '3. Uso do Aplicativo: O motorista compromete-se a manter seus dados cadastrais, documentos e vistorias sempre atualizados.\n\n'
+            '4. Conduta Ética: Espera-se do motorista uma conduta profissional e respeitosa com os gestores e demais usuários da rede.\n\n'
+            '5. Monitoramento: O veículo poderá estar equipado com dispositivos de telemetria e geolocalização para fins de segurança e gestão de frota.\n\n'
+            'Qualquer violação destes termos poderá resultar no bloqueio de acesso ao sistema e rescisão contratual.',
+            style: AppTextStyles.bodyMedium,
+          ),
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Estou de acordo'),
+        ),
+      ],
     );
   }
 
