@@ -44,7 +44,7 @@ class DashboardCtaCard extends StatelessWidget {
           Text(
             description,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: isSecondary ? AppColors.onSurfaceVariant : AppColors.onPrimary.withOpacity(0.8),
+              color: isSecondary ? AppColors.onSurfaceVariant : AppColors.onPrimary.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -70,7 +70,7 @@ class DashboardCtaCard extends StatelessWidget {
               if (icon != null)
                 Icon(
                   icon,
-                  color: isSecondary ? AppColors.onSurface.withOpacity(0.05) : AppColors.onPrimary.withOpacity(0.1),
+                  color: isSecondary ? AppColors.onSurface.withValues(alpha: 0.05) : AppColors.onPrimary.withValues(alpha: 0.1),
                   size: 64,
                 ),
             ],

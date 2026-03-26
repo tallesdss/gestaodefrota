@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/routes/app_routes.dart';
 import 'widgets/kpi_card.dart';
 import 'widgets/delay_list_item.dart';
 import 'widgets/fleet_status_chart.dart';

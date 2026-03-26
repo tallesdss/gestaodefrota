@@ -3,7 +3,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/repositories/mock_repository.dart';
-import '../../models/driver.dart';
 import '../../core/widgets/status_badge.dart';
 
 class RegistrationAuditScreen extends StatefulWidget {
@@ -97,7 +96,7 @@ class _RegistrationAuditScreenState extends State<RegistrationAuditScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.between,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Pendente Aprovação',
@@ -247,7 +246,7 @@ class _RegistrationAuditScreenState extends State<RegistrationAuditScreen> {
                       border: Border.all(color: AppColors.surfaceContainerLowest, width: 4),
                       image: user.avatarUrl.isNotEmpty ? DecorationImage(image: NetworkImage(user.avatarUrl), fit: BoxFit.cover) : null,
                     ),
-                    child: user.avatarUrl.isEmpty ? Center(child: Text(user.name[0], style: AppTextStyles.headlineMedium.copyWith(color: AppColors.primary))) : null,
+                    child: user.avatarUrl.isEmpty ? Center(child: Text(user.name[0], style: AppTextStyles.headlineLarge.copyWith(color: AppColors.primary))) : null,
                   ),
                   const SizedBox(width: AppSpacing.xl),
                   Column(

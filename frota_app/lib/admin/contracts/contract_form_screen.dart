@@ -138,7 +138,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                         title: Text('Caução Pago?', style: AppTextStyles.labelLarge),
                         value: _depositPaid,
                         onChanged: (val) => setState(() => _depositPaid = val),
-                        activeColor: AppColors.primary,
+                        activeThumbColor: AppColors.primary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         contentPadding: EdgeInsets.zero,
                       ),
@@ -249,7 +249,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items.map((e) {
         return DropdownMenuItem<T>(
           value: e,
