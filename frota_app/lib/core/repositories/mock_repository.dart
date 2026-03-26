@@ -64,4 +64,9 @@ class MockRepository {
     await Future.delayed(const Duration(milliseconds: 500));
     return mockFinancialEntries;
   }
+
+  Future<List<FinancialEntry>> getFinancialEntriesByVehicle(String vehicleId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return mockFinancialEntries.where((f) => f.vehicleId == vehicleId).toList();
+  }
 }

@@ -68,8 +68,8 @@ Elementos voltados para representação do usuário e segurança.
 ## 🛠️ 5. Componentes de Administração (Auditoria & Controle)
 Ferramentas específicas para o Admin e Gestor.
 
-- [ ] **AuditTimeline:** Linha do tempo visual para histórico de atividades e vistorias.
-- [ ] **StatusIndicator:** Pequenos indicadores circulares (dot) com pulsação para status real-time.
+- [x] **AuditTimeline (Histórico de Uso):** Linha do tempo visual integrada para controle de atribuições.
+- [x] **StatusIndicator:** Implementado via `StatusBadge` com cores semânticas (Active, Neutral, Error).
 - [ ] **MetricBentoGrid:** Layout de grid (estilo Apple/Bento) para métricas do dashboard.
 - [ ] **PermissionChip:** Badge interativo para gerenciar permissões de usuários.
 - [ ] **VehicleTypeIcon:** Set de ícones customizados para diferentes tipos de veículos.
@@ -85,9 +85,21 @@ Status das interfaces que devem ser criadas/refinadas com base nos gatilhos acim
     - [ ] **Precisa:** Skeletons de Carregamento (Shimmer).
 - [ ] **Página de Notificações** (Trigger: Sino/Header).
 - [ ] **Página de Configurações** (Trigger: Engrenagem/Header).
-- [ ] **Gestão de Veículos**
+- [x] **Gestão de Veículos (Refatoração Premium)**
+    - [x] **Página de Detalhes do Veículo:** Implementada com arquitetura de alta densidade.
+        - [x] **Seção de Motorista:** Identificação do condutor atual e data de vínculo.
+        - [x] **Controle de KM:** Exibição da última leitura, data/hora e valor anterior.
+        - [x] **Vencimento de Documentos:** Monitoramento visual de IPVA, Seguro e Licenciamento.
+        - [x] **Resumo Financeiro:** Integração de Ganhos, Gastos e Multas vinculadas ao veículo.
+        - [x] **Histórico de Uso:** Timeline completa de motoristas e períodos de vinculação.
+        - [x] **Interface de Edição:** Implementado sistema de modais (AppDialogs) para todas as seções:
+            - [x] **Editar Info:** Marca, Modelo, Placa, Ano, Cor.
+            - [x] **Editar Foto:** Atualização via URL com preview em tempo real.
+            - [x] **Vincular Motorista:** Seleção dinâmica a partir da lista de motoristas cadastrados.
+            - [x] **Datas Doc:** Atualização de vencimentos via DatePicker.
+            - [x] **Financeiro:** Lançamento rápido e edição individual (ícone de lápis) para Despesas, Ganhos e Multas.
     - [ ] **Precisa:** Carousel de fotos do veículo com zoom.
-    - [ ] **Precisa:** Badge de Status em tempo real (Pulsante).
+    - [x] **Badge de Status:** Implementado com `StatusBadge` e cores semânticas.
 - [ ] **Módulo Financeiro**
     - [x] Exportação de Relatórios (PDF).
     - [ ] **Precisa:** Modal de Detalhes da Transação ao clicar em linha da tabela.

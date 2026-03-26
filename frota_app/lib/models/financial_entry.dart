@@ -53,4 +53,28 @@ class FinancialEntry {
       'isPaid': isPaid,
     };
   }
+
+  FinancialEntry copyWith({
+    String? id,
+    FinancialType? type,
+    String? category,
+    String? vehicleId,
+    String? driverId,
+    double? amount,
+    DateTime? date,
+    String? description,
+    bool? isPaid,
+  }) {
+    return FinancialEntry(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      category: category ?? this.category,
+      vehicleId: vehicleId ?? this.vehicleId,
+      driverId: driverId ?? this.driverId,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      description: description ?? this.description,
+      isPaid: isPaid ?? this.isPaid,
+    );
+  }
 }

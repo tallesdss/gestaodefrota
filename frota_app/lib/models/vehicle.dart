@@ -9,6 +9,50 @@ enum ContractType {
   prefecture 
 }
 
+class VehicleUsage {
+  final String driverId;
+  final String driverName;
+  final DateTime startDate;
+  final DateTime? endDate;
+  final int startKm;
+  final int? endKm;
+  final String purpose;
+
+  VehicleUsage({
+    required this.driverId,
+    required this.driverName,
+    required this.startDate,
+    this.endDate,
+    required this.startKm,
+    this.endKm,
+    required this.purpose,
+  });
+
+  factory VehicleUsage.fromMap(Map<String, dynamic> map) {
+    return VehicleUsage(
+      driverId: map['driverId'],
+      driverName: map['driverName'],
+      startDate: DateTime.parse(map['startDate']),
+      endDate: map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
+      startKm: map['startKm'],
+      endKm: map['endKm'],
+      purpose: map['purpose'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'driverId': driverId,
+      'driverName': driverName,
+      'startDate': startDate.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'startKm': startKm,
+      'endKm': endKm,
+      'purpose': purpose,
+    };
+  }
+}
+
 class Vehicle {
   final String id;
   final String plate;
@@ -24,6 +68,13 @@ class Vehicle {
   final DateTime ipvaExpiry;
   final DateTime insuranceExpiry;
   final DateTime licensingExpiry;
+  
+  // New fields
+  final String? currentDriverId;
+  final String? currentDriverName;
+  final DateTime? lastKmUpdateDate;
+  final int? lastKmValue;
+  final List<VehicleUsage> usageHistory;
 
   Vehicle({
     required this.id,
@@ -40,6 +91,11 @@ class Vehicle {
     required this.ipvaExpiry,
     required this.insuranceExpiry,
     required this.licensingExpiry,
+    this.currentDriverId,
+    this.currentDriverName,
+    this.lastKmUpdateDate,
+    this.lastKmValue,
+    this.usageHistory = const [],
   });
 
   factory Vehicle.fromMap(Map<String, dynamic> map) {
@@ -58,6 +114,11 @@ class Vehicle {
       ipvaExpiry: DateTime.parse(map['ipvaExpiry']),
       insuranceExpiry: DateTime.parse(map['insuranceExpiry']),
       licensingExpiry: DateTime.parse(map['licensingExpiry']),
+      currentDriverId: map['currentDriverId'],
+      currentDriverName: map['currentDriverName'],
+      lastKmUpdateDate: map['lastKmUpdateDate'] != null ? DateTime.parse(map['lastKmUpdateDate']) : null,
+      lastKmValue: map['lastKmValue'],
+      usageHistory: (map['usageHistory'] as List? ?? []).map((e) => VehicleUsage.fromMap(e)).toList(),
     );
   }
 
@@ -77,6 +138,54 @@ class Vehicle {
       'ipvaExpiry': ipvaExpiry.toIso8601String(),
       'insuranceExpiry': insuranceExpiry.toIso8601String(),
       'licensingExpiry': licensingExpiry.toIso8601String(),
+      'currentDriverId': currentDriverId,
+      'currentDriverName': currentDriverName,
+      'lastKmUpdateDate': lastKmUpdateDate?.toIso8601String(),
+      'lastKmValue': lastKmValue,
+      'usageHistory': usageHistory.map((e) => e.toMap()).toList(),
     };
+  }
+  Vehicle copyWith({
+    String? id,
+    String? plate,
+    String? brand,
+    String? model,
+    int? year,
+    String? color,
+    VehicleStatus? status,
+    int? currentKm,
+    double? fuelLevel,
+    ContractType? contractType,
+    String? imageUrl,
+    DateTime? ipvaExpiry,
+    DateTime? insuranceExpiry,
+    DateTime? licensingExpiry,
+    String? currentDriverId,
+    String? currentDriverName,
+    DateTime? lastKmUpdateDate,
+    int? lastKmValue,
+    List<VehicleUsage>? usageHistory,
+  }) {
+    return Vehicle(
+      id: id ?? this.id,
+      plate: plate ?? this.plate,
+      brand: brand ?? this.brand,
+      model: model ?? this.model,
+      year: year ?? this.year,
+      color: color ?? this.color,
+      status: status ?? this.status,
+      currentKm: currentKm ?? this.currentKm,
+      fuelLevel: fuelLevel ?? this.fuelLevel,
+      contractType: contractType ?? this.contractType,
+      imageUrl: imageUrl ?? this.imageUrl,
+      ipvaExpiry: ipvaExpiry ?? this.ipvaExpiry,
+      insuranceExpiry: insuranceExpiry ?? this.insuranceExpiry,
+      licensingExpiry: licensingExpiry ?? this.licensingExpiry,
+      currentDriverId: currentDriverId ?? this.currentDriverId,
+      currentDriverName: currentDriverName ?? this.currentDriverName,
+      lastKmUpdateDate: lastKmUpdateDate ?? this.lastKmUpdateDate,
+      lastKmValue: lastKmValue ?? this.lastKmValue,
+      usageHistory: usageHistory ?? this.usageHistory,
+    );
   }
 }
