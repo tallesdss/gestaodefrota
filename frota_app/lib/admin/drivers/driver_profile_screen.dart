@@ -145,7 +145,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     const SizedBox(width: AppSpacing.sm),
                     StatusBadge(
                       label: _driver!.type.name.toUpperCase(),
-                      type: BadgeType.secondary,
+                      type: BadgeType.neutral,
                     ),
                   ],
                 ),
@@ -168,7 +168,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             Expanded(
               child: StatCard(
                 title: 'TOTAL RENDIDO',
-                value: 'R$ 12.450,00',
+                value: 'R\$ 12.450,00',
                 icon: Icons.payments_outlined,
                 iconColor: AppColors.success,
               ),
@@ -177,7 +177,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             Expanded(
               child: StatCard(
                 title: 'SALDO DEVEDOR',
-                value: 'R$ 450,00',
+                value: 'R\$ 450,00',
                 icon: Icons.warning_amber_rounded,
                 iconColor: AppColors.error,
               ),
@@ -255,7 +255,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             child: Text(
               'Nenhum veículo vinculado atualmente',
               style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
-              textAlign: Center,
+              textAlign: TextAlign.center,
             ),
           ),
       ],
@@ -310,8 +310,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   Widget _buildActivityTimeline() {
     final activities = [
       {'date': '25/03/2026', 'title': 'Troca de Óleo Realizada', 'desc': 'Veículo: ${_currentVehicle?.model ?? "N/A"}'},
-      {'date': '12/03/2026', 'title': 'Novo Veículo Vinculado', 'desc': '${_currentVehicle?.brand} ${_currentVehicle?.model}'},
-      {'date': '01/03/2026', 'title': 'Pagamento Mensalidade', 'desc': 'Referente a Fevereiro - R$ 2.400,00'},
+      {'date': '12/03/2026', 'title': 'Novo Veículo Vinculado', 'desc': '${_currentVehicle?.brand ?? ""} ${_currentVehicle?.model ?? ""}'},
+      {'date': '01/03/2026', 'title': 'Pagamento Mensalidade', 'desc': 'Referente a Fevereiro - R\$ 2.400,00'},
     ];
 
     return Column(
@@ -319,7 +319,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       children: [
         const SectionHeader(title: 'LINHA DO TEMPO'),
         const SizedBox(height: AppSpacing.md),
-        ...activities.map((a) => _buildTimelineItem(a['date']!, a['title']!, a['desc']!)).toList(),
+        ...activities.map((a) => _buildTimelineItem(a['date']!, a['title']!, a['desc']!)),
       ],
     );
   }
@@ -415,7 +415,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               ),
             ],
           ),
-        )).toList(),
+        )),
       ],
     );
   }
