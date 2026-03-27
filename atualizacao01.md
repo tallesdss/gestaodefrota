@@ -105,9 +105,9 @@ Status das interfaces que devem ser criadas/refinadas com base nos gatilhos acim
     - [x] **Lista de Motoristas:** Visualização otimizada com fotos em destaque e bordas dinâmicas.
     - [x] **Filtros por Cidade:** Implementado dropdown dinâmico baseado na base de dados.
     - [x] **Status de Vínculo:** Indicadores visuais imediatos (ícone + badge) para motoristas com/sem carro.
-            - [x] **Datas Doc:** Atualização de vencimentos via DatePicker.
-            - [x] **Financeiro:** Lançamento rápido e edição individual (ícone de lápis) para Despesas, Ganhos e Multas.
-    - [ ] **Precisa:** Carousel de fotos do veículo com zoom.
+    - [x] **Edit Profile Component:** Implementado modal funcional com campos de dados pessoais, CNH e localidade.
+    - [x] **Datas Doc:** Atualização de vencimentos via DatePicker.
+    - [x] **Financeiro:** Lançamento rápido e edição individual (ícone de lápis) para Despesas, Ganhos e Multas.
     - [x] **Badge de Status:** Implementado com `StatusBadge` e cores semânticas.
 - [ ] **Módulo Financeiro**
     - [x] Exportação de Relatórios (PDF).
