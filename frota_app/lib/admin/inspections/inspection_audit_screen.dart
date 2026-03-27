@@ -18,8 +18,11 @@ class InspectionAuditScreen extends StatefulWidget {
 class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
   final MockRepository _repository = MockRepository();
   List<Inspection> _inspections = [];
+  List<Inspection> _filteredInspections = [];
   Map<String, Driver> _driverMap = {};
   Map<String, Vehicle> _vehicleMap = {};
+  List<String> _cities = ['Todas'];
+  String _selectedCity = 'Todas';
   bool _isLoading = true;
 
   @override
@@ -35,9 +38,26 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
     
     setState(() {
       _inspections = inspections;
+      _filteredInspections = inspections;
       _driverMap = {for (var d in drivers) d.id: d};
       _vehicleMap = {for (var v in vehicles) v.id: v};
+      
+      _cities = ['Todas', ...drivers.map((d) => d.city).whereType<String>().toSet()];
       _isLoading = false;
+    });
+  }
+
+  void _applyFilter(String city) {
+    setState(() {
+      _selectedCity = city;
+      if (city == 'Todas') {
+        _filteredInspections = _inspections;
+      } else {
+        _filteredInspections = _inspections.where((ins) {
+          final driver = _driverMap[ins.driverId];
+          return driver?.city == city;
+        }).toList();
+      }
     });
   }
 
@@ -56,14 +76,51 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: ListView.builder(
-                itemCount: _inspections.length,
-                itemBuilder: (context, index) {
-                  final inspection = _inspections[index];
-                  final driver = _driverMap[inspection.driverId];
-                  final vehicle = _vehicleMap[inspection.vehicleId];
+          : Column(
+              children: [
+                // Filter Bar
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'FILTRAR POR CIDADE:',
+                          style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedCity,
+                            items: _cities.map((city) {
+                              return DropdownMenuItem(
+                                value: city,
+                                child: Text(city, style: AppTextStyles.bodySmall),
+                              );
+                            }).toList(),
+                            onChanged: (val) => _applyFilter(val!),
+                            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                    child: ListView.builder(
+                      itemCount: _filteredInspections.length,
+                      itemBuilder: (context, index) {
+                        final inspection = _filteredInspections[index];
+                        final driver = _driverMap[inspection.driverId];
+                        final vehicle = _vehicleMap[inspection.vehicleId];
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -179,6 +236,8 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                 },
               ),
             ),
+          ],
+        ),
     );
   }
 
