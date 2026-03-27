@@ -70,7 +70,7 @@ Ferramentas específicas para o Admin e Gestor.
 
 - [x] **AuditTimeline (Histórico de Uso):** Linha do tempo visual integrada para controle de atribuições.
 - [x] **StatusIndicator:** Implementado via `StatusBadge` com cores semânticas (Active, Neutral, Error).
-- [ ] **MetricBentoGrid:** Layout de grid (estilo Apple/Bento) para métricas do dashboard.
+- [x] **MetricBentoGrid:** Layout de grid (estilo Apple/Bento) para métricas e navegação do dashboard.
 - [ ] **PermissionChip:** Badge interativo para gerenciar permissões de usuários.
 - [ ] **VehicleTypeIcon:** Set de ícones customizados para diferentes tipos de veículos.
 
@@ -80,7 +80,9 @@ Ferramentas específicas para o Admin e Gestor.
 Status das interfaces que devem ser criadas/refinadas com base nos gatilhos acima.
 
 ### 👑 Módulos do Administrador
-- [ ] **Dashboard Principal**
+- [x] **Dashboard Principal**
+    - [x] **Implementado:** Quick Actions Row para gatilhos rápidos (Add Veículo, Motorista, Suporte).
+    - [x] **Implementado:** Module Navigation Grid (Bento Style) para navegação intuitiva entre todos os módulos.
     - [ ] **Precisa:** Modal de Busca Global (Trigger: Lupa/Header).
     - [ ] **Precisa:** Skeletons de Carregamento (Shimmer).
 - [ ] **Página de Notificações** (Trigger: Sino/Header).
@@ -105,6 +107,9 @@ Status das interfaces que devem ser criadas/refinadas com base nos gatilhos acim
     - [ ] **Precisa:** Modal de Detalhes da Transação ao clicar em linha da tabela.
 - [ ] **Auditoria de Cadastro**
     - [ ] **Precisa:** Modal de Justificativa para Recusas.
+- [x] **Integração de Navegação (Dashboard):**
+    - [x] Link "Ver Financeiro Completo" conectado ao Módulo Financeiro.
+    - [x] Lista de "Atrasos Recentes" conectada aos Detalhes do Veículo.
 
 ### 🚗 Módulos do Motorista (Foco Mobile)
 - [ ] **Check-in / Check-out:** Com interface de câmera customizada.

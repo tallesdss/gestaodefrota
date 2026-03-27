@@ -6,6 +6,10 @@ import 'widgets/kpi_card.dart';
 import 'widgets/delay_list_item.dart';
 import 'widgets/fleet_status_chart.dart';
 import 'widgets/dashboard_cta_card.dart';
+import 'widgets/quick_action_button.dart';
+import 'widgets/module_nav_card.dart';
+import '../../core/routes/app_routes.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -104,6 +108,117 @@ class AdminDashboardScreen extends StatelessWidget {
         
         const SizedBox(height: AppSpacing.xl),
         
+        const SizedBox(height: AppSpacing.xl),
+        
+        // Quick Actions Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            QuickActionButton(
+              icon: Icons.add_circle_outline,
+              label: 'Add Veículo',
+              onTap: () => context.go(AppRoutes.adminVehicleForm),
+            ),
+            QuickActionButton(
+              icon: Icons.person_add_outlined,
+              label: 'Add Motorista',
+              onTap: () => context.go(AppRoutes.adminDriverForm),
+            ),
+            QuickActionButton(
+              icon: Icons.fact_check_outlined,
+              label: 'Auditoria',
+              onTap: () => context.go(AppRoutes.adminRegistrationAudit),
+            ),
+            QuickActionButton(
+              icon: Icons.payments_outlined,
+              label: 'Novo Lançamento',
+              onTap: () => context.go(AppRoutes.adminFinancialList),
+            ),
+            QuickActionButton(
+              icon: Icons.notifications_outlined,
+              label: 'Notificações',
+              onTap: () => context.go(AppRoutes.adminNotifications),
+            ),
+            QuickActionButton(
+              icon: Icons.tune_outlined,
+              label: 'Ajustes',
+              onTap: () => context.go(AppRoutes.adminSettings),
+            ),
+            QuickActionButton(
+              icon: Icons.support_agent_outlined,
+              label: 'Suporte',
+              onTap: () => _showSupportModal(context),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: AppSpacing.xl),
+        
+        // Module Navigation Grid (Bento Style)
+        Text(
+          'Módulos do Sistema',
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontSize: 20,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 3,
+          mainAxisSpacing: AppSpacing.md,
+          crossAxisSpacing: AppSpacing.md,
+          childAspectRatio: 1.6,
+          children: [
+            ModuleNavCard(
+              title: 'Gestão de Veículos',
+              description: 'Controle de frota, documentação e status.',
+              icon: Icons.directions_car_outlined,
+              onTap: () => context.go(AppRoutes.adminVehicleList),
+              color: Colors.indigo,
+            ),
+            ModuleNavCard(
+              title: 'Financeiro',
+              description: 'Ganhos, gastos e relatórios mensais.',
+              icon: Icons.account_balance_wallet_outlined,
+              onTap: () => context.go(AppRoutes.adminFinancialList),
+              color: Colors.green,
+            ),
+             ModuleNavCard(
+              title: 'Motoristas',
+              description: 'Perfis, CNH e histórico de aluguéis.',
+              icon: Icons.person_search_outlined,
+              onTap: () => context.go(AppRoutes.adminDriverList),
+              color: Colors.blueAccent,
+            ),
+            ModuleNavCard(
+              title: 'Auditoria de Cadastro',
+              description: 'Validar documentos e perfis pendentes.',
+              icon: Icons.fact_check_outlined,
+              onTap: () => context.go(AppRoutes.adminRegistrationAudit),
+              color: Colors.orange,
+            ),
+            ModuleNavCard(
+              title: 'Vistorias & Check-ins',
+              description: 'Histórico de estados de entrada e saída.',
+              icon: Icons.task_outlined,
+              onTap: () => context.go(AppRoutes.adminInspectionAudit),
+              color: Colors.purple,
+            ),
+            ModuleNavCard(
+              title: 'Plano de Manutenção',
+              description: 'Previsão de revisões e alertas de peças.',
+              icon: Icons.handyman_outlined,
+              onTap: () => context.go(AppRoutes.adminMaintenanceList),
+              color: Colors.redAccent,
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppSpacing.xl),
+        
         // Middle Section: Status Chart + Recent Delays
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,6 +268,62 @@ class AdminDashboardScreen extends StatelessWidget {
       ],
     );
   }
+
+  void _showSupportModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Text(
+              'Suporte Premium',
+              style: AppTextStyles.headlineSmall.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text(
+              'Como podemos ajudar você hoje? Nossa equipe está online para orientar sua gestão.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            ListTile(
+              leading: const Icon(Icons.support_agent_outlined, color: AppColors.primary),
+              title: const Text('Consultor Especialista'),
+              subtitle: const Text('Sessão técnica de 15 min'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.chat_outlined, color: AppColors.primary),
+              title: const Text('Chat em Tempo Real'),
+              subtitle: const Text('Resposta em até 2 min'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+              onTap: () {},
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _RecentDelaysSection extends StatelessWidget {
@@ -189,7 +360,7 @@ class _RecentDelaysSection extends StatelessWidget {
                 ],
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () => context.go(AppRoutes.adminFinancialList),
                 child: Text(
                   'Ver Financeiro Completo',
                   style: AppTextStyles.labelMedium.copyWith(
@@ -208,7 +379,7 @@ class _RecentDelaysSection extends StatelessWidget {
             client: 'João Silva',
             value: 'R\$ 1.250,00',
             delay: '3 dias de atraso',
-            onTap: () {},
+            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '1')),
           ),
           DelayListItem(
             imageUrl: 'https://images.unsplash.com/photo-1550355291-bbee04a92027?q=80&w=200&auto=format&fit=crop',
@@ -217,7 +388,7 @@ class _RecentDelaysSection extends StatelessWidget {
             client: 'Maria Oliveira',
             value: 'R\$ 890,00',
             delay: '2 dias de atraso',
-            onTap: () {},
+            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '2')),
           ),
           DelayListItem(
             imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=200&auto=format&fit=crop',
@@ -226,7 +397,7 @@ class _RecentDelaysSection extends StatelessWidget {
             client: 'Pedro Santos',
             value: 'R\$ 1.100,00',
             delay: '1 dia de atraso',
-            onTap: () {},
+            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '3')),
           ),
           DelayListItem(
             imageUrl: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=200&auto=format&fit=crop',
@@ -235,7 +406,7 @@ class _RecentDelaysSection extends StatelessWidget {
             client: 'Carla Dias',
             value: 'R\$ 560,00',
             delay: '5 dias de atraso',
-            onTap: () {},
+            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '4')),
           ),
           DelayListItem(
             imageUrl: 'https://images.unsplash.com/photo-1542362567-b055034193b4?q=80&w=200&auto=format&fit=crop',
@@ -244,7 +415,7 @@ class _RecentDelaysSection extends StatelessWidget {
             client: 'Roberto Lima',
             value: 'R\$ 2.450,00',
             delay: '2 dias de atraso',
-            onTap: () {},
+            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '5')),
           ),
         ],
       ),
