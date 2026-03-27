@@ -236,8 +236,9 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                 },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 
