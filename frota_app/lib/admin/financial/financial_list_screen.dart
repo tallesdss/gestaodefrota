@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/repositories/mock_repository.dart';
 import '../../models/financial_entry.dart';
 import '../../core/utils/report_generator.dart';
+import '../../core/widgets/app_dialogs.dart';
 
 class FinancialListScreen extends StatefulWidget {
   const FinancialListScreen({super.key});
@@ -30,6 +33,85 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       _entries = list;
       _isLoading = false;
     });
+  }
+
+  void _togglePaymentStatus(FinancialEntry entry) {
+    setState(() {
+      final index = _entries.indexWhere((e) => e.id == entry.id);
+      if (index != -1) {
+        _entries[index] = _entries[index].copyWith(isPaid: !entry.isPaid);
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Status de pagamento atualizado para: ${!entry.isPaid ? "PAGO" : "PENDENTE"}'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: !entry.isPaid ? AppColors.success : AppColors.error,
+      ),
+    );
+  }
+
+  void _confirmDelete(FinancialEntry entry) {
+    AppDialogs.showModal(
+      context: context,
+      title: 'Excluir Lançamento',
+      content: Text('Tem certeza que deseja excluir o lançamento "${entry.description}"? Esta ação não pode ser desfeita.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _entries.removeWhere((e) => e.id == entry.id);
+            });
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Lançamento excluído com sucesso.'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+          child: const Text('Excluir'),
+        ),
+      ],
+    );
+  }
+
+  void _showEntryActions(FinancialEntry entry) {
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Ações de Lançamento',
+      content: Column(
+        children: [
+          ListTile(
+            leading: Icon(entry.isPaid ? Icons.pending_actions_outlined : Icons.check_circle_outline, color: AppColors.primary),
+            title: Text(entry.isPaid ? 'Marcar como Pendente' : 'Marcar como Pago'),
+            onTap: () {
+              Navigator.pop(context);
+              _togglePaymentStatus(entry);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit_outlined, color: AppColors.onSurfaceVariant),
+            title: const Text('Editar Lançamento'),
+            onTap: () {
+              Navigator.pop(context);
+              // Lógica de edição futura
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_outline, color: AppColors.error),
+            title: const Text('Excluir Lançamento', style: TextStyle(color: AppColors.error)),
+            onTap: () {
+              Navigator.pop(context);
+              _confirmDelete(entry);
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -395,7 +477,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
                   style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () => context.push(AppRoutes.adminFinancialFlow),
                   child: Text(
                     'Ver tudo',
                     style: AppTextStyles.labelSmall.copyWith(
@@ -520,7 +602,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               ),
             ),
           ),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert, color: AppColors.onSurfaceVariant)),
+          IconButton(
+            onPressed: () => _showEntryActions(entry),
+            icon: const Icon(Icons.more_vert, color: AppColors.onSurfaceVariant),
+          ),
         ],
       ),
     );
