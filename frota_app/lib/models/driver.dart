@@ -78,4 +78,38 @@ class Driver {
       'city': city,
     };
   }
+
+  Driver copyWith({
+    String? id,
+    String? name,
+    String? cpf,
+    String? phone,
+    String? email,
+    DriverType? type,
+    DriverStatus? status,
+    String? cnhNumber,
+    DateTime? cnhExpiry,
+    String? cnhCategory,
+    String? currentVehicleId,
+    String? avatarUrl,
+    bool? isApproved,
+    String? city,
+  }) {
+    return Driver(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      cpf: cpf ?? this.cpf,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      cnhNumber: cnhNumber ?? this.cnhNumber,
+      cnhExpiry: cnhExpiry ?? this.cnhExpiry,
+      cnhCategory: cnhCategory ?? this.cnhCategory,
+      currentVehicleId: currentVehicleId ?? this.currentVehicleId,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      isApproved: isApproved ?? this.isApproved,
+      city: city ?? this.city,
+    );
+  }
 }

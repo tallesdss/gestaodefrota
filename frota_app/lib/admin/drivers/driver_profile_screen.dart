@@ -155,12 +155,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           ),
           const SizedBox(width: AppSpacing.lg),
           OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Implement edit functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Funcionalidade de edição em desenvolvimento...')),
-              );
-            },
+            onPressed: () => _showEditProfileDialog(),
             icon: const Icon(Icons.edit_outlined, size: 18),
             label: const Text('EDITAR PERFIL'),
             style: OutlinedButton.styleFrom(
@@ -415,6 +410,115 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             foregroundColor: AppColors.onPrimary,
           ),
           child: const Text('Fechar'),
+        ),
+      ],
+    );
+  }
+
+  void _showEditProfileDialog() {
+    final nameController = TextEditingController(text: _driver!.name);
+    final emailController = TextEditingController(text: _driver!.email);
+    final phoneController = TextEditingController(text: _driver!.phone);
+    final cityController = TextEditingController(text: _driver!.city);
+    final cnhController = TextEditingController(text: _driver!.cnhNumber);
+    final categoryController = TextEditingController(text: _driver!.cnhCategory);
+
+    AppDialogs.showModal(
+      context: context,
+      title: 'Editar Perfil',
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTextField('Nome Completo', nameController, Icons.person_outline),
+            const SizedBox(height: AppSpacing.md),
+            _buildTextField('E-mail', emailController, Icons.email_outlined),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(child: _buildTextField('Telefone', phoneController, Icons.phone_outlined)),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: _buildTextField('Cidade', cityController, Icons.location_city_outlined)),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(child: _buildTextField('Nº CNH', cnhController, Icons.badge_outlined)),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: _buildTextField('Categoria', categoryController, Icons.fact_check_outlined)),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              '⚠️ Alterações afetarão os registros contratuais.',
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.accent),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _driver = _driver!.copyWith(
+                name: nameController.text,
+                email: emailController.text,
+                phone: phoneController.text,
+                city: cityController.text,
+                cnhNumber: cnhController.text,
+                cnhCategory: categoryController.text,
+              );
+            });
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Perfil atualizado com sucesso!'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.onPrimary,
+          ),
+          child: const Text('Salvar Alterações'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.onSurfaceVariant,
+            letterSpacing: 1.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, size: 20, color: AppColors.primary),
+            filled: true,
+            fillColor: AppColors.surfaceContainerLow,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          style: AppTextStyles.bodyMedium,
         ),
       ],
     );
