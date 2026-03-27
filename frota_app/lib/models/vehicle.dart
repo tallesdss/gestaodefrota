@@ -74,6 +74,7 @@ class Vehicle {
   final String? currentDriverName;
   final DateTime? lastKmUpdateDate;
   final int? lastKmValue;
+  final double? rentalValue;
   final List<VehicleUsage> usageHistory;
 
   Vehicle({
@@ -91,6 +92,7 @@ class Vehicle {
     required this.ipvaExpiry,
     required this.insuranceExpiry,
     required this.licensingExpiry,
+    this.rentalValue,
     this.currentDriverId,
     this.currentDriverName,
     this.lastKmUpdateDate,
@@ -114,6 +116,7 @@ class Vehicle {
       ipvaExpiry: DateTime.parse(map['ipvaExpiry']),
       insuranceExpiry: DateTime.parse(map['insuranceExpiry']),
       licensingExpiry: DateTime.parse(map['licensingExpiry']),
+      rentalValue: map['rentalValue']?.toDouble(),
       currentDriverId: map['currentDriverId'],
       currentDriverName: map['currentDriverName'],
       lastKmUpdateDate: map['lastKmUpdateDate'] != null ? DateTime.parse(map['lastKmUpdateDate']) : null,
@@ -138,6 +141,7 @@ class Vehicle {
       'ipvaExpiry': ipvaExpiry.toIso8601String(),
       'insuranceExpiry': insuranceExpiry.toIso8601String(),
       'licensingExpiry': licensingExpiry.toIso8601String(),
+      'rentalValue': rentalValue,
       'currentDriverId': currentDriverId,
       'currentDriverName': currentDriverName,
       'lastKmUpdateDate': lastKmUpdateDate?.toIso8601String(),
@@ -164,6 +168,7 @@ class Vehicle {
     String? currentDriverName,
     DateTime? lastKmUpdateDate,
     int? lastKmValue,
+    double? rentalValue,
     List<VehicleUsage>? usageHistory,
   }) {
     return Vehicle(
@@ -185,6 +190,7 @@ class Vehicle {
       currentDriverName: currentDriverName ?? this.currentDriverName,
       lastKmUpdateDate: lastKmUpdateDate ?? this.lastKmUpdateDate,
       lastKmValue: lastKmValue ?? this.lastKmValue,
+      rentalValue: rentalValue ?? this.rentalValue,
       usageHistory: usageHistory ?? this.usageHistory,
     );
   }

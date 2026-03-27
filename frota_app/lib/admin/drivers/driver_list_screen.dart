@@ -18,7 +18,10 @@ class DriverListScreen extends StatefulWidget {
 class _DriverListScreenState extends State<DriverListScreen> {
   final MockRepository _repository = MockRepository();
   List<Driver> _drivers = [];
+  List<Driver> _filteredDrivers = [];
   bool _isLoading = true;
+  String _selectedCity = 'Todas';
+  List<String> _cities = ['Todas'];
 
   @override
   void initState() {
@@ -30,7 +33,22 @@ class _DriverListScreenState extends State<DriverListScreen> {
     final list = await _repository.getDrivers();
     setState(() {
       _drivers = list;
+      _filteredDrivers = list;
       _isLoading = false;
+      // Extract unique cities
+      final citySet = list.map((d) => d.city).whereType<String>().toSet();
+      _cities = ['Todas', ...citySet];
+    });
+  }
+
+  void _applyFilter(String city) {
+    setState(() {
+      _selectedCity = city;
+      if (city == 'Todas') {
+        _filteredDrivers = _drivers;
+      } else {
+        _filteredDrivers = _drivers.where((d) => d.city == city).toList();
+      }
     });
   }
 
@@ -49,56 +67,160 @@ class _DriverListScreenState extends State<DriverListScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.search, color: AppColors.onSurface),
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: ListView.builder(
-                itemCount: _drivers.length,
-                itemBuilder: (context, index) {
-                  final driver = _drivers[index];
-                  return GestureDetector(
-                    onTap: () {
-                      if (driver.isApproved) {
-                        context.push(AppRoutes.adminDriverProfile.replaceFirst(':id', driver.id));
-                      } else {
-                        context.push('${AppRoutes.adminRegistrationAudit}?id=${driver.id}');
-                      }
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerLowest,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 25,
-                            backgroundColor: AppColors.surfaceContainerLow,
-                            child: Text(driver.name[0], style: AppTextStyles.headlineSmall.copyWith(fontSize: 18)),
+          : Column(
+              children: [
+                // City Filter Bar
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 18, color: AppColors.onSurfaceVariant),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text('Cidade:', style: AppTextStyles.labelMedium),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(driver.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                                Text(driver.email, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
-                                const SizedBox(height: 4),
-                                StatusBadge(label: driver.isApproved ? 'APROVADO' : 'PENDENTE', type: driver.isApproved ? BadgeType.active : BadgeType.warning),
-                              ],
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedCity,
+                              isExpanded: true,
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                              items: _cities.map((city) {
+                                return DropdownMenuItem(
+                                  value: city,
+                                  child: Text(city, style: AppTextStyles.bodyMedium),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) _applyFilter(value);
+                              },
                             ),
                           ),
-                          const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
-                        ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    ],
+                  ),
+                ),
+                // Drivers List
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                    itemCount: _filteredDrivers.length,
+                    itemBuilder: (context, index) {
+                      final driver = _filteredDrivers[index];
+                      final hasCar = driver.currentVehicleId != null;
+                      
+                      return GestureDetector(
+                        onTap: () {
+                          if (driver.isApproved) {
+                            context.push(AppRoutes.adminDriverProfile.replaceFirst(':id', driver.id));
+                          } else {
+                            context.push('${AppRoutes.adminRegistrationAudit}?id=${driver.id}');
+                          }
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.onSurface.withValues(alpha: 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // Highlighted Driver Photo
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: hasCar ? AppColors.success.withValues(alpha: 0.3) : AppColors.outlineVariant,
+                                    width: 2,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(2),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    driver.avatarUrl,
+                                    width: 60,
+                                    height: 60,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      width: 60,
+                                      height: 60,
+                                      color: AppColors.surfaceContainerLow,
+                                      child: const Icon(Icons.person, color: AppColors.primary),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          driver.name,
+                                          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                        ),
+                                        if (hasCar) ...[
+                                          const SizedBox(width: 8),
+                                          const Icon(Icons.directions_car_filled_rounded, size: 14, color: AppColors.success),
+                                        ],
+                                      ],
+                                    ),
+                                    Text(
+                                      '${driver.city ?? 'Não info.'} • ${driver.email}',
+                                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        StatusBadge(
+                                          label: driver.isApproved ? 'APROVADO' : 'PENDENTE',
+                                          type: driver.isApproved ? BadgeType.active : BadgeType.warning,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        StatusBadge(
+                                          label: hasCar ? 'COM VEÍCULO' : 'SEM VEÍCULO',
+                                          type: hasCar ? BadgeType.active : BadgeType.error,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.adminDriverForm),

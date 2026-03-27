@@ -88,6 +88,9 @@ Status das interfaces que devem ser criadas/refinadas com base nos gatilhos acim
 - [ ] **Página de Notificações** (Trigger: Sino/Header).
 - [ ] **Página de Configurações** (Trigger: Engrenagem/Header).
 - [x] **Gestão de Veículos (Refatoração Premium)**
+    - [x] **Lista de Veículos (Grid View):** Reformulada para visualização em grid (Bento Style) para desktop.
+        - [x] **Cards Informativos:** Exibição de Nome, Imagem, Valor de Aluguel e Status.
+        - [x] **Filtros Rápidos:** ChoiceChips para alternar entre "Todos", "Alugados" e "Livres".
     - [x] **Página de Detalhes do Veículo:** Implementada com arquitetura de alta densidade.
         - [x] **Seção de Motorista:** Identificação do condutor atual e data de vínculo.
         - [x] **Controle de KM:** Exibição da última leitura, data/hora e valor anterior.
@@ -98,6 +101,10 @@ Status das interfaces que devem ser criadas/refinadas com base nos gatilhos acim
             - [x] **Editar Info:** Marca, Modelo, Placa, Ano, Cor.
             - [x] **Editar Foto:** Atualização via URL com preview em tempo real.
             - [x] **Vincular Motorista:** Seleção dinâmica a partir da lista de motoristas cadastrados.
+- [x] **Módulo de Motoristas (Refatoração Premium)**
+    - [x] **Lista de Motoristas:** Visualização otimizada com fotos em destaque e bordas dinâmicas.
+    - [x] **Filtros por Cidade:** Implementado dropdown dinâmico baseado na base de dados.
+    - [x] **Status de Vínculo:** Indicadores visuais imediatos (ícone + badge) para motoristas com/sem carro.
             - [x] **Datas Doc:** Atualização de vencimentos via DatePicker.
             - [x] **Financeiro:** Lançamento rápido e edição individual (ícone de lápis) para Despesas, Ganhos e Multas.
     - [ ] **Precisa:** Carousel de fotos do veículo com zoom.

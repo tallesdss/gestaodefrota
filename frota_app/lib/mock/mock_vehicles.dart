@@ -16,6 +16,7 @@ List<Vehicle> mockVehicles = [
     ipvaExpiry: DateTime(2025, 05, 10),
     insuranceExpiry: DateTime(2025, 08, 15),
     licensingExpiry: DateTime(2025, 09, 20),
+    rentalValue: 2400.0,
     currentDriverId: 'd1',
     currentDriverName: 'Maria Santos',
     lastKmUpdateDate: DateTime(2024, 03, 25, 18, 30),
@@ -54,6 +55,7 @@ List<Vehicle> mockVehicles = [
     ipvaExpiry: DateTime(2025, 04, 05),
     insuranceExpiry: DateTime(2025, 07, 12),
     licensingExpiry: DateTime(2025, 10, 18),
+    rentalValue: 2100.0,
     currentDriverId: 'd3',
     currentDriverName: 'Pedro Oliveira',
     lastKmUpdateDate: DateTime(2024, 03, 24, 09, 15),
@@ -83,6 +85,7 @@ List<Vehicle> mockVehicles = [
     ipvaExpiry: DateTime(2025, 06, 30),
     insuranceExpiry: DateTime(2025, 11, 01),
     licensingExpiry: DateTime(2025, 12, 15),
+    rentalValue: 3500.0,
     usageHistory: [
       VehicleUsage(
         driverId: 'd4',
@@ -110,5 +113,6 @@ List<Vehicle> mockVehicles = [
     ipvaExpiry: DateTime(2025, 03, 20),
     insuranceExpiry: DateTime(2025, 06, 25),
     licensingExpiry: DateTime(2025, 08, 30),
+    rentalValue: 1800.0,
   ),
 ];

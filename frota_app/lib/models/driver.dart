@@ -22,6 +22,7 @@ class Driver {
   final String? currentVehicleId;
   final String avatarUrl;
   final bool isApproved;
+  final String? city;
 
   Driver({
     required this.id,
@@ -37,6 +38,7 @@ class Driver {
     this.currentVehicleId,
     required this.avatarUrl,
     this.isApproved = true,
+    this.city,
   });
 
   factory Driver.fromMap(Map<String, dynamic> map) {
@@ -54,6 +56,7 @@ class Driver {
       currentVehicleId: map['currentVehicleId'],
       avatarUrl: map['avatarUrl'],
       isApproved: map['isApproved'] ?? true,
+      city: map['city'],
     );
   }
 
@@ -72,6 +75,7 @@ class Driver {
       'currentVehicleId': currentVehicleId,
       'avatarUrl': avatarUrl,
       'isApproved': isApproved,
+      'city': city,
     };
   }
 }

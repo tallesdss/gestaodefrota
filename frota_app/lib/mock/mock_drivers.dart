@@ -14,6 +14,7 @@ List<Driver> mockDrivers = [
     cnhCategory: 'AB',
     currentVehicleId: 'v2',
     avatarUrl: 'https://i.pravatar.cc/150?u=d1',
+    city: 'São Paulo',
   ),
   Driver(
     id: 'd2',
@@ -28,6 +29,7 @@ List<Driver> mockDrivers = [
     cnhCategory: 'B',
     currentVehicleId: null,
     avatarUrl: 'https://i.pravatar.cc/150?u=d2',
+    city: 'Rio de Janeiro',
   ),
   Driver(
     id: 'd3',
@@ -42,6 +44,7 @@ List<Driver> mockDrivers = [
     cnhCategory: 'AC',
     currentVehicleId: null,
     avatarUrl: 'https://i.pravatar.cc/150?u=d3',
+    city: 'São Paulo',
   ),
   Driver(
     id: 'd4',
@@ -56,6 +59,7 @@ List<Driver> mockDrivers = [
     cnhCategory: 'B',
     avatarUrl: 'https://i.pravatar.cc/150?u=d4',
     isApproved: false,
+    city: 'Curitiba',
   ),
   Driver(
     id: 'd5',
@@ -70,5 +74,6 @@ List<Driver> mockDrivers = [
     cnhCategory: 'D',
     avatarUrl: 'https://i.pravatar.cc/150?u=d5',
     isApproved: false,
+    city: 'Rio de Janeiro',
   ),
 ];
