@@ -87,7 +87,7 @@ Status das interfaces que devem ser criadas/refinadas com base nos gatilhos acim
     - [ ] **Precisa:** Skeletons de Carregamento (Shimmer).
 - [ ] **Página de Notificações** (Trigger: Sino/Header).
 - [ ] **Página de Configurações** (Trigger: Engrenagem/Header).
-- [x] **Gestão de Veículos (Refatoração Premium)**
+- [x] **Gestão de Veículos (Refatoração Premium)** 
     - [x] **Lista de Veículos (Grid View):** Reformulada para visualização em grid (Bento Style) para desktop.
         - [x] **Cards Informativos:** Exibição de Nome, Imagem, Valor de Aluguel e Status.
         - [x] **Filtros Rápidos:** ChoiceChips para alternar entre "Todos", "Alugados" e "Livres".
