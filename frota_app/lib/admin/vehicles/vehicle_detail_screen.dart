@@ -86,12 +86,20 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             const SizedBox(height: AppSpacing.xxl),
 
             // Financial Summary (Gains and Expenses)
-            _buildSectionTitle('Ganhos e Gastos', onEdit: () => _showFinancialModal(FinancialType.expense)),
+            _buildSectionTitle(
+              'Ganhos e Gastos', 
+              onEdit: () => _showFinancialModal(FinancialType.income),
+              icon: Icons.add_circle_outline,
+            ),
             _buildFinancialList(currencyFormat, dateFormat),
             const SizedBox(height: AppSpacing.xxl),
 
             // Fines List
-            _buildSectionTitle('Multas', onEdit: () => _showFinancialModal(FinancialType.expense, category: 'multa')),
+            _buildSectionTitle(
+              'Multas', 
+              onEdit: () => _showFinancialModal(FinancialType.expense, category: 'multa'),
+              icon: Icons.add_circle_outline,
+            ),
             _buildFinesList(currencyFormat, dateFormat),
             const SizedBox(height: AppSpacing.xxl),
 
@@ -105,7 +113,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title, {VoidCallback? onEdit}) {
+  Widget _buildSectionTitle(String title, {VoidCallback? onEdit, IconData icon = Icons.edit_outlined}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
@@ -118,7 +126,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           if (onEdit != null)
             IconButton(
               onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined, size: 20, color: AppColors.primary),
+              icon: Icon(icon, size: 20, color: AppColors.primary),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
