@@ -109,11 +109,11 @@ Status das interfaces que devem ser criadas/refinadas com base nos gatilhos acim
     - [x] **Datas Doc:** Atualização de vencimentos via DatePicker.
     - [x] **Financeiro:** Lançamento rápido e edição individual (ícone de lápis) para Despesas, Ganhos e Multas.
     - [x] **Badge de Status:** Implementado com `StatusBadge` e cores semânticas.
+- [x] **Auditoria de Vistorias (Inspeções)**
+    - [x] **Lista de Vistorias:** Exibição de Nome do Motorista, Foto, Veículo (Modelo/Ano) e Status.
+    - [x] **Registro Fotográfico:** Galeria horizontal com preview das fotos da vistoria.
+    - [x] **Identificação de Avarias:** Status de "OK" ou "Avaria" com cores semânticas.
 - [ ] **Módulo Financeiro**
-    - [x] Exportação de Relatórios (PDF).
-    - [ ] **Precisa:** Modal de Detalhes da Transação ao clicar em linha da tabela.
-- [ ] **Auditoria de Cadastro**
-    - [ ] **Precisa:** Modal de Justificativa para Recusas.
 - [x] **Integração de Navegação (Dashboard):**
     - [x] Link "Ver Financeiro Completo" conectado ao Módulo Financeiro.
     - [x] Lista de "Atrasos Recentes" conectada aos Detalhes do Veículo.

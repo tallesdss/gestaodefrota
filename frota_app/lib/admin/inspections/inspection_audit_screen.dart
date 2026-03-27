@@ -3,6 +3,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/repositories/mock_repository.dart';
+import '../../models/vehicle.dart';
+import '../../models/driver.dart';
 import '../../models/inspection.dart';
 import '../../core/widgets/status_badge.dart';
 
@@ -16,6 +18,8 @@ class InspectionAuditScreen extends StatefulWidget {
 class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
   final MockRepository _repository = MockRepository();
   List<Inspection> _inspections = [];
+  Map<String, Driver> _driverMap = {};
+  Map<String, Vehicle> _vehicleMap = {};
   bool _isLoading = true;
 
   @override
@@ -25,9 +29,14 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
   }
 
   Future<void> _fetchInspections() async {
-    final list = await _repository.getInspections();
+    final inspections = await _repository.getInspections();
+    final drivers = await _repository.getDrivers();
+    final vehicles = await _repository.getVehicles();
+    
     setState(() {
-      _inspections = list;
+      _inspections = inspections;
+      _driverMap = {for (var d in drivers) d.id: d};
+      _vehicleMap = {for (var v in vehicles) v.id: v};
       _isLoading = false;
     });
   }
@@ -53,27 +62,33 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                 itemCount: _inspections.length,
                 itemBuilder: (context, index) {
                   final inspection = _inspections[index];
+                  final driver = _driverMap[inspection.driverId];
+                  final vehicle = _vehicleMap[inspection.vehicleId];
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: AppSpacing.md),
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.ambientShadow,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: inspection.type == InspectionType.checkin ? Colors.green.withAlpha(30) : Colors.orange.withAlpha(30),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                inspection.type == InspectionType.checkin ? Icons.login_outlined : Icons.logout_outlined,
-                                color: inspection.type == InspectionType.checkin ? Colors.green : Colors.orange,
-                              ),
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: driver != null ? NetworkImage(driver.avatarUrl) : null,
+                              backgroundColor: AppColors.surfaceContainerLow,
+                              child: driver == null ? const Icon(Icons.person) : null,
                             ),
                             const SizedBox(width: AppSpacing.md),
                             Expanded(
@@ -81,23 +96,40 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    inspection.type == InspectionType.checkin ? 'CHECK-IN (ENTRADA)' : 'CHECK-OUT (SAÍDA)',
+                                    driver?.name ?? 'Motorista não identificado',
                                     style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   Text(
-                                    'Veículo: ${inspection.vehicleId} • Motorista: ${inspection.driverId}',
-                                    style: AppTextStyles.bodySmall,
+                                    vehicle != null 
+                                      ? '${vehicle.model} (${vehicle.year})' 
+                                      : 'Veículo não identificado',
+                                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
                                   ),
                                 ],
                               ),
                             ),
-                            if (inspection.hasNewDamage)
-                              const StatusBadge(label: 'AVARIA', type: BadgeType.error)
-                            else
-                              const StatusBadge(label: 'OK', type: BadgeType.active),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: inspection.type == InspectionType.checkin ? AppColors.successContainer : AppColors.tertiaryContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                inspection.type == InspectionType.checkin ? 'CHECK-IN' : 'CHECK-OUT',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: inspection.type == InspectionType.checkin ? AppColors.success : AppColors.tertiary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          'REGISTRO FOTOGRÁFICO',
+                          style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, letterSpacing: 1.0),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
                         SizedBox(
                           height: 80,
                           child: ListView.separated(
@@ -122,18 +154,23 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        const Divider(),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Data: ${_formatDate(inspection.dateTime)}',
-                              style: AppTextStyles.bodySmall,
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.onSurfaceVariant),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatDate(inspection.dateTime),
+                                  style: AppTextStyles.bodySmall,
+                                ),
+                              ],
                             ),
-                            TextButton(
-                              onPressed: () {},
-                              child: const Text('VER DETALHES'),
-                            ),
+                            if (inspection.hasNewDamage)
+                              const StatusBadge(label: 'REGISTRO DE AVARIA', type: BadgeType.error)
+                            else
+                              const StatusBadge(label: 'VISTORIA OK', type: BadgeType.active),
                           ],
                         ),
                       ],
