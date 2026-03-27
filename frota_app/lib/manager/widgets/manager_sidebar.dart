@@ -70,43 +70,6 @@ class ManagerSidebar extends StatelessWidget {
             onTap: () => context.go('/gestor/inspections'),
           ),
           const Spacer(),
-          // Help Card
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'SUPORTE AO GESTOR',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.onPrimary,
-                      minimumSize: const Size(double.infinity, 40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text('Falar com Admin'),
-                  ),
-                ],
-              ),
-            ),
-          ),
           const SizedBox(height: AppSpacing.xl),
         ],
       ),

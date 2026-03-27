@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
-import '../../core/widgets/app_dialogs.dart';
 
 class AdminSidebar extends StatelessWidget {
   final String activeRoute;
@@ -83,72 +82,7 @@ class AdminSidebar extends StatelessWidget {
             onTap: () => context.go(AppRoutes.adminInspectionAudit),
           ),
           const Spacer(),
-          // Premium Support Card
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'SUPORTE PREMIUM',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  ElevatedButton(
-                    onPressed: () => _showSupportModal(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.onPrimary,
-                      minimumSize: const Size(double.infinity, 40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text('Contatar Consultor'),
-                  ),
-                ],
-              ),
-            ),
-          ),
           const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
-    );
-  }
-
-  void _showSupportModal(BuildContext context) {
-    AppDialogs.showBottomSheet(
-      context: context,
-      title: 'Suporte Premium',
-      content: Column(
-        children: [
-          const Text('Como podemos ajudar hoje? Nosso time de especialistas está online.'),
-          const SizedBox(height: 24),
-          ListTile(
-            leading: const Icon(Icons.chat_bubble_outline, color: AppColors.primary),
-            title: const Text('Chat em Tempo Real'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.phone_outlined, color: AppColors.primary),
-            title: const Text('Suporte Telefônico'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.mail_outline, color: AppColors.primary),
-            title: const Text('E-mail Prioritário'),
-            onTap: () {},
-          ),
         ],
       ),
     );
