@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
@@ -75,7 +76,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             const SizedBox(height: AppSpacing.xxl),
 
             // Kilometrage Update
-            _buildSectionTitle('Última Atualização de KM'),
+            _buildSectionTitle('Última Atualização de KM', onEdit: _showKmUpdateModal),
             _buildKmUpdateCard(dateFormat, timeFormat),
             const SizedBox(height: AppSpacing.xxl),
 
@@ -208,41 +209,42 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.primaryContainer,
-                child: Icon(Icons.person, color: AppColors.primary),
-              ),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_vehicle!.currentDriverName!, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                    Text(
-                      'Vinculado em: ${dateFormat.format(_vehicle!.usageHistory.firstWhere((h) => h.driverId == _vehicle!.currentDriverId).startDate)}',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
-                    ),
-                  ],
+    return InkWell(
+      onTap: () => context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}'),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppColors.primaryContainer,
+                  child: Icon(Icons.person, color: AppColors.primary),
                 ),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.arrow_forward_ios, size: 16),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_vehicle!.currentDriverName!, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Vinculado em: ${dateFormat.format(_vehicle!.usageHistory.firstWhere((h) => h.driverId == _vehicle!.currentDriverId).startDate)}',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, size: 16),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -540,6 +542,45 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 year: int.tryParse(yearController.text) ?? _vehicle!.year,
                 plate: plateController.text,
                 color: colorController.text,
+              );
+            });
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
+  }
+
+  void _showKmUpdateModal() {
+    final kmController = TextEditingController(text: _vehicle!.currentKm.toString());
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Atualizar Quilometragem',
+      content: Column(
+        children: [
+          AppTextField(
+            label: 'KM Atual',
+            controller: kmController,
+            keyboardType: TextInputType.number,
+            prefixIcon: Icons.speed,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'A quilometragem anterior era de ${_vehicle!.currentKm} KM. Certifique-se de que o novo valor seja maior.',
+            style: AppTextStyles.bodySmall,
+          ),
+        ],
+      ),
+      actions: [
+        AppButton(
+          label: 'Atualizar KM',
+          onPressed: () {
+            final newKm = int.tryParse(kmController.text) ?? _vehicle!.currentKm;
+            setState(() {
+              _vehicle = _vehicle!.copyWith(
+                lastKmValue: _vehicle!.currentKm,
+                currentKm: newKm,
+                lastKmUpdateDate: DateTime.now(),
               );
             });
             Navigator.pop(context);
