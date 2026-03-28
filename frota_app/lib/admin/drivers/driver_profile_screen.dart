@@ -15,6 +15,8 @@ import '../../models/financial_entry.dart';
 import '../../models/timeline_item.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
+import '../../core/routes/app_routes.dart';
+
 
 class DriverProfileScreen extends StatefulWidget {
   final String driverId;
@@ -782,7 +784,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         SectionHeader(
           title: 'LINHA DO TEMPO',
           actionLabel: 'VER TUDO',
-          onActionTap: () => context.push('/admin/drivers/${widget.driverId}/timeline'),
+          onActionTap: () => context.push(AppRoutes.adminDriverTimeline.replaceFirst(':id', widget.driverId)),
         ),
         const SizedBox(height: AppSpacing.md),
         if (_timelineItems.isEmpty)

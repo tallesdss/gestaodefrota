@@ -9,6 +9,11 @@ enum ContractType {
   prefecture 
 }
 
+enum RentalType { 
+  weekly, 
+  monthly 
+}
+
 class VehicleUsage {
   final String driverId;
   final String driverName;
@@ -101,6 +106,8 @@ class Vehicle {
   final double? rentalValue;
   final List<VehicleUsage> usageHistory;
   final List<RentalValueHistory> rentalHistory;
+  final RentalType? rentalType;
+  final int? rentalDueDay;
 
   Vehicle({
     required this.id,
@@ -124,6 +131,8 @@ class Vehicle {
     this.lastKmValue,
     this.usageHistory = const [],
     this.rentalHistory = const [],
+    this.rentalType,
+    this.rentalDueDay,
   });
 
   factory Vehicle.fromMap(Map<String, dynamic> map) {
@@ -149,6 +158,8 @@ class Vehicle {
       lastKmValue: map['lastKmValue'],
       usageHistory: (map['usageHistory'] as List? ?? []).map((e) => VehicleUsage.fromMap(e)).toList(),
       rentalHistory: (map['rentalHistory'] as List? ?? []).map((e) => RentalValueHistory.fromMap(e)).toList(),
+      rentalType: map['rentalType'] != null ? RentalType.values.firstWhere((e) => e.name == map['rentalType']) : null,
+      rentalDueDay: map['rentalDueDay'],
     );
   }
 
@@ -175,6 +186,8 @@ class Vehicle {
       'lastKmValue': lastKmValue,
       'usageHistory': usageHistory.map((e) => e.toMap()).toList(),
       'rentalHistory': rentalHistory.map((e) => e.toMap()).toList(),
+      'rentalType': rentalType?.name,
+      'rentalDueDay': rentalDueDay,
     };
   }
   Vehicle copyWith({
@@ -199,6 +212,8 @@ class Vehicle {
     double? rentalValue,
     List<VehicleUsage>? usageHistory,
     List<RentalValueHistory>? rentalHistory,
+    RentalType? rentalType,
+    int? rentalDueDay,
   }) {
     return Vehicle(
       id: id ?? this.id,
@@ -222,6 +237,8 @@ class Vehicle {
       rentalValue: rentalValue ?? this.rentalValue,
       usageHistory: usageHistory ?? this.usageHistory,
       rentalHistory: rentalHistory ?? this.rentalHistory,
+      rentalType: rentalType ?? this.rentalType,
+      rentalDueDay: rentalDueDay ?? this.rentalDueDay,
     );
   }
 }

@@ -626,6 +626,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     _vehicle!.rentalValue != null ? currencyFormat.format(_vehicle!.rentalValue) : 'Não definido',
                     style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
                   ),
+                  if (_vehicle!.rentalValue != null && _vehicle!.rentalType != null && _vehicle!.rentalDueDay != null)
+                    Text(
+                      '${_vehicle!.rentalType == RentalType.weekly ? "Semanal" : "Mensal"} • ${_vehicle!.rentalType == RentalType.weekly ? _getDayLabel(_vehicle!.rentalDueDay!) : "Todo dia ${_vehicle!.rentalDueDay!.toString().padLeft(2, '0')}"}',
+                      style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                    ),
                 ],
               ),
               AppButton(
@@ -690,6 +695,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
+  String _getDayLabel(int day) {
+    const labels = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    if (day >= 1 && day <= 7) return labels[day - 1];
+    return '';
+  }
+
   void _showVehicleInfoModal() {
     final brandController = TextEditingController(text: _vehicle!.brand);
     final modelController = TextEditingController(text: _vehicle!.model);
@@ -735,31 +746,107 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   void _showRentalValueUpdateModal() {
     final rentalController = TextEditingController(text: _vehicle!.rentalValue?.toString() ?? '');
+    RentalType selectedType = _vehicle!.rentalType ?? RentalType.weekly;
+    int? selectedDay = _vehicle!.rentalDueDay;
+
     AppDialogs.showBottomSheet(
       context: context,
       title: 'Alterar Valor do Aluguel',
-      content: Column(
-        children: [
-          AppTextField(
-            label: 'Novo Valor do Aluguel',
-            controller: rentalController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            prefixIcon: Icons.attach_money,
-            hintText: '0,00',
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Ao alterar o valor, a data da mudança será registrada no histórico do veículo.',
-            style: AppTextStyles.bodySmall,
-          ),
-        ],
+      content: StatefulBuilder(
+        builder: (context, setModalState) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppTextField(
+                label: 'Novo Valor do Aluguel',
+                controller: rentalController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                prefixIcon: Icons.attach_money,
+                hintText: '0,00',
+              ),
+              const SizedBox(height: 24),
+              Text('Ciclo de Faturamento', style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _buildCycleChip(
+                    'SEMANAL',
+                    RentalType.weekly,
+                    selectedType == RentalType.weekly,
+                    () => setModalState(() {
+                      selectedType = RentalType.weekly;
+                      selectedDay = selectedDay != null && selectedDay! > 7 ? 1 : selectedDay;
+                    }),
+                  ),
+                  const SizedBox(width: 12),
+                  _buildCycleChip(
+                    'MENSAL',
+                    RentalType.monthly,
+                    selectedType == RentalType.monthly,
+                    () => setModalState(() => selectedType = RentalType.monthly),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                selectedType == RentalType.weekly ? 'Dia da Semana do Vencimento' : 'Dia do Mês do Vencimento',
+                style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              if (selectedType == RentalType.weekly)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildDayChip('SEG', 1, selectedDay == 1, () => setModalState(() => selectedDay = 1)),
+                      const SizedBox(width: 8),
+                      _buildDayChip('TER', 2, selectedDay == 2, () => setModalState(() => selectedDay = 2)),
+                      const SizedBox(width: 8),
+                      _buildDayChip('QUA', 3, selectedDay == 3, () => setModalState(() => selectedDay = 3)),
+                      const SizedBox(width: 8),
+                      _buildDayChip('QUI', 4, selectedDay == 4, () => setModalState(() => selectedDay = 4)),
+                      const SizedBox(width: 8),
+                      _buildDayChip('SEX', 5, selectedDay == 5, () => setModalState(() => selectedDay = 5)),
+                      const SizedBox(width: 8),
+                      _buildDayChip('SAB', 6, selectedDay == 6, () => setModalState(() => selectedDay = 6)),
+                      const SizedBox(width: 8),
+                      _buildDayChip('DOM', 7, selectedDay == 7, () => setModalState(() => selectedDay = 7)),
+                    ],
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 48,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 31,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final day = index + 1;
+                      return _buildDayChip(
+                        day.toString().padLeft(2, '0'),
+                        day,
+                        selectedDay == day,
+                        () => setModalState(() => selectedDay = day),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 24),
+              Text(
+                'Ao alterar o valor, a data da mudança será registrada no histórico do veículo.',
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+              ),
+            ],
+          );
+        },
       ),
       actions: [
         AppButton(
           label: 'Confirmar Alteração',
           onPressed: () {
             final newValue = double.tryParse(rentalController.text.replaceAll(',', '.')) ?? 0;
-            if (newValue > 0) {
+            if (newValue > 0 && selectedDay != null) {
               final newHistory = List<RentalValueHistory>.from(_vehicle!.rentalHistory);
               if (_vehicle!.rentalValue != null) {
                 newHistory.add(RentalValueHistory(
@@ -772,17 +859,81 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 _vehicle = _vehicle!.copyWith(
                   rentalValue: newValue,
                   rentalHistory: newHistory,
+                  rentalType: selectedType,
+                  rentalDueDay: selectedDay,
                 );
               });
               Navigator.pop(context);
               
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Valor do aluguel atualizado com sucesso!')),
+                const SnackBar(
+                  content: Text('Configurações de aluguel atualizadas com sucesso!'),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            } else if (selectedDay == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                   content: Text('Selecione o dia do vencimento.'),
+                   backgroundColor: AppColors.error,
+                ),
               );
             }
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildCycleChip(String label, RentalType type, bool isSelected, VoidCallback onTap) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.outlineVariant.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDayChip(String label, int value, bool isSelected, VoidCallback onTap) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onTap(),
+      selectedColor: AppColors.primary,
+      disabledColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
+      labelStyle: AppTextStyles.labelSmall.copyWith(
+        color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? AppColors.primary : AppColors.outlineVariant.withValues(alpha: 0.3),
+        ),
+      ),
+      showCheckmark: false,
     );
   }
 
