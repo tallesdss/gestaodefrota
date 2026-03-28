@@ -53,6 +53,30 @@ class VehicleUsage {
   }
 }
 
+class RentalValueHistory {
+  final double value;
+  final DateTime date;
+
+  RentalValueHistory({
+    required this.value,
+    required this.date,
+  });
+
+  factory RentalValueHistory.fromMap(Map<String, dynamic> map) {
+    return RentalValueHistory(
+      value: map['value'].toDouble(),
+      date: DateTime.parse(map['date']),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'value': value,
+      'date': date.toIso8601String(),
+    };
+  }
+}
+
 class Vehicle {
   final String id;
   final String plate;
@@ -76,6 +100,7 @@ class Vehicle {
   final int? lastKmValue;
   final double? rentalValue;
   final List<VehicleUsage> usageHistory;
+  final List<RentalValueHistory> rentalHistory;
 
   Vehicle({
     required this.id,
@@ -98,6 +123,7 @@ class Vehicle {
     this.lastKmUpdateDate,
     this.lastKmValue,
     this.usageHistory = const [],
+    this.rentalHistory = const [],
   });
 
   factory Vehicle.fromMap(Map<String, dynamic> map) {
@@ -122,6 +148,7 @@ class Vehicle {
       lastKmUpdateDate: map['lastKmUpdateDate'] != null ? DateTime.parse(map['lastKmUpdateDate']) : null,
       lastKmValue: map['lastKmValue'],
       usageHistory: (map['usageHistory'] as List? ?? []).map((e) => VehicleUsage.fromMap(e)).toList(),
+      rentalHistory: (map['rentalHistory'] as List? ?? []).map((e) => RentalValueHistory.fromMap(e)).toList(),
     );
   }
 
@@ -147,6 +174,7 @@ class Vehicle {
       'lastKmUpdateDate': lastKmUpdateDate?.toIso8601String(),
       'lastKmValue': lastKmValue,
       'usageHistory': usageHistory.map((e) => e.toMap()).toList(),
+      'rentalHistory': rentalHistory.map((e) => e.toMap()).toList(),
     };
   }
   Vehicle copyWith({
@@ -170,6 +198,7 @@ class Vehicle {
     int? lastKmValue,
     double? rentalValue,
     List<VehicleUsage>? usageHistory,
+    List<RentalValueHistory>? rentalHistory,
   }) {
     return Vehicle(
       id: id ?? this.id,
@@ -192,6 +221,8 @@ class Vehicle {
       lastKmValue: lastKmValue ?? this.lastKmValue,
       rentalValue: rentalValue ?? this.rentalValue,
       usageHistory: usageHistory ?? this.usageHistory,
+      rentalHistory: rentalHistory ?? this.rentalHistory,
     );
   }
 }
+

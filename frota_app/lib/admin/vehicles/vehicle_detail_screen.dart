@@ -94,6 +94,15 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             _buildDocumentsCard(dateFormat),
             const SizedBox(height: AppSpacing.xxl),
 
+            // Rental Value History
+            _buildSectionTitle(
+              'Valor do Aluguel', 
+              icon: Icons.payments_outlined,
+              onEdit: _showRentalValueUpdateModal,
+            ),
+            _buildRentalHistoryCard(currencyFormat, dateFormat),
+            const SizedBox(height: AppSpacing.xxl),
+
             // Financial Summary (Gains and Expenses)
             _buildSectionTitle(
               'Ganhos e Gastos', 
@@ -590,6 +599,83 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
+  Widget _buildRentalHistoryCard(NumberFormat currencyFormat, DateFormat dateFormat) {
+    if (_vehicle!.rentalHistory.isEmpty && _vehicle!.rentalValue == null) {
+      return _buildEmptyCard('Sem histórico de aluguel');
+    }
+
+    final history = _vehicle!.rentalHistory.reversed.toList();
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Valor Atual', style: AppTextStyles.labelSmall),
+                  Text(
+                    _vehicle!.rentalValue != null ? currencyFormat.format(_vehicle!.rentalValue) : 'Não definido',
+                    style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              AppButton(
+                label: 'Alterar Valor',
+                onPressed: _showRentalValueUpdateModal,
+                variant: AppButtonVariant.primary,
+              ),
+            ],
+          ),
+          if (history.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Divider(),
+            ),
+            Text('Histórico de Alterações', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: AppSpacing.sm),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: history.length > 3 ? 3 : history.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final item = history[index];
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(currencyFormat.format(item.value), style: AppTextStyles.bodyMedium),
+                    Text(dateFormat.format(item.date), style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                  ],
+                );
+              },
+            ),
+            if (history.length > 3)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Center(
+                  child: TextButton(
+                    onPressed: () {
+                      // Optionally implement a full history screen
+                    },
+                    child: Text('Ver Histórico Completo', style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
+                  ),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyCard(String text) {
     return Container(
       width: double.infinity,
@@ -641,6 +727,59 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               );
             });
             Navigator.pop(context);
+          },
+        ),
+      ],
+    );
+  }
+
+  void _showRentalValueUpdateModal() {
+    final rentalController = TextEditingController(text: _vehicle!.rentalValue?.toString() ?? '');
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Alterar Valor do Aluguel',
+      content: Column(
+        children: [
+          AppTextField(
+            label: 'Novo Valor do Aluguel',
+            controller: rentalController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            prefixIcon: Icons.attach_money,
+            hintText: '0,00',
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Ao alterar o valor, a data da mudança será registrada no histórico do veículo.',
+            style: AppTextStyles.bodySmall,
+          ),
+        ],
+      ),
+      actions: [
+        AppButton(
+          label: 'Confirmar Alteração',
+          onPressed: () {
+            final newValue = double.tryParse(rentalController.text.replaceAll(',', '.')) ?? 0;
+            if (newValue > 0) {
+              final newHistory = List<RentalValueHistory>.from(_vehicle!.rentalHistory);
+              if (_vehicle!.rentalValue != null) {
+                newHistory.add(RentalValueHistory(
+                  value: _vehicle!.rentalValue!,
+                  date: DateTime.now(),
+                ));
+              }
+              
+              setState(() {
+                _vehicle = _vehicle!.copyWith(
+                  rentalValue: newValue,
+                  rentalHistory: newHistory,
+                );
+              });
+              Navigator.pop(context);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Valor do aluguel atualizado com sucesso!')),
+              );
+            }
           },
         ),
       ],

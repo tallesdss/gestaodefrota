@@ -17,6 +17,10 @@ List<Vehicle> mockVehicles = [
     insuranceExpiry: DateTime(2025, 08, 15),
     licensingExpiry: DateTime(2025, 09, 20),
     rentalValue: 2400.0,
+    rentalHistory: [
+      RentalValueHistory(value: 2000.0, date: DateTime(2023, 01, 01)),
+      RentalValueHistory(value: 2200.0, date: DateTime(2023, 07, 01)),
+    ],
     currentDriverId: 'd1',
     currentDriverName: 'Maria Santos',
     lastKmUpdateDate: DateTime(2024, 03, 25, 18, 30),
@@ -56,6 +60,9 @@ List<Vehicle> mockVehicles = [
     insuranceExpiry: DateTime(2025, 07, 12),
     licensingExpiry: DateTime(2025, 10, 18),
     rentalValue: 2100.0,
+    rentalHistory: [
+      RentalValueHistory(value: 2000.0, date: DateTime(2023, 01, 15)),
+    ],
     currentDriverId: 'd3',
     currentDriverName: 'Pedro Oliveira',
     lastKmUpdateDate: DateTime(2024, 03, 24, 09, 15),
