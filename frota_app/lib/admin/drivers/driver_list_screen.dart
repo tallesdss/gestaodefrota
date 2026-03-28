@@ -249,7 +249,16 @@ class _DriverListScreenState extends State<DriverListScreen> {
                                         ),
                                         if (hasCar) ...[
                                           const SizedBox(width: 8),
-                                          const Icon(Icons.directions_car_filled_rounded, size: 14, color: AppColors.success),
+                                          Tooltip(
+                                            message: 'Ver Veículo',
+                                            child: GestureDetector(
+                                              onTap: () => context.push(AppRoutes.adminVehicleDetail.replaceFirst(':id', driver.currentVehicleId!)),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(4),
+                                                child: const Icon(Icons.directions_car_filled_rounded, size: 18, color: AppColors.success),
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       ],
                                     ),

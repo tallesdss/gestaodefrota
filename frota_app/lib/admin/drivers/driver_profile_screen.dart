@@ -441,7 +441,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
-              onTap: () => context.push('/admin/vehicles/${_currentVehicle!.id}'),
+              onTap: () => context.push(AppRoutes.adminVehicleDetail.replaceFirst(':id', _currentVehicle!.id)),
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
