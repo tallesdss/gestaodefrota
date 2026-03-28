@@ -65,7 +65,7 @@ class AdminDashboardScreen extends StatelessWidget {
         const SizedBox(height: AppSpacing.xl),
         
         // KPI Row
-        const SingleChildScrollView(
+        SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
@@ -101,6 +101,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 subtitle: 'Inadimplência',
                 icon: Icons.error_outline,
                 accentColor: Colors.redAccent,
+                onTap: () => context.go(AppRoutes.adminDelinquencyDrivers),
               ),
             ],
           ),

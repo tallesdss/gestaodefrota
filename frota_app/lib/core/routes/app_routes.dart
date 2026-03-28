@@ -23,6 +23,7 @@ import '../../admin/maintenance/maintenance_list_screen.dart';
 import '../../admin/inspections/inspection_audit_screen.dart';
 import '../../admin/financial/financial_list_screen.dart';
 import '../../admin/financial/financial_flow_detail_screen.dart';
+import '../../admin/financial/delinquency_list_screen.dart';
 import '../../admin/admin_scaffold.dart';
 import '../../manager/dashboard/manager_dashboard_screen.dart';
 import '../../manager/widgets/manager_scaffold.dart';
@@ -53,6 +54,7 @@ class AppRoutes {
   static const String adminInspectionAudit = '/admin/inspections';
   static const String adminFinancialList = '/admin/financial';
   static const String adminFinancialFlow = '/admin/financial/flow';
+  static const String adminDelinquencyDrivers = '/admin/delinquency';
   static const String adminNotifications = '/admin/notifications';
   static const String adminSettings = '/admin/settings';
   static const String adminProfile = '/admin/profile';
@@ -178,6 +180,10 @@ class AppRoutes {
               final vehicleId = state.uri.queryParameters['vehicleId'];
               return FinancialFlowDetailScreen(vehicleId: vehicleId);
             },
+          ),
+          GoRoute(
+            path: adminDelinquencyDrivers,
+            builder: (context, state) => const DelinquencyListScreen(),
           ),
           GoRoute(
             path: adminNotifications,

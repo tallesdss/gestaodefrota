@@ -14,12 +14,15 @@ class FinancialFlowDetailScreen extends StatefulWidget {
   State<FinancialFlowDetailScreen> createState() => _FinancialFlowDetailScreenState();
 }
 
+enum FinancialFilter { all, income, expense }
+
 class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
   final MockRepository _repository = MockRepository();
   List<FinancialEntry> _entries = [];
   List<FinancialEntry> _filteredEntries = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  FinancialFilter _selectedType = FinancialFilter.all;
 
   @override
   void initState() {
@@ -33,24 +36,30 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
         : await _repository.getFinancialEntries();
     setState(() {
       _entries = list;
-      _filteredEntries = list;
+      _applyFilters();
       _isLoading = false;
     });
   }
 
-  void _filterEntries(String query) {
+  void _applyFilters() {
     setState(() {
-      _searchQuery = query;
-      if (query.isEmpty) {
-        _filteredEntries = _entries;
-      } else {
-        _filteredEntries = _entries.where((e) {
-          final desc = e.description.toLowerCase();
-          final cat = e.category.toLowerCase();
-          return desc.contains(query.toLowerCase()) || cat.contains(query.toLowerCase());
-        }).toList();
-      }
+      _filteredEntries = _entries.where((e) {
+        final matchesQuery = _searchQuery.isEmpty || 
+            e.description.toLowerCase().contains(_searchQuery.toLowerCase()) || 
+            e.category.toLowerCase().contains(_searchQuery.toLowerCase());
+            
+        final matchesType = _selectedType == FinancialFilter.all ||
+            (_selectedType == FinancialFilter.income && e.type == FinancialType.income) ||
+            (_selectedType == FinancialFilter.expense && e.type == FinancialType.expense);
+            
+        return matchesQuery && matchesType;
+      }).toList();
     });
+  }
+
+  void _filterEntries(String query) {
+    _searchQuery = query;
+    _applyFilters();
   }
 
   void _togglePaymentStatus(FinancialEntry entry) {
@@ -58,7 +67,7 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
       final index = _entries.indexWhere((e) => e.id == entry.id);
       if (index != -1) {
         _entries[index] = _entries[index].copyWith(isPaid: !entry.isPaid);
-        _filterEntries(_searchQuery);
+        _applyFilters();
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -159,18 +168,32 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Search Bar
+                // Search & Filter Section
                 Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: TextField(
-                    onChanged: _filterEntries,
-                    decoration: InputDecoration(
-                      hintText: 'Buscar por categoria ou descrição...',
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: AppColors.surfaceContainerLow,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+                  child: Column(
+                    children: [
+                      TextField(
+                        onChanged: _filterEntries,
+                        decoration: InputDecoration(
+                          hintText: 'Buscar por categoria ou descrição...',
+                          prefixIcon: const Icon(Icons.search),
+                          filled: true,
+                          fillColor: AppColors.surfaceContainerLow,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          _buildFilterChip('Tudo', FinancialFilter.all),
+                          const SizedBox(width: AppSpacing.sm),
+                          _buildFilterChip('Ganho', FinancialFilter.income),
+                          const SizedBox(width: AppSpacing.sm),
+                          _buildFilterChip('Gasto', FinancialFilter.expense),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -287,6 +310,32 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, FinancialFilter type) {
+    final isSelected = _selectedType == type;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          setState(() {
+            _selectedType = type;
+            _applyFilters();
+          });
+        }
+      },
+      selectedColor: AppColors.primary,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 12,
+      ),
+      backgroundColor: AppColors.surfaceContainerLow,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide.none),
+      showCheckmark: false,
     );
   }
 
