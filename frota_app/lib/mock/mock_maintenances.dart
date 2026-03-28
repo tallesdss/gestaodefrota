@@ -3,7 +3,7 @@ import '../models/maintenance_entry.dart';
 final List<MaintenanceEntry> mockMaintenances = [
   MaintenanceEntry(
     id: 'm1',
-    vehicleId: 'v1',
+    vehicleId: '1',
     type: MaintenanceType.oilChange,
     description: 'Troca de óleo 5W30 e filtro de motor',
     date: DateTime(2024, 02, 10),
@@ -13,7 +13,7 @@ final List<MaintenanceEntry> mockMaintenances = [
   ),
   MaintenanceEntry(
     id: 'm2',
-    vehicleId: 'v2',
+    vehicleId: '2',
     type: MaintenanceType.tires,
     description: 'Troca de 2 pneus dianteiros Michelin',
     date: DateTime(2023, 11, 25),
@@ -23,7 +23,7 @@ final List<MaintenanceEntry> mockMaintenances = [
   ),
   MaintenanceEntry(
     id: 'm3',
-    vehicleId: 'v1',
+    vehicleId: '1',
     type: MaintenanceType.brakes,
     description: 'Substituição de pastilhas de freio dianteiras',
     date: DateTime(2023, 08, 05),

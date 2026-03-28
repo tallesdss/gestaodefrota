@@ -11,6 +11,8 @@ import '../../admin/drivers/driver_form_screen.dart';
 import '../../admin/managers/manager_list_screen.dart';
 import '../../admin/managers/manager_form_screen.dart';
 import '../../admin/drivers/driver_profile_screen.dart';
+import '../../admin/drivers/driver_timeline_screen.dart';
+import '../../admin/drivers/driver_inspection_history_screen.dart';
 import '../../admin/users/registration_audit_screen.dart';
 import '../../admin/users/profile_screen.dart';
 import '../../admin/users/settings_screen.dart';
@@ -28,6 +30,8 @@ import '../../models/driver.dart';
 import '../../models/manager.dart';
 import '../../models/contract.dart';
 import '../../admin/vehicles/vehicle_form_screen.dart';
+import '../../admin/vehicles/vehicle_usage_history_screen.dart';
+import '../../admin/vehicles/vehicle_inspection_history_screen.dart';
 
 class AppRoutes {
   static const String root = '/selection';
@@ -39,6 +43,7 @@ class AppRoutes {
   static const String adminDriverList = '/admin/drivers';
   static const String adminDriverForm = '/admin/drivers/form';
   static const String adminDriverProfile = '/admin/drivers/profile/:id';
+  static const String adminDriverTimeline = '/admin/drivers/:id/timeline';
   static const String adminManagerList = '/admin/managers';
   static const String adminManagerForm = '/admin/managers/form';
   static const String adminRegistrationAudit = '/admin/audit';
@@ -52,6 +57,7 @@ class AppRoutes {
   static const String adminSettings = '/admin/settings';
   static const String adminProfile = '/admin/profile';
   static const String adminVehicleForm = '/admin/vehicles/form';
+  static const String adminVehicleUsageHistory = '/admin/vehicles/:id/usage';
   static const String gestorDashboard = '/gestor/dashboard';
   static const String gestorFinancialList = '/gestor/financial';
   static const String gestorDriverList = '/gestor/drivers';
@@ -112,6 +118,20 @@ class AppRoutes {
             },
           ),
           GoRoute(
+            path: adminDriverTimeline,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return DriverTimelineScreen(driverId: id);
+            },
+          ),
+          GoRoute(
+            path: '/admin/drivers/:id/inspections',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return DriverInspectionHistoryScreen(driverId: id);
+            },
+          ),
+          GoRoute(
             path: adminManagerList,
             builder: (context, state) => const ManagerListScreen(),
           ),
@@ -154,7 +174,10 @@ class AppRoutes {
           ),
           GoRoute(
             path: adminFinancialFlow,
-            builder: (context, state) => const FinancialFlowDetailScreen(),
+            builder: (context, state) {
+              final vehicleId = state.uri.queryParameters['vehicleId'];
+              return FinancialFlowDetailScreen(vehicleId: vehicleId);
+            },
           ),
           GoRoute(
             path: adminNotifications,
@@ -171,6 +194,20 @@ class AppRoutes {
           GoRoute(
             path: adminVehicleForm,
             builder: (context, state) => const VehicleFormScreen(),
+          ),
+          GoRoute(
+            path: adminVehicleUsageHistory,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return VehicleUsageHistoryScreen(vehicleId: id);
+            },
+          ),
+          GoRoute(
+            path: '/admin/vehicles/:id/inspections',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return VehicleInspectionHistoryScreen(vehicleId: id);
+            },
           ),
         ],
       ),

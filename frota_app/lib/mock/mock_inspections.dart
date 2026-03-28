@@ -3,7 +3,7 @@ import '../models/inspection.dart';
 List<Inspection> mockInspections = [
   Inspection(
     id: 'i1',
-    vehicleId: 'v1',
+    vehicleId: '1',
     driverId: 'd1',
     type: InspectionType.checkin,
     dateTime: DateTime(2024, 03, 01, 08, 30),
@@ -15,7 +15,7 @@ List<Inspection> mockInspections = [
   ),
   Inspection(
     id: 'i2',
-    vehicleId: 'v2',
+    vehicleId: '2',
     driverId: 'd2',
     type: InspectionType.checkout,
     dateTime: DateTime(2024, 02, 28, 18, 00),

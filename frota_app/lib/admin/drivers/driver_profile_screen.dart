@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
@@ -9,6 +11,7 @@ import '../../core/widgets/app_dialogs.dart';
 import '../../core/repositories/mock_repository.dart';
 import '../../models/driver.dart';
 import '../../models/vehicle.dart';
+import '../../models/timeline_item.dart';
 
 class DriverProfileScreen extends StatefulWidget {
   final String driverId;
@@ -23,6 +26,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   final MockRepository _repository = MockRepository();
   Driver? _driver;
   Vehicle? _currentVehicle;
+  List<TimelineItem> _timelineItems = [];
   bool _isLoading = true;
 
   @override
@@ -41,9 +45,12 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       vehicle = vehicles.firstWhere((v) => v.id == driver.currentVehicleId);
     }
 
+    final timeline = await _repository.getDriverTimeline(driverId: widget.driverId, page: 1, pageSize: 3);
+
     setState(() {
       _driver = driver;
       _currentVehicle = vehicle;
+      _timelineItems = timeline;
       _isLoading = false;
     });
   }
@@ -553,18 +560,26 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   Widget _buildActivityTimeline() {
-    final activities = [
-      {'date': '25/03/2026', 'title': 'Troca de Óleo Realizada', 'desc': 'Veículo: ${_currentVehicle?.model ?? "N/A"}'},
-      {'date': '12/03/2026', 'title': 'Novo Veículo Vinculado', 'desc': '${_currentVehicle?.brand ?? ""} ${_currentVehicle?.model ?? ""}'},
-      {'date': '01/03/2026', 'title': 'Pagamento Mensalidade', 'desc': 'Referente a Fevereiro - R\$ 2.400,00'},
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'LINHA DO TEMPO'),
+        SectionHeader(
+          title: 'LINHA DO TEMPO',
+          actionLabel: 'VER TUDO',
+          onActionTap: () => context.push('/admin/drivers/${widget.driverId}/timeline'),
+        ),
         const SizedBox(height: AppSpacing.md),
-        ...activities.map((a) => _buildTimelineItem(a['date']!, a['title']!, a['desc']!)),
+        if (_timelineItems.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: Text('Nenhuma atividade recente', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant))),
+          )
+        else
+          ..._timelineItems.map((a) => _buildTimelineItem(
+            DateFormat('dd/MM/yyyy').format(a.date), 
+            a.title, 
+            a.description,
+          )),
       ],
     );
   }
@@ -620,7 +635,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'HISTÓRICO DE VISTORIAS'),
+        SectionHeader(
+          title: 'HISTÓRICO DE VISTORIAS',
+          actionLabel: 'VER TUDO',
+          onActionTap: () => context.push('/admin/drivers/${widget.driverId}/inspections'),
+        ),
         const SizedBox(height: AppSpacing.md),
         ...inspections.map((i) => Container(
           margin: const EdgeInsets.only(bottom: AppSpacing.sm),

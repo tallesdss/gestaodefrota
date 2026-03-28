@@ -34,13 +34,22 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   Future<void> _fetchData() async {
-    final v = await _repository.getVehicleById(widget.vehicleId);
-    final f = await _repository.getFinancialEntriesByVehicle(widget.vehicleId);
-    setState(() {
-      _vehicle = v;
-      _financials = f;
-      _isLoading = false;
-    });
+    try {
+      final v = await _repository.getVehicleById(widget.vehicleId);
+      final f = await _repository.getFinancialEntriesByVehicle(widget.vehicleId);
+      setState(() {
+        _vehicle = v;
+        _financials = f;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _vehicle = null;
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -89,6 +98,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             _buildSectionTitle(
               'Ganhos e Gastos', 
               onEdit: () => _showFinancialModal(FinancialType.income),
+              onAllTap: () => context.push('/admin/financial/flow?vehicleId=${_vehicle!.id}'),
               icon: Icons.add_circle_outline,
             ),
             _buildFinancialList(currencyFormat, dateFormat),
@@ -98,14 +108,26 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             _buildSectionTitle(
               'Multas', 
               onEdit: () => _showFinancialModal(FinancialType.expense, category: 'multa'),
+              onAllTap: () => context.push('/admin/financial/flow?vehicleId=${_vehicle!.id}'),
               icon: Icons.add_circle_outline,
             ),
             _buildFinesList(currencyFormat, dateFormat),
             const SizedBox(height: AppSpacing.xxl),
 
             // Usage History
-            _buildSectionTitle('Histórico de Motoristas'),
+            _buildSectionTitle(
+              'Histórico de Motoristas',
+              onAllTap: () => context.push('/admin/vehicles/${_vehicle!.id}/usage'),
+            ),
             _buildUsageHistory(dateFormat),
+            const SizedBox(height: AppSpacing.xxl),
+
+            // Inspection History
+            _buildSectionTitle(
+              'Histórico de Vistorias',
+              onAllTap: () => context.push('/admin/vehicles/${_vehicle!.id}/inspections'),
+            ),
+            _buildInspectionHistoryPreview(dateFormat),
             const SizedBox(height: AppSpacing.xxl),
           ],
         ),
@@ -113,7 +135,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title, {VoidCallback? onEdit, IconData icon = Icons.edit_outlined}) {
+  Widget _buildSectionTitle(String title, {VoidCallback? onEdit, IconData icon = Icons.edit_outlined, VoidCallback? onAllTap}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
@@ -123,13 +145,30 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             title,
             style: AppTextStyles.headlineSmall.copyWith(fontSize: 18, color: AppColors.onSurface),
           ),
-          if (onEdit != null)
-            IconButton(
-              onPressed: onEdit,
-              icon: Icon(icon, size: 20, color: AppColors.primary),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
+          Row(
+            children: [
+              if (onAllTap != null)
+                TextButton(
+                  onPressed: onAllTap,
+                  child: Text(
+                    'VER TUDO', 
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primary, 
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              if (onEdit != null)
+                IconButton(
+                  onPressed: onEdit,
+                  icon: Icon(icon, size: 20, color: AppColors.primary),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  visualDensity: VisualDensity.compact,
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -502,6 +541,55 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
+  Widget _buildInspectionHistoryPreview(DateFormat dateFormat) {
+    // Hardcoded preview for now, consistent with DriverProfile
+    final inspections = [
+      {'type': 'CHECK-IN', 'date': '12/03/2026', 'km': '15.420', 'status': 'APROVADO'},
+    ];
+
+    return Column(
+      children: inspections.map((i) => Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              i['type'] == 'CHECK-IN' ? Icons.login_rounded : Icons.logout_rounded,
+              color: i['type'] == 'CHECK-IN' ? AppColors.success : AppColors.secondary,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(i['type']!, style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold)),
+                  Text('KM: ${i['km']}', style: AppTextStyles.bodySmall),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(i['date']!, style: AppTextStyles.labelSmall),
+                Text(
+                  i['status']!,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      )).toList(),
+    );
+  }
+
   Widget _buildEmptyCard(String text) {
     return Container(
       width: double.infinity,
@@ -746,18 +834,76 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   void _showFinancialModal(FinancialType type, {String? category, FinancialEntry? entry}) {
     final descController = TextEditingController(text: entry?.description);
     final amountController = TextEditingController(text: entry?.amount.toString());
+    bool isPaidLocal = entry?.isPaid ?? false;
 
     AppDialogs.showBottomSheet(
       context: context,
       title: entry != null 
           ? 'Editar Registro' 
           : (category == 'multa' ? 'Novo Lançamento de Multa' : 'Nova Movimentação'),
-      content: Column(
-        children: [
-          AppTextField(label: 'Descrição / Motivo', controller: descController, hintText: 'Ex: Troca de Óleo, Multa por velocidade...'),
-          const SizedBox(height: 16),
-          AppTextField(label: r'Valor (R$)', controller: amountController, keyboardType: TextInputType.number, prefixIcon: Icons.attach_money),
-        ],
+      content: StatefulBuilder(
+        builder: (context, setModalState) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppTextField(label: 'Descrição / Motivo', controller: descController, hintText: 'Ex: Troca de Óleo, Multa por velocidade...'),
+              const SizedBox(height: 16),
+              AppTextField(label: r'Valor (R$)', controller: amountController, keyboardType: TextInputType.number, prefixIcon: Icons.attach_money),
+              const SizedBox(height: 24),
+              Text('Status de Pagamento', style: AppTextStyles.labelLarge),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setModalState(() => isPaidLocal = false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: !isPaidLocal ? AppColors.errorContainer.withValues(alpha: 0.1) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: !isPaidLocal ? AppColors.error : AppColors.outlineVariant.withValues(alpha: 0.2)),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'PENDENTE', 
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: !isPaidLocal ? AppColors.error : AppColors.onSurfaceVariant,
+                              fontWeight: !isPaidLocal ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setModalState(() => isPaidLocal = true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isPaidLocal ? Colors.green.withValues(alpha: 0.1) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isPaidLocal ? Colors.green : AppColors.outlineVariant.withValues(alpha: 0.2)),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'PAGO', 
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: isPaidLocal ? Colors.green : AppColors.onSurfaceVariant,
+                              fontWeight: isPaidLocal ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
       ),
       actions: [
         AppButton(
@@ -774,6 +920,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   _financials[index] = entry.copyWith(
                     description: descController.text,
                     amount: updatedAmount,
+                    isPaid: isPaidLocal,
                   );
                 }
               } else {
@@ -785,7 +932,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   type: category == 'multa' ? FinancialType.expense : type,
                   category: category ?? 'manutenção',
                   date: DateTime.now(),
-                  isPaid: false,
+                  isPaid: isPaidLocal,
                 );
                 _financials.insert(0, newEntry);
               }

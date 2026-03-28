@@ -12,7 +12,7 @@ List<Driver> mockDrivers = [
     cnhNumber: '12345678901',
     cnhExpiry: DateTime(2028, 10, 20),
     cnhCategory: 'AB',
-    currentVehicleId: 'v2',
+    currentVehicleId: '2',
     avatarUrl: 'https://i.pravatar.cc/150?u=d1',
     city: 'São Paulo',
   ),

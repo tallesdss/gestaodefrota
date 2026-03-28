@@ -7,7 +7,8 @@ import '../../models/financial_entry.dart';
 import '../../core/widgets/app_dialogs.dart';
 
 class FinancialFlowDetailScreen extends StatefulWidget {
-  const FinancialFlowDetailScreen({super.key});
+  final String? vehicleId;
+  const FinancialFlowDetailScreen({super.key, this.vehicleId});
 
   @override
   State<FinancialFlowDetailScreen> createState() => _FinancialFlowDetailScreenState();
@@ -27,7 +28,9 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
   }
 
   Future<void> _fetchFinancials() async {
-    final list = await _repository.getFinancialEntries();
+    final list = widget.vehicleId != null 
+        ? await _repository.getFinancialEntriesByVehicle(widget.vehicleId!)
+        : await _repository.getFinancialEntries();
     setState(() {
       _entries = list;
       _filteredEntries = list;

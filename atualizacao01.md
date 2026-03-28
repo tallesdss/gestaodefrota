@@ -15,11 +15,16 @@ Itens que já estão implementados, testados e funcionais na interface Admin.
     - [x] **GridView de Frota:** Visualização em grade editorial para desktop.
     - [x] **Filtros Rápidos:** ChoiceChips para "Todos", "Alugados" e "Livres".
     - [x] **Tela de Detalhes:** Arquitetura de alta densidade (KM, Docs, Financeiro).
+    - [x] **Navegação de Histórico:** Implementado botão "VER TUDO" para Ganhos, Multas e Uso.
+    - [x] **Telas Dedicadas:** Criada `VehicleUsageHistoryScreen` e filtragem em `FinancialFlowDetailScreen`.
     - [x] **Modais de Edição:** Sistema `AppDialogs` para editar informações, fotos e vínculos.
+    - [x] **Gestão Financeira:** Toggle de status "Pago/Pendente" em multas e lançamentos (Stateful Modal).
+    - [x] **Robustez de Dados:** Tratamento de erro no carregamento de detalhes e padronização de IDs numéricos.
 - **Gestão de Motoristas:**
     - [x] **Lista Premium:** Fotos em destaque com bordas indicativas de vínculo.
     - [x] **Filtro por Cidade:** Dropdown dinâmico integrado à base de dados.
     - [x] **Edit Profile:** Componente funcional para atualizar dados cadastrais e CNH.
+    - [x] **Histórico Paginado:** Tela de linha do tempo completa com paginação e carregamento infinito.
 - **Auditoria de Vistorias:**
     - [x] **Interface de Lista:** Visualização com Foto, Nome do Motorista e Veículo.
     - [x] **Filtro Regional:** Filtro por Cidade integrado.
@@ -43,12 +48,12 @@ Itens numerados por prioridade de implementação.
 3. **Carousel Premium:** Implementar o carrossel de fotos com zoom na visualização de detalhes do veículo.
 
 ### **ETAPA 2: Módulos de Gestão & Configuração**
-4. **Central de Notificações:** Criar a tela de notificações administrativa (Gatilho: Sino/Header).
-5. **Painel de Configurações:** Implementar preferências de sistema e unidades de medida (Gatilho: Engrenagem/Header).
+4. **Central de Notificações:** Criar a tela de notificações administrativa (Gatilho: Sino/Header). [DONE]
+5. **Painel de Configurações:** Implementar preferências de sistema e unidades de medida (Gatilho: Engrenagem/Header). [DONE]
 6. **Sidebar Adaptativa:** Adicionar suporte a modo colapsável e sub-menus na barra lateral.
 
 ### **ETAPA 3: Financeiro & Auditoria Avançada**
-7. **Detalhes Financeiros:** Modal de detalhamento de transação ao clicar em itens da tabela financeira.
+7. **Detalhes Financeiros:** Modal de detalhamento de transação ao clicar em itens da tabela financeira. [DONE]
 8. **Justificativa de Recusa:** Implementar o modal de feedback para auditoria de cadastro recusada.
 9. **Gerenciamento de Permissões:** Interface para controle de acesso (PermissionChips).
 

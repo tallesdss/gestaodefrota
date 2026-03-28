@@ -3,7 +3,7 @@ import '../models/contract.dart';
 List<Contract> mockContracts = [
   Contract(
     id: 'c1',
-    vehicleId: 'v1',
+    vehicleId: '1',
     driverId: 'd1',
     type: 'UBER',
     startDate: DateTime(2024, 01, 15),
@@ -15,7 +15,7 @@ List<Contract> mockContracts = [
   ),
   Contract(
     id: 'c2',
-    vehicleId: 'v2',
+    vehicleId: '2',
     driverId: 'd2',
     type: 'PREFEITURA',
     startDate: DateTime(2023, 12, 01),
@@ -27,7 +27,7 @@ List<Contract> mockContracts = [
   ),
   Contract(
     id: 'c3',
-    vehicleId: 'v3',
+    vehicleId: '3',
     driverId: 'd3',
     type: 'UBER',
     startDate: DateTime(2023, 06, 01),
