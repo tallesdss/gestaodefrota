@@ -13,6 +13,7 @@ class FinancialEntry {
   final DateTime date;
   final String description;
   final bool isPaid;
+  final bool isLate;
 
   FinancialEntry({
     required this.id,
@@ -24,6 +25,7 @@ class FinancialEntry {
     required this.date,
     required this.description,
     required this.isPaid,
+    this.isLate = false,
   });
 
   factory FinancialEntry.fromMap(Map<String, dynamic> map) {
@@ -37,6 +39,7 @@ class FinancialEntry {
       date: DateTime.parse(map['date']),
       description: map['description'],
       isPaid: map['isPaid'] as bool,
+      isLate: map['isLate'] ?? false,
     );
   }
 
@@ -51,6 +54,7 @@ class FinancialEntry {
       'date': date.toIso8601String(),
       'description': description,
       'isPaid': isPaid,
+      'isLate': isLate,
     };
   }
 
@@ -64,6 +68,7 @@ class FinancialEntry {
     DateTime? date,
     String? description,
     bool? isPaid,
+    bool? isLate,
   }) {
     return FinancialEntry(
       id: id ?? this.id,
@@ -75,6 +80,7 @@ class FinancialEntry {
       date: date ?? this.date,
       description: description ?? this.description,
       isPaid: isPaid ?? this.isPaid,
+      isLate: isLate ?? this.isLate,
     );
   }
 }

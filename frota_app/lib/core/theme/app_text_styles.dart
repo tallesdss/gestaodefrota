@@ -28,6 +28,12 @@ class AppTextStyles {
     color: AppColors.onSurface,
   );
 
+  static TextStyle titleMedium = GoogleFonts.inter(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AppColors.onSurface,
+  );
+  
   // Body - Inter
   static TextStyle bodyLarge = GoogleFonts.inter(
     fontSize: 16,

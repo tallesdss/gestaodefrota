@@ -6,6 +6,7 @@ enum BadgeType {
   active, 
   warning, 
   error, 
+  success,
   neutral 
 }
 
@@ -24,6 +25,7 @@ class StatusBadge extends StatelessWidget {
       case BadgeType.active: return AppColors.primary.withAlpha(25);
       case BadgeType.warning: return AppColors.accent.withAlpha(25);
       case BadgeType.error: return AppColors.error.withAlpha(25);
+      case BadgeType.success: return AppColors.success.withAlpha(25);
       case BadgeType.neutral: return AppColors.outlineVariant.withAlpha(51);
     }
   }
@@ -33,6 +35,7 @@ class StatusBadge extends StatelessWidget {
       case BadgeType.active: return AppColors.primary;
       case BadgeType.warning: return Colors.orange[800]!;
       case BadgeType.error: return AppColors.error;
+      case BadgeType.success: return AppColors.success;
       case BadgeType.neutral: return AppColors.onSurfaceVariant;
     }
   }

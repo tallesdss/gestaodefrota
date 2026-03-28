@@ -82,6 +82,11 @@ class MockRepository {
     return mockFinancialEntries.where((f) => f.vehicleId == vehicleId).toList();
   }
 
+  Future<List<FinancialEntry>> getFinancialEntriesByDriver(String driverId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return mockFinancialEntries.where((f) => f.driverId == driverId).toList();
+  }
+
   // Timeline
   Future<List<TimelineItem>> getDriverTimeline({required String driverId, int page = 1, int pageSize = 5}) async {
     await Future.delayed(const Duration(milliseconds: 400));
@@ -89,5 +94,10 @@ class MockRepository {
     if (start >= mockTimeline.length) return [];
     final end = (start + pageSize) > mockTimeline.length ? mockTimeline.length : (start + pageSize);
     return mockTimeline.sublist(start, end);
+  }
+
+  Future<void> addFinancialEntry(FinancialEntry entry) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    mockFinancialEntries.add(entry);
   }
 }

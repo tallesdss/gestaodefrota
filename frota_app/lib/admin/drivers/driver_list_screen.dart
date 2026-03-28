@@ -6,7 +6,11 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/repositories/mock_repository.dart';
 import '../../models/driver.dart';
+import '../../models/financial_entry.dart';
 import '../../core/widgets/status_badge.dart';
+import '../../core/widgets/app_dialogs.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_text_field.dart';
 
 class DriverListScreen extends StatefulWidget {
   const DriverListScreen({super.key});
@@ -50,6 +54,64 @@ class _DriverListScreenState extends State<DriverListScreen> {
         _filteredDrivers = _drivers.where((d) => d.city == city).toList();
       }
     });
+  }
+
+  void _showPaymentModal(Driver driver) {
+    final amountController = TextEditingController();
+    
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Informar Pagamento',
+      content: Column(
+        children: [
+          Text(
+            'Informe o valor pago por ${driver.name}',
+            style: AppTextStyles.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            label: 'Valor (R\$)',
+            controller: amountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            prefixIcon: Icons.attach_money,
+            hintText: '0,00',
+          ),
+        ],
+      ),
+      actions: [
+        AppButton(
+          label: 'Salvar Pagamento',
+          onPressed: () async {
+            final amount = double.tryParse(amountController.text.replaceAll(',', '.')) ?? 0;
+            if (amount > 0) {
+              final entry = FinancialEntry(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                type: FinancialType.income,
+                category: 'aluguel',
+                driverId: driver.id,
+                vehicleId: driver.currentVehicleId,
+                amount: amount,
+                date: DateTime.now(),
+                description: 'Pagamento informado de ${driver.name}',
+                isPaid: true,
+              );
+              
+              await _repository.addFinancialEntry(entry);
+              
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Pagamento de R\$ ${amount.toStringAsFixed(2)} salvo com sucesso!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ],
+    );
   }
 
   @override
@@ -212,8 +274,14 @@ class _DriverListScreenState extends State<DriverListScreen> {
                                   ],
                                 ),
                               ),
-                              const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
-                            ],
+                               const SizedBox(width: AppSpacing.md),
+                               IconButton(
+                                 icon: const Icon(Icons.payments_outlined, color: Colors.green),
+                                 onPressed: () => _showPaymentModal(driver),
+                                 tooltip: 'Informar Pagamento',
+                               ),
+                               const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
+                             ],
                           ),
                         ),
                       );

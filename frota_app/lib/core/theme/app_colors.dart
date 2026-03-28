@@ -10,6 +10,7 @@ class AppColors {
   static const Color secondary = Color(0xFF425E91);
   static const Color secondaryContainer = Color(0xFFD7E2FF);
   static const Color onSecondaryContainer = Color(0xFF001A40);
+  static const Color onPrimaryContainer = Color(0xFFFFFFFF);
   
   // Surfaces - Filosofia de Camadas Tonais
   static const Color surface = Color(0xFFF8F9FF); // Base canvas

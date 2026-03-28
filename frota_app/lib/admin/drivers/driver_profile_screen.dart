@@ -11,7 +11,10 @@ import '../../core/widgets/app_dialogs.dart';
 import '../../core/repositories/mock_repository.dart';
 import '../../models/driver.dart';
 import '../../models/vehicle.dart';
+import '../../models/financial_entry.dart';
 import '../../models/timeline_item.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_text_field.dart';
 
 class DriverProfileScreen extends StatefulWidget {
   final String driverId;
@@ -27,6 +30,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   Driver? _driver;
   Vehicle? _currentVehicle;
   List<TimelineItem> _timelineItems = [];
+  List<FinancialEntry> _financialEntries = [];
   bool _isLoading = true;
 
   @override
@@ -46,11 +50,13 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     }
 
     final timeline = await _repository.getDriverTimeline(driverId: widget.driverId, page: 1, pageSize: 3);
+    final financials = await _repository.getFinancialEntriesByDriver(widget.driverId);
 
     setState(() {
       _driver = driver;
       _currentVehicle = vehicle;
       _timelineItems = timeline;
+      _financialEntries = financials;
       _isLoading = false;
     });
   }
@@ -180,6 +186,10 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   Widget _buildFinanceStats() {
+    final totalReceived = _financialEntries
+        .where((e) => e.type == FinancialType.income && e.isPaid)
+        .fold(0.0, (sum, item) => sum + item.amount);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -188,11 +198,17 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         Row(
           children: [
             Expanded(
-              child: StatCard(
-                title: 'TOTAL RENDIDO',
-                value: 'R\$ 12.450,00',
-                icon: Icons.payments_outlined,
-                iconColor: AppColors.success,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => _showPaymentHistoryModal(),
+                  child: StatCard(
+                    title: 'TOTAL RENDIDO',
+                    value: 'R\$ ${NumberFormat('#,##0.00', 'pt_BR').format(totalReceived)}',
+                    icon: Icons.payments_outlined,
+                    iconColor: AppColors.success,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -206,7 +222,212 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             ),
           ],
         ),
+        const SizedBox(height: AppSpacing.lg),
+        SizedBox(
+          width: double.infinity,
+          child: AppButton(
+            label: 'INFORMAR PAGAMENTO',
+            icon: Icons.add_card,
+            onPressed: () => _showPaymentModal(),
+          ),
+        ),
       ],
+    );
+  }
+
+  void _showPaymentModal() {
+    final amountController = TextEditingController();
+    bool isLate = false;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            top: 16,
+            left: 20,
+            right: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Informar Pagamento',
+                style: AppTextStyles.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Informe o valor pago por ${_driver!.name}',
+                style: AppTextStyles.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              AppTextField(
+                label: 'Valor (R\$)',
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                prefixIcon: Icons.attach_money,
+                hintText: '0,00',
+              ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: Text('Pago com atraso?', style: AppTextStyles.bodyMedium),
+                value: isLate,
+                onChanged: (val) {
+                  setModalState(() {
+                    isLate = val;
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: 'Cancelar',
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppButton(
+                      label: 'Salvar',
+                      onPressed: () async {
+                        final amountText = amountController.text.replaceAll(',', '.');
+                        final amount = double.tryParse(amountText) ?? 0.0;
+                        if (amount > 0) {
+                          final entry = FinancialEntry(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            type: FinancialType.income,
+                            category: 'aluguel',
+                            driverId: _driver!.id,
+                            vehicleId: _driver!.currentVehicleId,
+                            amount: amount,
+                            date: DateTime.now(),
+                            description: 'Pagamento de ${isLate ? "aluguel com atraso" : "aluguel"}',
+                            isPaid: true,
+                            isLate: isLate,
+                          );
+                          
+                          await _repository.addFinancialEntry(entry);
+                          
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Pagamento de R\$ ${amount.toStringAsFixed(2)} salvo com sucesso!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                            _loadData();
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPaymentHistoryModal() {
+    final paidEntries = _financialEntries
+        .where((e) => e.type == FinancialType.income && e.isPaid)
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Histórico de Pagamentos',
+      content: paidEntries.isEmpty
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Text('Nenhum pagamento registrado.'),
+              ),
+            )
+          : SizedBox(
+              height: 400,
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                itemCount: paidEntries.length,
+                itemBuilder: (context, index) {
+                  final entry = paidEntries[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: entry.isLate 
+                                ? AppColors.error.withValues(alpha: 0.1) 
+                                : AppColors.success.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            entry.isLate ? Icons.history : Icons.check_circle_outline,
+                            color: entry.isLate ? AppColors.error : AppColors.success,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'R\$ ${NumberFormat('#,##0.00', 'pt_BR').format(entry.amount)}',
+                                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                DateFormat('dd/MM/yyyy HH:mm').format(entry.date),
+                                style: AppTextStyles.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                         if (entry.isLate)
+                          StatusBadge(
+                            label: 'ATRASO',
+                            type: BadgeType.error,
+                          )
+                        else
+                          StatusBadge(
+                            label: 'OK',
+                            type: BadgeType.success,
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 
@@ -217,53 +438,48 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         const SectionHeader(title: 'VEÍCULO ATUAL & HISTÓRICO'),
         const SizedBox(height: AppSpacing.md),
         if (_currentVehicle != null)
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.directions_car, color: AppColors.primary),
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => context.push('/admin/vehicles/${_currentVehicle!.id}'),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${_currentVehicle!.brand} ${_currentVehicle!.model}',
-                        style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        'Placa: ${_currentVehicle!.plate}',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Row(
                   children: [
-                    Text(
-                      'DESDE',
-                      style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.directions_car, color: AppColors.onPrimaryContainer, size: 30),
                     ),
-                    Text(
-                      '12/03/2026',
-                      style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_currentVehicle!.model, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+                          Text('Placa: ${_currentVehicle!.plate}', style: AppTextStyles.bodyMedium),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text('DESDE', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
+                        Text('12/03/2026', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           )
         else
