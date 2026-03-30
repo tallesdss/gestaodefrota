@@ -41,6 +41,10 @@ import '../../admin/control_panel/expense_categories_screen.dart';
 import '../../admin/control_panel/cash_flow_form_screen.dart';
 import '../../admin/managers/user_search_promotion_screen.dart';
 import '../../admin/control_panel/financial_report_screen.dart';
+import '../../driver_portal/onboarding/driver_onboarding_docs_screen.dart';
+import '../../driver_portal/onboarding/driver_onboarding_contract_screen.dart';
+import '../../driver_portal/profile/driver_profile_setup_screen.dart';
+import '../../driver_portal/home/driver_home_screen.dart';
 
 
 
@@ -93,6 +97,9 @@ class AppRoutes {
   static const String gestorVehicleDetail = '/gestor/vehicles/detail/:id';
   static const String gestorDriverProfile = '/gestor/drivers/profile/:id';
   static const String gestorInspectionDetail = '/gestor/inspections/:id';
+  static const String driverOnboardingDocs = '/driver/onboarding/docs';
+  static const String driverOnboardingContract = '/driver/onboarding/contract';
+  static const String driverProfileSetup = '/driver/profile-setup';
   static const String driverHome = '/driver/home';
 
   static final router = GoRouter(
@@ -412,10 +419,20 @@ class AppRoutes {
       ),
 
       GoRoute(
+        path: driverOnboardingDocs,
+        builder: (context, state) => const DriverOnboardingDocsScreen(),
+      ),
+      GoRoute(
+        path: driverOnboardingContract,
+        builder: (context, state) => const DriverOnboardingContractScreen(),
+      ),
+      GoRoute(
+        path: driverProfileSetup,
+        builder: (context, state) => const DriverProfileSetupScreen(),
+      ),
+      GoRoute(
         path: driverHome,
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('Driver Portal (Work in Progress)')),
-        ),
+        builder: (context, state) => const DriverHomeScreen(),
       ),
     ],
   );

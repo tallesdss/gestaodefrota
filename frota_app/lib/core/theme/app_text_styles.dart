@@ -22,6 +22,12 @@ class AppTextStyles {
     color: AppColors.onSurface,
   );
 
+  static TextStyle headlineMedium = GoogleFonts.manrope(
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    color: AppColors.onSurface,
+  );
+
   static TextStyle headlineSmall = GoogleFonts.manrope(
     fontSize: 24,
     fontWeight: FontWeight.w600,

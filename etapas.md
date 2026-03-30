@@ -57,17 +57,32 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
 ---
 
 ## 🚗 Etapas: Motorista (Mobilidade e Transparência)
-*Interface focada em agilidade, contraste e uso em campo.*
+*Foco em agilidade, interface de alto contraste para uso em campo (Touch-First) e transparência total de dados.*
 
-- [ ] **FASE 1: Onboarding & Portal do Condutor**
-    - [ ] **Módulo de Auto-Cadastro:** Entrada do motorista e upload de documentos (CNH, Comprovante de Residência).
-    - [ ] **Home:** Status do veículo vinculado e situação financeira imediata.
-    - [ ] **Fluxo de Check-in (Início):** Validação de KM, Checklist e Vistoria Fotográfica (6 fotos obrigatórias).
-    - [ ] **Fluxo de Check-out (Devolução):** Comparação fotográfica e cálculo automático de KM rodados.
+- [x] **FASE 1: Identidade Digital & Auto-Cadastro**
+    - [x] **Onboarding Premium:** Fluxo guiado para upload de documentos (CNH e Comprovante de Residência) com feedback visual de análise.
+    - [x] **Assinatura de Termo de Uso:** Aceite digital dos termos de locação e política de privacidade integrado ao app.
+    - [x] **Perfil do Condutor:** Edição de dados pessoais e visualização de "Score de Confiança" (Gamificação mockada).
 
-- [ ] **FASE 2: Pagamentos e Financeiro**
-    - [ ] **Minhas Mensalidades:** Histórico de pagamentos e próximos vencimentos com visualização de "Status Chips".
-    - [ ] **Pagamento via PIX (Mock):** Geração de QR Code estático e upload de comprovante.
+- [x] **FASE 2: Central de Mobilidade (Home das Operações)**
+    - [x] **Status do Veículo Ativo:** Card monumental com placa, modelo, KM atual e status de manutenção preventiva.
+    - [x] **Documentos Digitais:** Acesso rápido ao CRLV do veículo e Cartão de Seguro (Disponível para uso offline).
+    - [x] **Timeline de Atividades:** Histórico de avisos, manutenções agendadas e mensagens diretas da gestão.
+
+- [ ] **FASE 3: Auditoria Progressiva (Vistorias e Check-ins)**
+    - [ ] **Fluxo de Check-in (Retirada):** Vistoria guiada 360º com fotos obrigatórias (conforme `vistoria.md`) e validação de KM inicial.
+    - [ ] **Relatório de Ocorrências:** Canal dedicado para reportar novos danos ou problemas mecânicos encontrados durante a jornada.
+    - [ ] **Fluxo de Check-out (Devolução):** Comparativo visual de fotos anteriores e cálculo automático de KM para fechamento de ciclo.
+
+- [ ] **FASE 4: Gestão Financeira Self-Service**
+    - [ ] **Extrato Consolidado:** Linha do tempo visual detalhando mensalidades, taxas, multas e créditos.
+    - [ ] **Checkout via PIX:** Geração de QR Code dinâmico ("Copia e Cola") e upload simplificado de comprovante de pagamento.
+    - [ ] **Central de Recibos:** Histórico de faturas quitadas com opção de download de comprovantes em PDF.
+
+- [ ] **FASE 5: Suporte e Segurança**
+    - [ ] **Notificações Push Premium:** Alertas inteligentes de vencimento, mensagens de sistema e avisos críticos de segurança.
+    - [ ] **Botão de Emergência/Suporte:** Canal direto de ação rápida (WhatsApp/Telefone) para assistência mecânica ou jurídica 24h.
+    - [ ] **FAQ do Condutor:** Manual interativo contendo regras de uso da frota, diretrizes de multas e procedimentos pós-acidente.
 
 ---
 
