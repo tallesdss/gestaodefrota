@@ -35,6 +35,7 @@ import '../../admin/vehicles/vehicle_form_screen.dart';
 import '../../admin/vehicles/vehicle_usage_history_screen.dart';
 import '../../admin/vehicles/vehicle_inspection_history_screen.dart';
 import '../../admin/control_panel/control_panel_screen.dart';
+import '../../admin/control_panel/salary_history_screen.dart';
 import '../../admin/control_panel/manager_salaries_screen.dart';
 import '../../admin/control_panel/expense_categories_screen.dart';
 import '../../admin/control_panel/cash_flow_form_screen.dart';
@@ -73,6 +74,7 @@ class AppRoutes {
   static const String adminVehicleUsageHistory = '/admin/vehicles/:id/usage';
   static const String adminControlPanel = '/admin/control-panel';
   static const String adminManagerSalaries = '/admin/control-panel/salaries';
+  static const String adminManagerSalaryHistory = '/admin/control-panel/salaries/history';
   static const String adminExpenseCategories = '/admin/control-panel/categories';
   static const String adminCashFlowForm = '/admin/control-panel/cash-flow-form';
   static const String adminManagerSearch = '/admin/managers/search';
@@ -249,6 +251,10 @@ class AppRoutes {
           GoRoute(
             path: adminManagerSalaries,
             builder: (context, state) => const ManagerSalariesScreen(),
+          ),
+          GoRoute(
+            path: 'salaries/history',
+            builder: (context, state) => const SalaryHistoryScreen(),
           ),
           GoRoute(
             path: adminExpenseCategories,
