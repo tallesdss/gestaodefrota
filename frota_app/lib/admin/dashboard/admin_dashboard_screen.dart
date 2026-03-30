@@ -16,6 +16,10 @@ class AdminDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String location = GoRouterState.of(context).uri.path;
+    final bool isGestor = location.startsWith('/gestor');
+    final String prefix = isGestor ? '/gestor' : '/admin';
+
     return ListView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xxl,
@@ -30,7 +34,7 @@ class AdminDashboardScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Visão Geral da Frota',
+                  isGestor ? 'Painel Operacional' : 'Visão Geral da Frota',
                   style: AppTextStyles.headlineLarge.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
@@ -38,7 +42,9 @@ class AdminDashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Relatório atualizado em tempo real • 24 Out 2023',
+                  isGestor 
+                    ? 'Supervisão de Fluxo de Caixa e Equipe • Hoje'
+                    : 'Relatório atualizado em tempo real • 24 Out 2023',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -46,7 +52,7 @@ class AdminDashboardScreen extends StatelessWidget {
               ],
             ),
             ElevatedButton.icon(
-              onPressed: () => context.push(AppRoutes.adminInspectionForm),
+              onPressed: () => context.push('$prefix/inspections/new'),
               icon: const Icon(Icons.add_circle_outline, size: 20),
               label: const Text('Nova Vistoria'),
               style: ElevatedButton.styleFrom(
@@ -101,7 +107,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 subtitle: 'Inadimplência',
                 icon: Icons.error_outline,
                 accentColor: Colors.redAccent,
-                onTap: () => context.go(AppRoutes.adminDelinquencyDrivers),
+                onTap: () => context.go('$prefix/delinquency'),
               ),
             ],
           ),
@@ -118,32 +124,32 @@ class AdminDashboardScreen extends StatelessWidget {
             QuickActionButton(
               icon: Icons.add_circle_outline,
               label: 'Add Veículo',
-              onTap: () => context.go(AppRoutes.adminVehicleForm),
+              onTap: () => context.go('$prefix/vehicles/form'),
             ),
             QuickActionButton(
               icon: Icons.person_add_outlined,
               label: 'Add Motorista',
-              onTap: () => context.go(AppRoutes.adminDriverForm),
+              onTap: () => context.go('$prefix/drivers/form'),
             ),
             QuickActionButton(
               icon: Icons.fact_check_outlined,
               label: 'Auditoria',
-              onTap: () => context.go(AppRoutes.adminRegistrationAudit),
+              onTap: () => context.go('$prefix/audit'),
             ),
             QuickActionButton(
               icon: Icons.payments_outlined,
               label: 'Novo Lançamento',
-              onTap: () => context.go(AppRoutes.adminFinancialList),
+              onTap: () => context.go('$prefix/financial'),
             ),
             QuickActionButton(
               icon: Icons.notifications_outlined,
               label: 'Notificações',
-              onTap: () => context.go(AppRoutes.adminNotifications),
+              onTap: () => context.go('$prefix/notifications'),
             ),
             QuickActionButton(
               icon: Icons.tune_outlined,
               label: 'Ajustes',
-              onTap: () => context.go(AppRoutes.adminSettings),
+              onTap: () => context.go('$prefix/settings'),
             ),
           ],
         ),
@@ -172,42 +178,42 @@ class AdminDashboardScreen extends StatelessWidget {
               title: 'Gestão de Veículos',
               description: 'Controle de frota, documentação e status.',
               icon: Icons.directions_car_outlined,
-              onTap: () => context.go(AppRoutes.adminVehicleList),
+              onTap: () => context.go('$prefix/vehicles'),
               color: Colors.indigo,
             ),
             ModuleNavCard(
               title: 'Financeiro',
               description: 'Ganhos, gastos e relatórios mensais.',
               icon: Icons.account_balance_wallet_outlined,
-              onTap: () => context.go(AppRoutes.adminFinancialList),
+              onTap: () => context.go('$prefix/financial'),
               color: Colors.green,
             ),
              ModuleNavCard(
               title: 'Motoristas',
               description: 'Perfis, CNH e histórico de aluguéis.',
               icon: Icons.person_search_outlined,
-              onTap: () => context.go(AppRoutes.adminDriverList),
+              onTap: () => context.go('$prefix/drivers'),
               color: Colors.blueAccent,
             ),
             ModuleNavCard(
               title: 'Auditoria de Cadastro',
               description: 'Validar documentos e perfis pendentes.',
               icon: Icons.fact_check_outlined,
-              onTap: () => context.go(AppRoutes.adminRegistrationAudit),
+              onTap: () => context.go('$prefix/audit'),
               color: Colors.orange,
             ),
             ModuleNavCard(
               title: 'Vistorias & Check-ins',
               description: 'Histórico de estados de entrada e saída.',
               icon: Icons.task_outlined,
-              onTap: () => context.go(AppRoutes.adminInspectionAudit),
+              onTap: () => context.go('$prefix/inspections'),
               color: Colors.purple,
             ),
             ModuleNavCard(
               title: 'Plano de Manutenção',
               description: 'Previsão de revisões e alertas de peças.',
               icon: Icons.handyman_outlined,
-              onTap: () => context.go(AppRoutes.adminMaintenanceList),
+              onTap: () => context.go('$prefix/maintenance'),
               color: Colors.redAccent,
             ),
           ],

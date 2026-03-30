@@ -28,7 +28,6 @@ import '../../admin/financial/financial_list_screen.dart';
 import '../../admin/financial/financial_flow_detail_screen.dart';
 import '../../admin/financial/delinquency_list_screen.dart';
 import '../../admin/admin_scaffold.dart';
-import '../../manager/dashboard/manager_dashboard_screen.dart';
 import '../../admin/vehicles/vehicle_form_screen.dart';
 import '../../models/driver.dart';
 import '../../models/manager.dart';
@@ -297,7 +296,7 @@ class AppRoutes {
         routes: [
           GoRoute(
             path: gestorDashboard,
-            builder: (context, state) => const ManagerDashboardScreen(),
+            builder: (context, state) => const AdminDashboardScreen(),
           ),
           GoRoute(
             path: gestorVehicleList,
