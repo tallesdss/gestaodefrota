@@ -15,6 +15,9 @@ class AdminSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isGestor = activeRoute.startsWith('/gestor');
+    final String prefix = isGestor ? '/gestor' : '/admin';
+
     return Container(
       width: 260,
       color: AppColors.surfaceContainerLowest,
@@ -35,7 +38,7 @@ class AdminSidebar extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '65 Veículos Ativos',
+                  isGestor ? 'Perfil Gestor' : 'Perfil Administrador',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -48,45 +51,46 @@ class AdminSidebar extends StatelessWidget {
           _SidebarItem(
             icon: Icons.dashboard_outlined,
             label: 'Dashboard',
-            isActive: activeRoute == AppRoutes.adminDashboard,
-            onTap: () => context.go(AppRoutes.adminDashboard),
+            isActive: activeRoute == '$prefix/dashboard',
+            onTap: () => context.go('$prefix/dashboard'),
           ),
           _SidebarItem(
             icon: Icons.directions_car_outlined,
             label: 'Veículos',
-            isActive: activeRoute.startsWith(AppRoutes.adminVehicleList),
-            onTap: () => context.go(AppRoutes.adminVehicleList),
+            isActive: activeRoute.startsWith('$prefix/vehicles'),
+            onTap: () => context.go('$prefix/vehicles'),
           ),
           _SidebarItem(
             icon: Icons.person_search_outlined,
             label: 'Motoristas',
-            isActive: activeRoute.startsWith(AppRoutes.adminDriverList),
-            onTap: () => context.go(AppRoutes.adminDriverList),
+            isActive: activeRoute.startsWith('$prefix/drivers'),
+            onTap: () => context.go('$prefix/drivers'),
           ),
           _SidebarItem(
             icon: Icons.fact_check_outlined,
             label: 'Auditoria',
-            isActive: activeRoute == AppRoutes.adminRegistrationAudit,
-            onTap: () => context.go(AppRoutes.adminRegistrationAudit),
+            isActive: activeRoute.startsWith('$prefix/audit'),
+            onTap: () => context.go('$prefix/audit'),
           ),
           _SidebarItem(
             icon: Icons.account_balance_wallet_outlined,
             label: 'Financeiro',
-            isActive: activeRoute.startsWith(AppRoutes.adminFinancialList),
-            onTap: () => context.go(AppRoutes.adminFinancialList),
+            isActive: activeRoute.startsWith('$prefix/financial'),
+            onTap: () => context.go('$prefix/financial'),
           ),
           _SidebarItem(
             icon: Icons.task_outlined,
             label: 'Vistorias',
-            isActive: activeRoute.startsWith(AppRoutes.adminInspectionAudit),
-            onTap: () => context.go(AppRoutes.adminInspectionAudit),
+            isActive: activeRoute.startsWith('$prefix/inspections'),
+            onTap: () => context.go('$prefix/inspections'),
           ),
-          _SidebarItem(
-            icon: Icons.settings_applications_outlined,
-            label: 'Painel de Controle',
-            isActive: activeRoute == AppRoutes.adminControlPanel,
-            onTap: () => context.go(AppRoutes.adminControlPanel),
-          ),
+          if (!isGestor)
+            _SidebarItem(
+              icon: Icons.settings_applications_outlined,
+              label: 'Painel de Controle',
+              isActive: activeRoute.startsWith('/admin/control-panel'),
+              onTap: () => context.go(AppRoutes.adminControlPanel),
+            ),
           const Spacer(),
           _SidebarItem(
             icon: Icons.logout,

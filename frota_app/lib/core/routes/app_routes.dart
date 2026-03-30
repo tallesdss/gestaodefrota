@@ -29,11 +29,10 @@ import '../../admin/financial/financial_flow_detail_screen.dart';
 import '../../admin/financial/delinquency_list_screen.dart';
 import '../../admin/admin_scaffold.dart';
 import '../../manager/dashboard/manager_dashboard_screen.dart';
-import '../../manager/widgets/manager_scaffold.dart';
+import '../../admin/vehicles/vehicle_form_screen.dart';
 import '../../models/driver.dart';
 import '../../models/manager.dart';
 import '../../models/contract.dart';
-import '../../admin/vehicles/vehicle_form_screen.dart';
 import '../../admin/vehicles/vehicle_usage_history_screen.dart';
 import '../../admin/vehicles/vehicle_inspection_history_screen.dart';
 import '../../admin/control_panel/control_panel_screen.dart';
@@ -90,6 +89,11 @@ class AppRoutes {
   static const String gestorFinancialList = '/gestor/financial';
   static const String gestorDriverList = '/gestor/drivers';
   static const String gestorInspectionAudit = '/gestor/inspections';
+  static const String gestorVehicleList = '/gestor/vehicles';
+  static const String gestorAudit = '/gestor/audit';
+  static const String gestorVehicleDetail = '/gestor/vehicles/detail/:id';
+  static const String gestorDriverProfile = '/gestor/drivers/profile/:id';
+  static const String gestorInspectionDetail = '/gestor/inspections/:id';
   static const String driverHome = '/driver/home';
 
   static final router = GoRouter(
@@ -287,25 +291,123 @@ class AppRoutes {
         ],
       ),
 
-      // Gestor Shell
+      // Gestor Shell (Mirrors Admin Shell but excludes Control Panel)
       ShellRoute(
-        builder: (context, state, child) => ManagerScaffold(child: child),
+        builder: (context, state, child) => AdminScaffold(child: child),
         routes: [
           GoRoute(
             path: gestorDashboard,
             builder: (context, state) => const ManagerDashboardScreen(),
           ),
           GoRoute(
-            path: gestorFinancialList,
-            builder: (context, state) => const FinancialListScreen(),
+            path: gestorVehicleList,
+            builder: (context, state) => const VehicleListScreen(),
+          ),
+          GoRoute(
+            path: gestorVehicleDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return VehicleDetailScreen(vehicleId: id);
+            },
+          ),
+          GoRoute(
+            path: '/gestor/vehicles/form', // Added missing form route
+            builder: (context, state) => const VehicleFormScreen(),
+          ),
+          GoRoute(
+            path: '/gestor/vehicles/:id/usage', // Added missing history route
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return VehicleUsageHistoryScreen(vehicleId: id);
+            },
+          ),
+          GoRoute(
+            path: '/gestor/vehicles/:id/inspections', // Added missing history route
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return VehicleInspectionHistoryScreen(vehicleId: id);
+            },
           ),
           GoRoute(
             path: gestorDriverList,
             builder: (context, state) => const DriverListScreen(),
           ),
           GoRoute(
+            path: '/gestor/drivers/form', // Added missing form route
+            builder: (context, state) {
+              final driver = state.extra as Driver?;
+              return DriverFormScreen(driver: driver);
+            },
+          ),
+          GoRoute(
+            path: gestorDriverProfile,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return DriverProfileScreen(driverId: id);
+            },
+          ),
+          GoRoute(
+            path: '/gestor/drivers/:id/timeline', // Added missing timeline route
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return DriverTimelineScreen(driverId: id);
+            },
+          ),
+          GoRoute(
+            path: '/gestor/drivers/:id/inspections', // Added missing history route
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return DriverInspectionHistoryScreen(driverId: id);
+            },
+          ),
+          GoRoute(
+            path: gestorAudit,
+            builder: (context, state) {
+               final id = state.uri.queryParameters['id'];
+               return RegistrationAuditScreen(initialSelectedId: id);
+            },
+          ),
+          GoRoute(
             path: gestorInspectionAudit,
             builder: (context, state) => const InspectionAuditScreen(),
+          ),
+          GoRoute(
+            path: '/gestor/inspections/new', // Added missing form route
+            builder: (context, state) => const InspectionFormScreen(),
+          ),
+          GoRoute(
+            path: gestorInspectionDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return InspectionDetailScreen(inspectionId: id);
+            },
+          ),
+          GoRoute(
+            path: gestorFinancialList,
+            builder: (context, state) => const FinancialListScreen(),
+          ),
+          GoRoute(
+            path: '/gestor/financial/flow', // Added missing flow route
+            builder: (context, state) {
+              final vehicleId = state.uri.queryParameters['vehicleId'];
+              return FinancialFlowDetailScreen(vehicleId: vehicleId);
+            },
+          ),
+          GoRoute(
+            path: '/gestor/delinquency', // Added missing delinquency route
+            builder: (context, state) => const DelinquencyListScreen(),
+          ),
+          GoRoute(
+            path: '/gestor/notifications', 
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/gestor/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/gestor/profile',
+            builder: (context, state) => const ProfileScreen(),
           ),
         ],
       ),
