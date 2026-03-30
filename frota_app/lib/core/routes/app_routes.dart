@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../onboarding/login_screen.dart';
 import '../onboarding/register_screen.dart';
 import '../onboarding/selection_profile_screen.dart';
+import '../onboarding/forgot_password_screen.dart';
 import '../../admin/dashboard/admin_dashboard_screen.dart';
 import '../../admin/vehicles/vehicle_list_screen.dart';
 import '../../admin/vehicles/vehicle_detail_screen.dart';
@@ -50,6 +51,7 @@ class AppRoutes {
   static const String root = '/selection';
   static const String login = '/';
   static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
   static const String adminDashboard = '/admin/dashboard';
   static const String adminVehicleList = '/admin/vehicles';
   static const String adminVehicleDetail = '/admin/vehicles/detail/:id';
@@ -100,6 +102,10 @@ class AppRoutes {
       GoRoute(
         path: register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: root,
