@@ -7,6 +7,7 @@ import '../../core/repositories/mock_repository.dart';
 import '../../models/vehicle.dart';
 import '../../models/driver.dart';
 import '../../models/inspection.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/widgets/status_badge.dart';
 
 class InspectionAuditScreen extends StatefulWidget {
@@ -124,7 +125,7 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                         final vehicle = _vehicleMap[inspection.vehicleId];
 
                   return InkWell(
-                    onTap: () => context.push('/admin/vehicles/detail/${inspection.vehicleId}'),
+                    onTap: () => context.push(AppRoutes.adminInspectionDetail.replaceAll(':id', inspection.id)),
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -183,6 +184,8 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                              _buildStatusIndicator(inspection.status),
                             ],
                           ),
                           const SizedBox(height: AppSpacing.lg),
@@ -197,21 +200,24 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                               scrollDirection: Axis.horizontal,
                               itemCount: inspection.photos.length,
                               separatorBuilder: (_, __) => const SizedBox(width: 8),
-                              itemBuilder: (context, i) => ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  inspection.photos[i],
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
+                              itemBuilder: (context, i) {
+                                final photo = inspection.photos[i];
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    photo.url,
                                     width: 80,
                                     height: 80,
-                                    color: AppColors.surfaceContainerLow,
-                                    child: const Icon(Icons.image_not_supported_outlined),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: AppColors.surfaceContainerLow,
+                                      child: const Icon(Icons.image_not_supported_outlined),
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
@@ -249,5 +255,37 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildStatusIndicator(InspectionStatus status) {
+    Color color;
+    switch (status) {
+      case InspectionStatus.approved:
+        color = AppColors.success;
+        break;
+      case InspectionStatus.rejected:
+        color = AppColors.error;
+        break;
+      case InspectionStatus.pending:
+        color = AppColors.warning;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        status.name.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 }

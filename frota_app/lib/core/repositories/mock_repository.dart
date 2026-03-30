@@ -61,6 +61,15 @@ class MockRepository {
     return mockInspections;
   }
 
+  Future<Inspection?> getInspectionById(String id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      return mockInspections.firstWhere((i) => i.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<List<Inspection>> getInspectionsByDriver(String driverId) async {
     await Future.delayed(const Duration(milliseconds: 300));
     return mockInspections.where((i) => i.driverId == driverId).toList();
@@ -69,6 +78,14 @@ class MockRepository {
   Future<List<Inspection>> getInspectionsByVehicle(String vehicleId) async {
     await Future.delayed(const Duration(milliseconds: 300));
     return mockInspections.where((i) => i.vehicleId == vehicleId).toList();
+  }
+
+  Future<void> updateInspection(Inspection updated) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final index = mockInspections.indexWhere((i) => i.id == updated.id);
+    if (index != -1) {
+      mockInspections[index] = updated;
+    }
   }
 
   // Financials

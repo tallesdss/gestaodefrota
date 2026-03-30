@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/repositories/mock_repository.dart';
@@ -71,88 +73,145 @@ class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistor
                 final i = _inspections[index];
                 final isCheckin = i.type == InspectionType.checkin;
                 
-                return Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLowest,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.ambientShadow,
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: isCheckin ? AppColors.success.withValues(alpha: 0.1) : AppColors.secondary.withValues(alpha: 0.1),
-                            child: Icon(
-                              isCheckin ? Icons.login_rounded : Icons.logout_rounded,
-                              color: isCheckin ? AppColors.success : AppColors.secondary,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isCheckin ? 'CHECK-IN' : 'CHECK-OUT',
-                                  style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  '${dateFormat.format(i.dateTime)} às ${timeFormat.format(i.dateTime)}',
-                                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
-                                ),
-                              ],
-                            ),
-                          ),
-                          StatusBadge(
-                            label: i.hasNewDamage ? 'COM AVARIA' : 'SEM AVARIA',
-                            type: i.hasNewDamage ? BadgeType.error : BadgeType.active,
-                          ),
-                        ],
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                        child: Divider(height: 1),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildInfoColumn('KM', '${i.kmAtInspection} km'),
-                          _buildInfoColumn('COMBUSTÍVEL', '${(i.fuelLevel * 100).toInt()}%'),
-                          _buildInfoColumn('MOTORISTA ID', i.driverId),
-                        ],
-                      ),
-                      if (i.photos.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        SizedBox(
-                          height: 60,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: i.photos.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 8),
-                            itemBuilder: (context, photoIndex) {
-                              return ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(i.photos[photoIndex], width: 60, height: 60, fit: BoxFit.cover),
-                              );
-                            },
-                          ),
+                return GestureDetector(
+                  onTap: () => context.push(AppRoutes.adminInspectionDetail.replaceAll(':id', i.id)),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.ambientShadow,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
                       ],
-                    ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: isCheckin ? AppColors.success.withValues(alpha: 0.1) : AppColors.secondary.withValues(alpha: 0.1),
+                              child: Icon(
+                                isCheckin ? Icons.login_rounded : Icons.logout_rounded,
+                                color: isCheckin ? AppColors.success : AppColors.secondary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        isCheckin ? 'CHECK-IN' : 'CHECK-OUT',
+                                        style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildSmallStatusBadge(i.status),
+                                    ],
+                                  ),
+                                  Text(
+                                    '${dateFormat.format(i.dateTime)} às ${timeFormat.format(i.dateTime)}',
+                                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            StatusBadge(
+                              label: i.hasNewDamage ? 'COM AVARIA' : 'SEM AVARIA',
+                              type: i.hasNewDamage ? BadgeType.error : BadgeType.active,
+                            ),
+                          ],
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                          child: Divider(height: 1),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildInfoColumn('KM', '${i.kmAtInspection} km'),
+                            _buildInfoColumn('COMBUSTÍVEL', '${(i.fuelLevel * 100).toInt()}%'),
+                            _buildInfoColumn('STATUS', i.status.name.toUpperCase()),
+                          ],
+                        ),
+                        if (i.photos.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          SizedBox(
+                            height: 72,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: i.photos.length,
+                              separatorBuilder: (_, __) => const SizedBox(width: 8),
+                              itemBuilder: (context, photoIndex) {
+                                final photo = i.photos[photoIndex];
+                                return Column(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(photo.url, width: 50, height: 50, fit: BoxFit.cover),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    SizedBox(
+                                      width: 50,
+                                      child: Text(
+                                        photo.title,
+                                        style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 );
               },
             ),
+    );
+  }
+
+  Widget _buildSmallStatusBadge(InspectionStatus status) {
+    Color color;
+    switch (status) {
+      case InspectionStatus.approved:
+        color = AppColors.success;
+        break;
+      case InspectionStatus.rejected:
+        color = AppColors.error;
+        break;
+      case InspectionStatus.pending:
+        color = AppColors.warning;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        status.name.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
