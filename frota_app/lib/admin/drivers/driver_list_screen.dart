@@ -114,6 +114,72 @@ class _DriverListScreenState extends State<DriverListScreen> {
     );
   }
 
+  void _showDebtModal(Driver driver) {
+    final amountController = TextEditingController();
+    final descriptionController = TextEditingController(text: 'Aluguel');
+    
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Informar Valor a Pagar',
+      content: Column(
+        children: [
+          Text(
+            'Informe o valor que ${driver.name} deve pagar',
+            style: AppTextStyles.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            label: 'Valor (R\$)',
+            controller: amountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            prefixIcon: Icons.attach_money,
+            hintText: '0,00',
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            label: 'Descrição',
+            controller: descriptionController,
+            prefixIcon: Icons.description_outlined,
+            hintText: 'Ex: Aluguel, Multa, Manutenção...',
+          ),
+        ],
+      ),
+      actions: [
+        AppButton(
+          label: 'Salvar Débito',
+          onPressed: () async {
+            final amount = double.tryParse(amountController.text.replaceAll(',', '.')) ?? 0;
+            if (amount > 0) {
+              final entry = FinancialEntry(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                type: FinancialType.expense,
+                category: descriptionController.text.toLowerCase(),
+                driverId: driver.id,
+                vehicleId: driver.currentVehicleId,
+                amount: amount,
+                date: DateTime.now(),
+                description: 'Valor a pagar informado: ${descriptionController.text}',
+                isPaid: false,
+              );
+              
+              await _repository.addFinancialEntry(entry);
+              
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Débito de R\$ ${amount.toStringAsFixed(2)} registrado com sucesso!'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -284,6 +350,11 @@ class _DriverListScreenState extends State<DriverListScreen> {
                                 ),
                               ),
                                const SizedBox(width: AppSpacing.md),
+                                IconButton(
+                                 icon: const Icon(Icons.money_off_csred_outlined, color: Colors.orange),
+                                 onPressed: () => _showDebtModal(driver),
+                                 tooltip: 'Informar Valor a Pagar',
+                               ),
                                IconButton(
                                  icon: const Icon(Icons.payments_outlined, color: Colors.green),
                                  onPressed: () => _showPaymentModal(driver),

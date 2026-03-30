@@ -225,13 +225,25 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-        SizedBox(
-          width: double.infinity,
-          child: AppButton(
-            label: 'INFORMAR PAGAMENTO',
-            icon: Icons.add_card,
-            onPressed: () => _showPaymentModal(),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: 'VALOR A PAGAR',
+                icon: Icons.money_off_csred_outlined,
+                onPressed: () => _showDebtModal(),
+                variant: AppButtonVariant.secondary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: AppButton(
+                label: 'PAGAMENTO',
+                icon: Icons.add_card,
+                onPressed: () => _showPaymentModal(),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -335,6 +347,121 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                               SnackBar(
                                 content: Text('Pagamento de R\$ ${amount.toStringAsFixed(2)} salvo com sucesso!'),
                                 backgroundColor: Colors.green,
+                              ),
+                            );
+                            _loadData();
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDebtModal() {
+    final amountController = TextEditingController();
+    final descriptionController = TextEditingController(text: 'Aluguel');
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            top: 16,
+            left: 20,
+            right: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Informar Valor a Pagar',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Informe o valor que ${_driver!.name} deve pagar',
+                style: AppTextStyles.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              AppTextField(
+                label: 'Valor (R\$)',
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                prefixIcon: Icons.attach_money,
+                hintText: '0,00',
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Descrição',
+                controller: descriptionController,
+                prefixIcon: Icons.description_outlined,
+                hintText: 'Ex: Aluguel, Multa, Manutenção...',
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: 'Cancelar',
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppButton(
+                      label: 'Salvar',
+                      onPressed: () async {
+                        final amountText = amountController.text.replaceAll(',', '.');
+                        final amount = double.tryParse(amountText) ?? 0.0;
+                        if (amount > 0) {
+                          final entry = FinancialEntry(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            type: FinancialType.expense,
+                            category: descriptionController.text.toLowerCase(),
+                            driverId: _driver!.id,
+                            vehicleId: _driver!.currentVehicleId,
+                            amount: amount,
+                            date: DateTime.now(),
+                            description: 'Valor a pagar informado: ${descriptionController.text}',
+                            isPaid: false,
+                          );
+                          
+                          await _repository.addFinancialEntry(entry);
+                          
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Débito de R\$ ${amount.toStringAsFixed(2)} registrado com sucesso!'),
+                                backgroundColor: AppColors.error,
                               ),
                             );
                             _loadData();
