@@ -46,7 +46,7 @@ class AdminDashboardScreen extends StatelessWidget {
               ],
             ),
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () => context.push(AppRoutes.adminInspectionForm),
               icon: const Icon(Icons.add_circle_outline, size: 20),
               label: const Text('Nova Vistoria'),
               style: ElevatedButton.styleFrom(

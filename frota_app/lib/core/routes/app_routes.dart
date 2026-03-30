@@ -21,6 +21,7 @@ import '../../admin/contracts/contract_list_screen.dart';
 import '../../admin/contracts/contract_form_screen.dart';
 import '../../admin/maintenance/maintenance_list_screen.dart';
 import '../../admin/inspections/inspection_audit_screen.dart';
+import '../../admin/inspections/inspection_form_screen.dart';
 import '../../admin/inspections/inspection_detail_screen.dart';
 import '../../admin/financial/financial_list_screen.dart';
 import '../../admin/financial/financial_flow_detail_screen.dart';
@@ -63,6 +64,7 @@ class AppRoutes {
   static const String adminContractForm = '/admin/contracts/form';
   static const String adminMaintenanceList = '/admin/maintenance';
   static const String adminInspectionAudit = '/admin/inspections';
+  static const String adminInspectionForm = '/admin/inspections/new';
   static const String adminInspectionDetail = '/admin/inspections/:id';
   static const String adminFinancialList = '/admin/financial';
   static const String adminFinancialFlow = '/admin/financial/flow';
@@ -191,6 +193,10 @@ class AppRoutes {
           GoRoute(
             path: adminInspectionAudit,
             builder: (context, state) => const InspectionAuditScreen(),
+          ),
+          GoRoute(
+            path: adminInspectionForm,
+            builder: (context, state) => const InspectionFormScreen(),
           ),
           GoRoute(
             path: adminInspectionDetail,
