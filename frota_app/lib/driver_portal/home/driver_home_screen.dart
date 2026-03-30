@@ -21,7 +21,7 @@ class DriverHomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: AppSpacing.xl),
               _buildVehicleStatusCard(),
               const SizedBox(height: AppSpacing.lg),
@@ -29,7 +29,7 @@ class DriverHomeScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               _buildQuickActions(context),
               const SizedBox(height: AppSpacing.lg),
-              _buildActivityTimeline(),
+              _buildActivityTimeline(context),
             ],
           ),
         ),
@@ -38,7 +38,7 @@ class DriverHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -58,15 +58,18 @@ class DriverHomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerHigh,
-            shape: BoxShape.circle,
-          ),
-          child: const AppIcon(
-            icon: Icons.notifications_none_outlined,
-            color: AppColors.onSurface,
+        GestureDetector(
+          onTap: () => context.push(AppRoutes.driverNotifications),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerHigh,
+              shape: BoxShape.circle,
+            ),
+            child: const AppIcon(
+              icon: Icons.notifications_active_outlined,
+              color: AppColors.primary,
+            ),
           ),
         ),
       ],
@@ -280,7 +283,7 @@ class DriverHomeScreen extends StatelessWidget {
               child: _buildActionButton(
                 icon: Icons.document_scanner_outlined,
                 label: 'Documentos',
-                onPressed: () {},
+                onPressed: () => context.push(AppRoutes.driverDocuments),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -291,6 +294,20 @@ class DriverHomeScreen extends StatelessWidget {
                 onPressed: () => context.push(AppRoutes.driverOccurrenceReport),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionButton(
+                icon: Icons.support_agent_outlined,
+                label: 'Suporte',
+                onPressed: () => context.push(AppRoutes.driverSupport),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            const Spacer(flex: 2), // Keeps the same button size
           ],
         ),
       ],
@@ -416,7 +433,7 @@ class DriverHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityTimeline() {
+  Widget _buildActivityTimeline(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -431,11 +448,14 @@ class DriverHomeScreen extends StatelessWidget {
                 letterSpacing: 2,
               ),
             ),
-            Text(
-              'VER TUDO',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+            GestureDetector(
+              onTap: () => context.push(AppRoutes.driverActivityTimeline),
+              child: Text(
+                'VER TUDO',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -532,7 +552,7 @@ class DriverHomeScreen extends StatelessWidget {
         children: [
           _buildNavItem(context, Icons.home_filled, 'Home', true, () {}),
           _buildNavItem(context, Icons.account_balance_wallet_outlined, 'Financeiro', false, () => context.push(AppRoutes.driverFinancialStatement)),
-          _buildNavItem(context, Icons.person_outline, 'Perfil', false, () {}),
+          _buildNavItem(context, Icons.person_outline, 'Perfil', false, () => context.push(AppRoutes.driverProfileDetail)),
         ],
       ),
     );

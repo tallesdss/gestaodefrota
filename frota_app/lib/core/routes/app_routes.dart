@@ -43,7 +43,11 @@ import '../../admin/control_panel/financial_report_screen.dart';
 import '../../driver_portal/onboarding/driver_onboarding_docs_screen.dart';
 import '../../driver_portal/onboarding/driver_onboarding_contract_screen.dart';
 import '../../driver_portal/profile/driver_profile_setup_screen.dart';
+import '../../driver_portal/profile/driver_profile_detail_screen.dart';
+import '../../driver_portal/profile/driver_documents_screen.dart';
+import '../../driver_portal/profile/account_security_screen.dart';
 import '../../driver_portal/home/driver_home_screen.dart';
+import '../../driver_portal/home/driver_activity_timeline_screen.dart';
 import '../../driver_portal/inspections/inspection_checkin_screen.dart';
 import '../../driver_portal/inspections/inspection_checkout_screen.dart';
 import '../../driver_portal/inspections/occurrence_report_screen.dart';
@@ -51,6 +55,8 @@ import '../../driver_portal/inspections/inspection_history_screen.dart';
 import '../../driver_portal/payments/financial_statement_screen.dart';
 import '../../driver_portal/payments/pix_checkout_screen.dart';
 import '../../driver_portal/payments/receipts_history_screen.dart';
+import '../../driver_portal/notifications/notifications_screen.dart';
+import '../../driver_portal/support/support_screen.dart';
 import '../../models/financial_entry.dart';
 
 
@@ -108,6 +114,10 @@ class AppRoutes {
   static const String driverOnboardingContract = '/driver/onboarding/contract';
   static const String driverProfileSetup = '/driver/profile-setup';
   static const String driverHome = '/driver/home';
+  static const String driverProfileDetail = '/driver/profile-detail';
+  static const String driverAccountSecurity = '/driver/account-security';
+  static const String driverDocuments = '/driver/documents';
+  static const String driverActivityTimeline = '/driver/activity-timeline';
   static const String driverInspectionCheckIn = '/driver/inspection/checkin';
   static const String driverInspectionCheckOut = '/driver/inspection/checkout';
   static const String driverOccurrenceReport = '/driver/occurrence/report';
@@ -115,6 +125,8 @@ class AppRoutes {
   static const String driverFinancialStatement = '/driver/financial/statement';
   static const String driverPixCheckout = '/driver/financial/checkout';
   static const String driverReceipts = '/driver/financial/receipts';
+  static const String driverNotifications = '/driver/notifications';
+  static const String driverSupport = '/driver/support';
 
   static final router = GoRouter(
     initialLocation: login,
@@ -478,6 +490,30 @@ class AppRoutes {
       GoRoute(
         path: driverReceipts,
         builder: (context, state) => const ReceiptsHistoryScreen(),
+      ),
+      GoRoute(
+        path: driverNotifications,
+        builder: (context, state) => const DriverNotificationsScreen(),
+      ),
+      GoRoute(
+        path: driverSupport,
+        builder: (context, state) => const DriverSupportScreen(),
+      ),
+      GoRoute(
+        path: driverProfileDetail,
+        builder: (context, state) => const DriverProfileDetailScreen(),
+      ),
+      GoRoute(
+        path: driverAccountSecurity,
+        builder: (context, state) => const AccountSecurityScreen(),
+      ),
+      GoRoute(
+        path: driverDocuments,
+        builder: (context, state) => const DriverDocumentsScreen(),
+      ),
+      GoRoute(
+        path: driverActivityTimeline,
+        builder: (context, state) => const DriverActivityTimelineScreen(),
       ),
     ],
   );

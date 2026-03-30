@@ -74,15 +74,20 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
     - [x] **Relatório de Ocorrências:** Canal dedicado para reportar novos danos ou problemas mecânicos encontrados durante a jornada.
     - [x] **Fluxo de Check-out (Devolução):** Comparativo visual de fotos anteriores e cálculo automático de KM para fechamento de ciclo.
 
-- [ ] **FASE 4: Gestão Financeira Self-Service**
-    - [ ] **Extrato Consolidado:** Linha do tempo visual detalhando mensalidades, taxas, multas e créditos.
-    - [ ] **Checkout via PIX:** Geração de QR Code dinâmico ("Copia e Cola") e upload simplificado de comprovante de pagamento.
-    - [ ] **Central de Recibos:** Histórico de faturas quitadas com opção de download de comprovantes em PDF.
+- [x] **FASE 4: Gestão Financeira Self-Service**
+    - [x] **Extrato Consolidado:** Linha do tempo visual detalhando mensalidades, taxas, multas e créditos.
+    - [x] **Checkout via PIX:** Geração de QR Code dinâmico ("Copia e Cola") e upload simplificado de comprovante de pagamento.
+    - [x] **Central de Recibos:** Histórico de faturas quitadas com opção de download de comprovantes em PDF.
 
-- [ ] **FASE 5: Suporte e Segurança**
-    - [ ] **Notificações Push Premium:** Alertas inteligentes de vencimento, mensagens de sistema e avisos críticos de segurança.
-    - [ ] **Botão de Emergência/Suporte:** Canal direto de ação rápida (WhatsApp/Telefone) para assistência mecânica ou jurídica 24h.
-    - [ ] **FAQ do Condutor:** Manual interativo contendo regras de uso da frota, diretrizes de multas e procedimentos pós-acidente.
+- [x] **FASE 5: Suporte e Segurança**
+    - [x] **Notificações Push Premium:** Alertas inteligentes de vencimento, mensagens de sistema e avisos críticos de segurança.
+    - [x] **Botão de Emergência/Suporte:** Canal direto de ação rápida (WhatsApp/Telefone) para assistência mecânica ou jurídica 24h.
+    - [x] **FAQ do Condutor:** Manual interativo contendo regras de uso da frota, diretrizes de multas e procedimentos pós-acidente.
+
+- [x] **FASE 6: Perfil Detalhado & Gestão de Dados**
+    - [x] **Meu Perfil Editorial:** Visualização de Score de confiança, estatísticas de KM rodado e tempo de casa.
+    - [x] **Central de Documentos:** Visualização da CNH Digital, Contrato Assinado e Comprovante de Residência com status de validade.
+    - [x] **Segurança da Conta:** Fluxo de alteração de senha, autenticação biométrica (mock) e exclusão de conta conforme LGPD.
 
 ---
 
