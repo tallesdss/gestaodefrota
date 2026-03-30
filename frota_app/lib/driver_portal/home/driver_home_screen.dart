@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/routes/app_routes.dart';
+import '../../models/financial_entry.dart';
 
 class DriverHomeScreen extends StatelessWidget {
   const DriverHomeScreen({super.key});
@@ -24,7 +25,7 @@ class DriverHomeScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.xl),
               _buildVehicleStatusCard(),
               const SizedBox(height: AppSpacing.lg),
-              _buildFinancialSummaryCard(),
+              _buildFinancialSummaryCard(context),
               const SizedBox(height: AppSpacing.lg),
               _buildQuickActions(context),
               const SizedBox(height: AppSpacing.lg),
@@ -33,7 +34,7 @@ class DriverHomeScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
@@ -181,7 +182,7 @@ class DriverHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFinancialSummaryCard() {
+  Widget _buildFinancialSummaryCard(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -231,7 +232,18 @@ class DriverHomeScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           AppButton(
             label: 'PAGAR COM PIX',
-            onPressed: () {},
+            onPressed: () => context.push(
+              AppRoutes.driverPixCheckout,
+              extra: FinancialEntry(
+                id: '1',
+                type: FinancialType.expense,
+                category: 'Aluguel',
+                amount: 550.00,
+                date: DateTime.now().add(const Duration(days: 2)),
+                description: 'Semana 12/03 a 19/03',
+                isPaid: false,
+              ),
+            ),
             variant: AppButtonVariant.secondary,
             icon: Icons.qr_code_scanner_outlined,
             isFullWidth: true,
@@ -504,7 +516,7 @@ class DriverHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       decoration: BoxDecoration(
@@ -518,32 +530,35 @@ class DriverHomeScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.home_filled, 'Home', true),
-          _buildNavItem(Icons.account_balance_wallet_outlined, 'Financeiro', false),
-          _buildNavItem(Icons.person_outline, 'Perfil', false),
+          _buildNavItem(context, Icons.home_filled, 'Home', true, () {}),
+          _buildNavItem(context, Icons.account_balance_wallet_outlined, 'Financeiro', false, () => context.push(AppRoutes.driverFinancialStatement)),
+          _buildNavItem(context, Icons.person_outline, 'Perfil', false, () {}),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool active) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AppIcon(
-          icon: icon,
-          color: active ? AppColors.primary : AppColors.onSurfaceVariant,
-          size: 28,
-        ),
-        Text(
-          label,
-          style: AppTextStyles.labelSmall.copyWith(
+  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool active, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppIcon(
+            icon: icon,
             color: active ? AppColors.primary : AppColors.onSurfaceVariant,
-            fontSize: 10,
-            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            size: 28,
           ),
-        ),
-      ],
+          Text(
+            label,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: active ? AppColors.primary : AppColors.onSurfaceVariant,
+              fontSize: 10,
+              fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -48,6 +48,10 @@ import '../../driver_portal/inspections/inspection_checkin_screen.dart';
 import '../../driver_portal/inspections/inspection_checkout_screen.dart';
 import '../../driver_portal/inspections/occurrence_report_screen.dart';
 import '../../driver_portal/inspections/inspection_history_screen.dart';
+import '../../driver_portal/payments/financial_statement_screen.dart';
+import '../../driver_portal/payments/pix_checkout_screen.dart';
+import '../../driver_portal/payments/receipts_history_screen.dart';
+import '../../models/financial_entry.dart';
 
 
 
@@ -108,6 +112,9 @@ class AppRoutes {
   static const String driverInspectionCheckOut = '/driver/inspection/checkout';
   static const String driverOccurrenceReport = '/driver/occurrence/report';
   static const String driverInspectionHistory = '/driver/inspection/history';
+  static const String driverFinancialStatement = '/driver/financial/statement';
+  static const String driverPixCheckout = '/driver/financial/checkout';
+  static const String driverReceipts = '/driver/financial/receipts';
 
   static final router = GoRouter(
     initialLocation: login,
@@ -456,6 +463,21 @@ class AppRoutes {
       GoRoute(
         path: driverInspectionHistory,
         builder: (context, state) => const InspectionHistoryScreen(),
+      ),
+      GoRoute(
+        path: driverFinancialStatement,
+        builder: (context, state) => const FinancialStatementScreen(),
+      ),
+      GoRoute(
+        path: driverPixCheckout,
+        builder: (context, state) {
+          final entry = state.extra as FinancialEntry;
+          return PixCheckoutScreen(entry: entry);
+        },
+      ),
+      GoRoute(
+        path: driverReceipts,
+        builder: (context, state) => const ReceiptsHistoryScreen(),
       ),
     ],
   );
