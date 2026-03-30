@@ -20,6 +20,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     'Toyota Corolla - TYU-0P12',
   ];
 
+  final TextEditingController _mileageController = TextEditingController();
+
   // Checklist states
   final Map<String, bool> externalPhotos = {
     'Frente': false,
@@ -62,6 +64,12 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
   };
 
   @override
+  void dispose() {
+    _mileageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -83,6 +91,8 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
             _buildSectionHeader('1. Seleção do Veículo', Icons.directions_car_outlined),
             const SizedBox(height: AppSpacing.md),
             _buildVehicleSelector(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildMileageInput(),
             const SizedBox(height: AppSpacing.xxl),
 
             // STEP 2: EXTERNAL PHOTOS
@@ -194,6 +204,33 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           onChanged: (val) => setState(() => selectedVehicle = val),
         ),
       ),
+    );
+  }
+
+  Widget _buildMileageInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Kilometragem Atual',
+          style: AppTextStyles.labelLarge.copyWith(color: AppColors.onSurfaceVariant),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: _mileageController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: 'Ex: 45000',
+            suffixText: 'KM',
+            fillColor: AppColors.surfaceContainerLowest,
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

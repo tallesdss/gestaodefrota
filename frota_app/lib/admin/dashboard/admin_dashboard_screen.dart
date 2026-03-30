@@ -145,11 +145,6 @@ class AdminDashboardScreen extends StatelessWidget {
               label: 'Ajustes',
               onTap: () => context.go(AppRoutes.adminSettings),
             ),
-            QuickActionButton(
-              icon: Icons.support_agent_outlined,
-              label: 'Suporte',
-              onTap: () => _showSupportModal(context),
-            ),
           ],
         ),
         
@@ -270,61 +265,6 @@ class AdminDashboardScreen extends StatelessWidget {
     );
   }
 
-  void _showSupportModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Text(
-              'Suporte Premium',
-              style: AppTextStyles.headlineSmall.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Text(
-              'Como podemos ajudar você hoje? Nossa equipe está online para orientar sua gestão.',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            ListTile(
-              leading: const Icon(Icons.support_agent_outlined, color: AppColors.primary),
-              title: const Text('Consultor Especialista'),
-              subtitle: const Text('Sessão técnica de 15 min'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.chat_outlined, color: AppColors.primary),
-              title: const Text('Chat em Tempo Real'),
-              subtitle: const Text('Resposta em até 2 min'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-              onTap: () {},
-            ),
-            const SizedBox(height: AppSpacing.xl),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _RecentDelaysSection extends StatelessWidget {
