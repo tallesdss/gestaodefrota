@@ -127,7 +127,6 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
           title: Text(title, style: AppTextStyles.bodyMedium),
           value: value,
           onChanged: (val) => setState(() => value = val),
-          activeColor: AppColors.primary,
           contentPadding: EdgeInsets.zero,
         );
       },

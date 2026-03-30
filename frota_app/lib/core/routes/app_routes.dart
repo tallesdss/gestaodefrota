@@ -253,7 +253,7 @@ class AppRoutes {
             builder: (context, state) => const ManagerSalariesScreen(),
           ),
           GoRoute(
-            path: 'salaries/history',
+            path: adminManagerSalaryHistory,
             builder: (context, state) => const SalaryHistoryScreen(),
           ),
           GoRoute(
