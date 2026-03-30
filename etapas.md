@@ -69,10 +69,10 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
     - [x] **Documentos Digitais:** Acesso rápido ao CRLV do veículo e Cartão de Seguro (Disponível para uso offline).
     - [x] **Timeline de Atividades:** Histórico de avisos, manutenções agendadas e mensagens diretas da gestão.
 
-- [ ] **FASE 3: Auditoria Progressiva (Vistorias e Check-ins)**
-    - [ ] **Fluxo de Check-in (Retirada):** Vistoria guiada 360º com fotos obrigatórias (conforme `vistoria.md`) e validação de KM inicial.
-    - [ ] **Relatório de Ocorrências:** Canal dedicado para reportar novos danos ou problemas mecânicos encontrados durante a jornada.
-    - [ ] **Fluxo de Check-out (Devolução):** Comparativo visual de fotos anteriores e cálculo automático de KM para fechamento de ciclo.
+- [x] **FASE 3: Auditoria Progressiva (Vistorias e Check-ins)**
+    - [x] **Fluxo de Check-in (Retirada):** Vistoria guiada 360º com fotos obrigatórias (conforme `vistoria.md`) e validação de KM inicial.
+    - [x] **Relatório de Ocorrências:** Canal dedicado para reportar novos danos ou problemas mecânicos encontrados durante a jornada.
+    - [x] **Fluxo de Check-out (Devolução):** Comparativo visual de fotos anteriores e cálculo automático de KM para fechamento de ciclo.
 
 - [ ] **FASE 4: Gestão Financeira Self-Service**
     - [ ] **Extrato Consolidado:** Linha do tempo visual detalhando mensalidades, taxas, multas e créditos.

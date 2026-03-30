@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../onboarding/login_screen.dart';
 import '../onboarding/register_screen.dart';
@@ -45,6 +44,10 @@ import '../../driver_portal/onboarding/driver_onboarding_docs_screen.dart';
 import '../../driver_portal/onboarding/driver_onboarding_contract_screen.dart';
 import '../../driver_portal/profile/driver_profile_setup_screen.dart';
 import '../../driver_portal/home/driver_home_screen.dart';
+import '../../driver_portal/inspections/inspection_checkin_screen.dart';
+import '../../driver_portal/inspections/inspection_checkout_screen.dart';
+import '../../driver_portal/inspections/occurrence_report_screen.dart';
+import '../../driver_portal/inspections/inspection_history_screen.dart';
 
 
 
@@ -101,6 +104,10 @@ class AppRoutes {
   static const String driverOnboardingContract = '/driver/onboarding/contract';
   static const String driverProfileSetup = '/driver/profile-setup';
   static const String driverHome = '/driver/home';
+  static const String driverInspectionCheckIn = '/driver/inspection/checkin';
+  static const String driverInspectionCheckOut = '/driver/inspection/checkout';
+  static const String driverOccurrenceReport = '/driver/occurrence/report';
+  static const String driverInspectionHistory = '/driver/inspection/history';
 
   static final router = GoRouter(
     initialLocation: login,
@@ -433,6 +440,22 @@ class AppRoutes {
       GoRoute(
         path: driverHome,
         builder: (context, state) => const DriverHomeScreen(),
+      ),
+      GoRoute(
+        path: driverInspectionCheckIn,
+        builder: (context, state) => const InspectionCheckInScreen(),
+      ),
+      GoRoute(
+        path: driverInspectionCheckOut,
+        builder: (context, state) => const InspectionCheckOutScreen(),
+      ),
+      GoRoute(
+        path: driverOccurrenceReport,
+        builder: (context, state) => const OccurrenceReportScreen(),
+      ),
+      GoRoute(
+        path: driverInspectionHistory,
+        builder: (context, state) => const InspectionHistoryScreen(),
       ),
     ],
   );

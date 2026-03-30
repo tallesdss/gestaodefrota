@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/routes/app_routes.dart';
 
 class DriverHomeScreen extends StatelessWidget {
   const DriverHomeScreen({super.key});
@@ -258,7 +260,7 @@ class DriverHomeScreen extends StatelessWidget {
               child: _buildActionButton(
                 icon: Icons.camera_alt_outlined,
                 label: 'Vistoria',
-                onPressed: () {},
+                onPressed: () => _showInspectionSelection(context),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -272,14 +274,102 @@ class DriverHomeScreen extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _buildActionButton(
-                icon: Icons.support_agent_outlined,
-                label: 'Suporte',
-                onPressed: () {},
+                icon: Icons.report_problem_outlined,
+                label: 'Ocorrência',
+                onPressed: () => context.push(AppRoutes.driverOccurrenceReport),
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  void _showInspectionSelection(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('TIPO DE VISTORIA', style: AppTextStyles.labelMedium.copyWith(letterSpacing: 2, color: AppColors.onSurfaceVariant)),
+            const SizedBox(height: AppSpacing.xl),
+            _buildSelectionItem(
+              context,
+              Icons.login_outlined,
+              'Check-in (Retirada)',
+              'Iniciar jornada com o veículo',
+              () => context.push(AppRoutes.driverInspectionCheckIn),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildSelectionItem(
+              context,
+              Icons.logout_outlined,
+              'Check-out (Entrega)',
+              'Finalizar jornada e devolver veículo',
+              () => context.push(AppRoutes.driverInspectionCheckOut),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildSelectionItem(
+              context,
+              Icons.history_outlined,
+              'Histórico de Vistorias',
+              'Ver todas as inspeções anteriores',
+              () => context.push(AppRoutes.driverInspectionHistory),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectionItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: AppColors.primary),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                  Text(subtitle, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+          ],
+        ),
+      ),
     );
   }
 
