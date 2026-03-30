@@ -88,6 +88,13 @@ class AdminSidebar extends StatelessWidget {
             onTap: () => context.go(AppRoutes.adminControlPanel),
           ),
           const Spacer(),
+          _SidebarItem(
+            icon: Icons.logout,
+            label: 'Sair do Sistema',
+            isActive: false,
+            onTap: () => context.go(AppRoutes.login),
+            color: Colors.redAccent,
+          ),
           const SizedBox(height: AppSpacing.xl),
         ],
       ),
@@ -100,12 +107,14 @@ class _SidebarItem extends StatelessWidget {
   final String label;
   final bool isActive;
   final VoidCallback onTap;
+  final Color? color;
 
   const _SidebarItem({
     required this.icon,
     required this.label,
     required this.isActive,
     required this.onTap,
+    this.color,
   });
 
   @override
@@ -133,14 +142,14 @@ class _SidebarItem extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xl),
                 Icon(
                   icon,
-                  color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: color ?? (isActive ? AppColors.primary : AppColors.onSurfaceVariant),
                   size: 20,
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
                   label,
                   style: AppTextStyles.labelLarge.copyWith(
-                    color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                    color: color ?? (isActive ? AppColors.primary : AppColors.onSurfaceVariant),
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
