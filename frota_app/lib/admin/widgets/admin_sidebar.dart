@@ -81,6 +81,12 @@ class AdminSidebar extends StatelessWidget {
             isActive: activeRoute.startsWith(AppRoutes.adminInspectionAudit),
             onTap: () => context.go(AppRoutes.adminInspectionAudit),
           ),
+          _SidebarItem(
+            icon: Icons.settings_applications_outlined,
+            label: 'Painel de Controle',
+            isActive: activeRoute == AppRoutes.adminControlPanel,
+            onTap: () => context.go(AppRoutes.adminControlPanel),
+          ),
           const Spacer(),
           const SizedBox(height: AppSpacing.xl),
         ],

@@ -34,6 +34,15 @@ import '../../models/contract.dart';
 import '../../admin/vehicles/vehicle_form_screen.dart';
 import '../../admin/vehicles/vehicle_usage_history_screen.dart';
 import '../../admin/vehicles/vehicle_inspection_history_screen.dart';
+import '../../admin/control_panel/control_panel_screen.dart';
+import '../../admin/control_panel/manager_salaries_screen.dart';
+import '../../admin/control_panel/expense_categories_screen.dart';
+import '../../admin/control_panel/cash_flow_form_screen.dart';
+import '../../admin/managers/user_search_promotion_screen.dart';
+import '../../admin/control_panel/financial_report_screen.dart';
+
+
+
 
 class AppRoutes {
   static const String root = '/selection';
@@ -62,6 +71,15 @@ class AppRoutes {
   static const String adminProfile = '/admin/profile';
   static const String adminVehicleForm = '/admin/vehicles/form';
   static const String adminVehicleUsageHistory = '/admin/vehicles/:id/usage';
+  static const String adminControlPanel = '/admin/control-panel';
+  static const String adminManagerSalaries = '/admin/control-panel/salaries';
+  static const String adminExpenseCategories = '/admin/control-panel/categories';
+  static const String adminCashFlowForm = '/admin/control-panel/cash-flow-form';
+  static const String adminManagerSearch = '/admin/managers/search';
+  static const String adminFinancialReport = '/admin/control-panel/report';
+
+
+
   static const String gestorDashboard = '/gestor/dashboard';
   static const String gestorFinancialList = '/gestor/financial';
   static const String gestorDriverList = '/gestor/drivers';
@@ -223,6 +241,30 @@ class AppRoutes {
               final id = state.pathParameters['id']!;
               return VehicleInspectionHistoryScreen(vehicleId: id);
             },
+          ),
+          GoRoute(
+            path: adminControlPanel,
+            builder: (context, state) => const ControlPanelScreen(),
+          ),
+          GoRoute(
+            path: adminManagerSalaries,
+            builder: (context, state) => const ManagerSalariesScreen(),
+          ),
+          GoRoute(
+            path: adminExpenseCategories,
+            builder: (context, state) => const ExpenseCategoriesScreen(),
+          ),
+          GoRoute(
+            path: adminCashFlowForm,
+            builder: (context, state) => const CashFlowFormScreen(),
+          ),
+          GoRoute(
+            path: adminManagerSearch,
+            builder: (context, state) => const UserSearchPromotionScreen(),
+          ),
+          GoRoute(
+            path: adminFinancialReport,
+            builder: (context, state) => const FinancialReportScreen(),
           ),
         ],
       ),

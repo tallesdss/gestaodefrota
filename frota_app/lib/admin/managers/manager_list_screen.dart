@@ -98,9 +98,9 @@ class _ManagerListScreenState extends State<ManagerListScreen> {
               ),
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.adminManagerForm),
+        onPressed: () => context.push(AppRoutes.adminManagerSearch),
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: AppColors.onPrimary),
+        child: const Icon(Icons.add_circle_outline, color: AppColors.onPrimary),
       ),
     );
   }

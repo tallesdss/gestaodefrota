@@ -84,6 +84,13 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
                   items: ManagerStatus.values,
                   onChanged: (val) => setState(() => _selectedStatus = val!),
                 ),
+                const SizedBox(height: AppSpacing.xl),
+                _buildSectionTitle('PERMISSÕES DE ACESSO'),
+                const SizedBox(height: AppSpacing.md),
+                _buildPermissionTile('Gestão de Veículos', true),
+                _buildPermissionTile('Gestão de Motoristas', true),
+                _buildPermissionTile('Fluxo Financeiro', false),
+                _buildPermissionTile('Relatórios Avançados', false),
                 const SizedBox(height: AppSpacing.xxl),
                 SizedBox(
                   width: double.infinity,
@@ -109,6 +116,21 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPermissionTile(String title, bool initialValue) {
+    bool value = initialValue;
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return SwitchListTile(
+          title: Text(title, style: AppTextStyles.bodyMedium),
+          value: value,
+          onChanged: (val) => setState(() => value = val),
+          activeColor: AppColors.primary,
+          contentPadding: EdgeInsets.zero,
+        );
+      },
     );
   }
 
