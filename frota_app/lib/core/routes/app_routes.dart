@@ -52,6 +52,7 @@ import '../../driver_portal/inspections/inspection_checkin_screen.dart';
 import '../../driver_portal/inspections/inspection_checkout_screen.dart';
 import '../../driver_portal/inspections/occurrence_report_screen.dart';
 import '../../driver_portal/inspections/inspection_history_screen.dart';
+import '../../driver_portal/inspections/inspection_detail_screen.dart';
 import '../../driver_portal/payments/financial_statement_screen.dart';
 import '../../driver_portal/payments/pix_checkout_screen.dart';
 import '../../driver_portal/payments/receipts_history_screen.dart';
@@ -123,6 +124,7 @@ class AppRoutes {
   static const String driverInspectionCheckOut = '/driver/inspection/checkout';
   static const String driverOccurrenceReport = '/driver/occurrence/report';
   static const String driverInspectionHistory = '/driver/inspection/history';
+  static const String driverInspectionDetail = '/driver/inspection/:id';
   static const String driverFinancialStatement = '/driver/financial/statement';
   static const String driverPixCheckout = '/driver/financial/checkout';
   static const String driverReceipts = '/driver/financial/receipts';
@@ -460,7 +462,7 @@ class AppRoutes {
 
       // Driver Shell
       ShellRoute(
-        builder: (context, state, child) => DriverScaffold(child: child),
+        builder: (context, state, child) => DriverScaffold(state: state, child: child),
         routes: [
           GoRoute(
             path: driverHome,
@@ -481,6 +483,13 @@ class AppRoutes {
           GoRoute(
             path: driverInspectionHistory,
             builder: (context, state) => const InspectionHistoryScreen(),
+          ),
+          GoRoute(
+            path: driverInspectionDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return DriverInspectionDetailScreen(inspectionId: id);
+            },
           ),
           GoRoute(
             path: driverFinancialStatement,

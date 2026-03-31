@@ -314,42 +314,64 @@ class DriverHomeScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('TIPO DE VISTORIA', style: AppTextStyles.labelMedium.copyWith(letterSpacing: 2, color: AppColors.onSurfaceVariant)),
-            const SizedBox(height: AppSpacing.xl),
-            _buildSelectionItem(
-              context,
-              Icons.login_outlined,
-              'Check-in (Retirada)',
-              'Iniciar jornada com o veículo',
-              () => context.push(AppRoutes.driverInspectionCheckIn),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildSelectionItem(
-              context,
-              Icons.logout_outlined,
-              'Check-out (Entrega)',
-              'Finalizar jornada e devolver veículo',
-              () => context.push(AppRoutes.driverInspectionCheckOut),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildSelectionItem(
-              context,
-              Icons.history_outlined,
-              'Histórico de Vistorias',
-              'Ver todas as inspeções anteriores',
-              () => context.push(AppRoutes.driverInspectionHistory),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-          ],
+      builder: (modalContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.xxl,
+          AppSpacing.xxl,
+          AppSpacing.xxl,
+          AppSpacing.xxl + MediaQuery.of(modalContext).padding.bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'TIPO DE VISTORIA',
+                style: AppTextStyles.labelMedium.copyWith(
+                  letterSpacing: 2,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              _buildSelectionItem(
+                modalContext,
+                Icons.login_outlined,
+                'Check-in (Retirada)',
+                'Iniciar jornada com o veículo',
+                () {
+                  Navigator.pop(modalContext);
+                  context.push(AppRoutes.driverInspectionCheckIn);
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _buildSelectionItem(
+                modalContext,
+                Icons.logout_outlined,
+                'Check-out (Entrega)',
+                'Finalizar jornada e devolver veículo',
+                () {
+                  Navigator.pop(modalContext);
+                  context.push(AppRoutes.driverInspectionCheckOut);
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _buildSelectionItem(
+                modalContext,
+                Icons.history_outlined,
+                'Histórico de Vistorias',
+                'Ver todas as inspeções anteriores',
+                () {
+                  Navigator.pop(modalContext);
+                  context.push(AppRoutes.driverInspectionHistory);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

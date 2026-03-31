@@ -6,15 +6,17 @@ import 'driver_sidebar.dart';
 
 class DriverScaffold extends StatelessWidget {
   final Widget child;
+  final GoRouterState state;
 
   const DriverScaffold({
     super.key,
     required this.child,
+    required this.state,
   });
 
   @override
   Widget build(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.path;
+    final String location = state.uri.path;
     final bool isDesktop = MediaQuery.of(context).size.width >= 1024;
 
     return Scaffold(

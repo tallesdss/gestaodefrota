@@ -4,6 +4,7 @@ import 'package:frota_app/core/theme/app_colors.dart';
 import 'package:frota_app/core/theme/app_text_styles.dart';
 import 'package:frota_app/core/theme/app_spacing.dart';
 import 'package:frota_app/core/widgets/app_icon.dart';
+import 'package:frota_app/core/routes/app_routes.dart';
 
 class InspectionHistoryScreen extends StatelessWidget {
   const InspectionHistoryScreen({super.key});
@@ -29,6 +30,8 @@ class InspectionHistoryScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final isCheckIn = index % 2 == 0;
           return _buildHistoryCard(
+            context: context,
+            index: index,
             type: isCheckIn ? 'CHECK-IN' : 'CHECK-OUT',
             date: '2${index + 1}/03/2026',
             time: '0${8 + index}:30',
@@ -42,6 +45,8 @@ class InspectionHistoryScreen extends StatelessWidget {
   }
 
   Widget _buildHistoryCard({
+    required BuildContext context,
+    required int index,
     required String type,
     required String date,
     required String time,
@@ -101,7 +106,7 @@ class InspectionHistoryScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               TextButton(
-                onPressed: () {},
+                onPressed: () => context.push(AppRoutes.driverInspectionDetail.replaceFirst(':id', 'insp_00${index + 1}')),
                 child: Text('VER DETALHES', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary)),
               ),
               const Icon(Icons.arrow_forward, size: 16, color: AppColors.primary),
