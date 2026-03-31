@@ -303,7 +303,7 @@ class DriverHomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            const Spacer(flex: 2), // Keeps the same button size
+             const Spacer(flex: 2), // Keeps the same button size
           ],
         ),
       ],
@@ -315,6 +315,7 @@ class DriverHomeScreen extends StatelessWidget {
       context: context,
       backgroundColor: AppColors.surface,
       isScrollControlled: true,
+      useRootNavigator: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
@@ -344,7 +345,6 @@ class DriverHomeScreen extends StatelessWidget {
                 'Check-in (Retirada)',
                 'Iniciar jornada com o veículo',
                 () {
-                  Navigator.pop(modalContext);
                   context.push(AppRoutes.driverInspectionCheckIn);
                 },
               ),
@@ -355,7 +355,6 @@ class DriverHomeScreen extends StatelessWidget {
                 'Check-out (Entrega)',
                 'Finalizar jornada e devolver veículo',
                 () {
-                  Navigator.pop(modalContext);
                   context.push(AppRoutes.driverInspectionCheckOut);
                 },
               ),
@@ -366,7 +365,6 @@ class DriverHomeScreen extends StatelessWidget {
                 'Histórico de Vistorias',
                 'Ver todas as inspeções anteriores',
                 () {
-                  Navigator.pop(modalContext);
                   context.push(AppRoutes.driverInspectionHistory);
                 },
               ),
@@ -386,7 +384,7 @@ class DriverHomeScreen extends StatelessWidget {
   ) {
     return InkWell(
       onTap: () {
-        Navigator.pop(context);
+        Navigator.of(context).pop();
         onTap();
       },
       borderRadius: BorderRadius.circular(20),
