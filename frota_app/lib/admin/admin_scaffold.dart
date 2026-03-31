@@ -16,12 +16,13 @@ class AdminScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine active route for sidebar
     final String location = GoRouterState.of(context).uri.path;
+    final bool isDesktop = MediaQuery.of(context).size.width >= 1024;
     
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: Row(
         children: [
-          AdminSidebar(activeRoute: location),
+          if (isDesktop) AdminSidebar(activeRoute: location),
           Expanded(
             child: Column(
               children: [
@@ -32,6 +33,8 @@ class AdminScaffold extends StatelessWidget {
           ),
         ],
       ),
+      // On mobile, we might want to use a Drawer but currently AdminHeader has a Menu button? 
+      // Let's check AdminHeader.
     );
   }
 }

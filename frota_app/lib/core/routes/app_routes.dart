@@ -58,6 +58,7 @@ import '../../driver_portal/payments/receipts_history_screen.dart';
 import '../../driver_portal/notifications/notifications_screen.dart';
 import '../../driver_portal/support/support_screen.dart';
 import '../../models/financial_entry.dart';
+import '../../driver_portal/widgets/driver_scaffold.dart';
 
 
 
@@ -456,64 +457,71 @@ class AppRoutes {
         path: driverProfileSetup,
         builder: (context, state) => const DriverProfileSetupScreen(),
       ),
-      GoRoute(
-        path: driverHome,
-        builder: (context, state) => const DriverHomeScreen(),
-      ),
-      GoRoute(
-        path: driverInspectionCheckIn,
-        builder: (context, state) => const InspectionCheckInScreen(),
-      ),
-      GoRoute(
-        path: driverInspectionCheckOut,
-        builder: (context, state) => const InspectionCheckOutScreen(),
-      ),
-      GoRoute(
-        path: driverOccurrenceReport,
-        builder: (context, state) => const OccurrenceReportScreen(),
-      ),
-      GoRoute(
-        path: driverInspectionHistory,
-        builder: (context, state) => const InspectionHistoryScreen(),
-      ),
-      GoRoute(
-        path: driverFinancialStatement,
-        builder: (context, state) => const FinancialStatementScreen(),
-      ),
-      GoRoute(
-        path: driverPixCheckout,
-        builder: (context, state) {
-          final entry = state.extra as FinancialEntry;
-          return PixCheckoutScreen(entry: entry);
-        },
-      ),
-      GoRoute(
-        path: driverReceipts,
-        builder: (context, state) => const ReceiptsHistoryScreen(),
-      ),
-      GoRoute(
-        path: driverNotifications,
-        builder: (context, state) => const DriverNotificationsScreen(),
-      ),
-      GoRoute(
-        path: driverSupport,
-        builder: (context, state) => const DriverSupportScreen(),
-      ),
-      GoRoute(
-        path: driverProfileDetail,
-        builder: (context, state) => const DriverProfileDetailScreen(),
-      ),
-      GoRoute(
-        path: driverAccountSecurity,
-        builder: (context, state) => const AccountSecurityScreen(),
-      ),
-      GoRoute(
-        path: driverDocuments,
-        builder: (context, state) => const DriverDocumentsScreen(),
-      ),
-      GoRoute(
-        path: driverActivityTimeline,
-        builder: (context, state) => const DriverActivityTimelineScreen(),
+
+      // Driver Shell
+      ShellRoute(
+        builder: (context, state, child) => DriverScaffold(child: child),
+        routes: [
+          GoRoute(
+            path: driverHome,
+            builder: (context, state) => const DriverHomeScreen(),
+          ),
+          GoRoute(
+            path: driverInspectionCheckIn,
+            builder: (context, state) => const InspectionCheckInScreen(),
+          ),
+          GoRoute(
+            path: driverInspectionCheckOut,
+            builder: (context, state) => const InspectionCheckOutScreen(),
+          ),
+          GoRoute(
+            path: driverOccurrenceReport,
+            builder: (context, state) => const OccurrenceReportScreen(),
+          ),
+          GoRoute(
+            path: driverInspectionHistory,
+            builder: (context, state) => const InspectionHistoryScreen(),
+          ),
+          GoRoute(
+            path: driverFinancialStatement,
+            builder: (context, state) => const FinancialStatementScreen(),
+          ),
+          GoRoute(
+            path: driverPixCheckout,
+            builder: (context, state) {
+              final entry = state.extra as FinancialEntry;
+              return PixCheckoutScreen(entry: entry);
+            },
+          ),
+          GoRoute(
+            path: driverReceipts,
+            builder: (context, state) => const ReceiptsHistoryScreen(),
+          ),
+          GoRoute(
+            path: driverNotifications,
+            builder: (context, state) => const DriverNotificationsScreen(),
+          ),
+          GoRoute(
+            path: driverSupport,
+            builder: (context, state) => const DriverSupportScreen(),
+          ),
+          GoRoute(
+            path: driverProfileDetail,
+            builder: (context, state) => const DriverProfileDetailScreen(),
+          ),
+          GoRoute(
+            path: driverAccountSecurity,
+            builder: (context, state) => const AccountSecurityScreen(),
+          ),
+          GoRoute(
+            path: driverDocuments,
+            builder: (context, state) => const DriverDocumentsScreen(),
+          ),
+          GoRoute(
+            path: driverActivityTimeline,
+            builder: (context, state) => const DriverActivityTimelineScreen(),
+          ),
+        ],
       ),
     ],
   );

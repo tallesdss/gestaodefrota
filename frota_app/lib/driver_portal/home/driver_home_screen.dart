@@ -13,28 +13,24 @@ class DriverHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: AppSpacing.xl),
-              _buildVehicleStatusCard(),
-              const SizedBox(height: AppSpacing.lg),
-              _buildFinancialSummaryCard(context),
-              const SizedBox(height: AppSpacing.lg),
-              _buildQuickActions(context),
-              const SizedBox(height: AppSpacing.lg),
-              _buildActivityTimeline(context),
-            ],
-          ),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(context),
+            const SizedBox(height: AppSpacing.xl),
+            _buildVehicleStatusCard(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildFinancialSummaryCard(context),
+            const SizedBox(height: AppSpacing.lg),
+            _buildQuickActions(context),
+            const SizedBox(height: AppSpacing.lg),
+            _buildActivityTimeline(context),
+          ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
@@ -529,52 +525,6 @@ class DriverHomeScreen extends StatelessWidget {
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
               fontSize: 10,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.onSurface.withValues(alpha: 0.05),
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(context, Icons.home_filled, 'Home', true, () {}),
-          _buildNavItem(context, Icons.account_balance_wallet_outlined, 'Financeiro', false, () => context.push(AppRoutes.driverFinancialStatement)),
-          _buildNavItem(context, Icons.person_outline, 'Perfil', false, () => context.push(AppRoutes.driverProfileDetail)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool active, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppIcon(
-            icon: icon,
-            color: active ? AppColors.primary : AppColors.onSurfaceVariant,
-            size: 28,
-          ),
-          Text(
-            label,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: active ? AppColors.primary : AppColors.onSurfaceVariant,
-              fontSize: 10,
-              fontWeight: active ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ],
