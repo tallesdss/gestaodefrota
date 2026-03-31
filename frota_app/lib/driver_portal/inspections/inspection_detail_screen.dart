@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/repositories/mock_repository.dart';
 import '../../models/inspection.dart';
 import '../../models/vehicle.dart';
+import '../../core/widgets/app_icon.dart';
 
 class DriverInspectionDetailScreen extends StatefulWidget {
   final String inspectionId;
@@ -28,20 +30,8 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
     'Traseira',
     'Lateral direita',
     'Lateral esquerda',
-    'Diagonal frontal',
-    'Diagonal traseira',
     'Painel ligado (KM visível)',
-    'Hodômetro (quilometragem)',
-    'Volante e painel geral',
-    'Bancos dianteiros',
-    'Bancos traseiros',
-    'Porta-malas',
-    'Parabrisa (vidro dianteiro)',
-    'Vidro traseiro',
     'Pneus',
-    'Cofre do motor',
-    'Placa do veículo',
-    'Chassi',
   ];
 
   @override
@@ -56,15 +46,35 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
       Vehicle? v;
       try {
         v = await _repository.getVehicleById(insp.vehicleId);
-      } catch (_) {}
+      } catch (_) {
+        // Fallback vehicle info if not found
+        v = Vehicle(
+          id: insp.vehicleId,
+          model: 'VEÍCULO #102',
+          plate: 'BRA2E24',
+          brand: 'VW',
+          year: 2024,
+          color: 'Preto',
+          status: VehicleStatus.available,
+          currentKm: insp.kmAtInspection,
+          fuelLevel: insp.fuelLevel,
+          contractType: ContractType.uber,
+          imageUrl: '',
+          ipvaExpiry: DateTime.now(),
+          insuranceExpiry: DateTime.now(),
+          licensingExpiry: DateTime.now(),
+        );
+      }
       
-      setState(() {
-        _inspection = insp;
-        _vehicle = v;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _inspection = insp;
+          _vehicle = v;
+          _isLoading = false;
+        });
+      }
     } else {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -76,184 +86,210 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.surface,
         elevation: 0,
-        leading: const BackButton(color: AppColors.onSurface),
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const AppIcon(icon: Icons.arrow_back),
+        ),
         title: Text(
           'DETALHES DA VISTORIA',
-          style: AppTextStyles.labelLarge.copyWith(
-            letterSpacing: 1.5,
+          style: AppTextStyles.labelMedium.copyWith(
+            letterSpacing: 2,
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined, color: AppColors.onSurface),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatusHeader(),
-            const SizedBox(height: AppSpacing.xl),
-            _buildInfoCard(),
-            const SizedBox(height: AppSpacing.xl),
-            if (_inspection!.checklist.isNotEmpty) ...[
-              _buildChecklistSection(),
-              const SizedBox(height: AppSpacing.xl),
-            ],
-            _buildPhotosGallery(),
-            const SizedBox(height: AppSpacing.xxl),
+            _buildQuickSummary(),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildStatusBanner(),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildVehicleInfoCard(),
+                  const SizedBox(height: AppSpacing.xl),
+                  if (_inspection!.checklist.isNotEmpty) ...[
+                    _buildChecklistSection(),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
+                  _buildPhotosGallery(),
+                  if (_inspection!.notes.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildNotesSection(),
+                  ],
+                  const SizedBox(height: AppSpacing.xxl * 2),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusHeader() {
-    Color statusColor;
-    String statusLabel;
-    IconData statusIcon;
+  Widget _buildQuickSummary() {
+    return Container(
+      width: double.infinity,
+      color: AppColors.surface,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+      child: Row(
+        children: [
+          _summaryText('ID', '#${_inspection!.id.split('_').last}'),
+          const Spacer(),
+          _summaryText('DATA', DateFormat('dd/MM/yy').format(_inspection!.dateTime)),
+          const SizedBox(width: AppSpacing.lg),
+          _summaryText('HORA', DateFormat('HH:mm').format(_inspection!.dateTime)),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryText(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
+        Text(value, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildStatusBanner() {
+    Color color;
+    String label;
+    IconData icon;
 
     switch (_inspection!.status) {
       case InspectionStatus.approved:
-        statusColor = AppColors.success;
-        statusLabel = 'APROVADA';
-        statusIcon = Icons.check_circle_rounded;
+        color = AppColors.success;
+        label = 'VISTORIA APROVADA';
+        icon = Icons.check_circle_rounded;
         break;
       case InspectionStatus.rejected:
-        statusColor = AppColors.error;
-        statusLabel = 'REPROVADA';
-        statusIcon = Icons.cancel_rounded;
+        color = AppColors.error;
+        label = 'VISTORIA REPROVADA';
+        icon = Icons.error_rounded;
         break;
       case InspectionStatus.pending:
-        statusColor = AppColors.warning;
-        statusLabel = 'AGUARDANDO APROVAÇÃO';
-        statusIcon = Icons.pending_rounded;
+        color = AppColors.warning;
+        label = 'EM ANÁLISE';
+        icon = Icons.pending_rounded;
         break;
     }
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(statusIcon, color: statusColor, size: 32),
+              Icon(icon, color: color, size: 24),
               const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      statusLabel,
-                      style: AppTextStyles.labelLarge.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Vistoria de ${_inspection!.type == InspectionType.checkin ? "Check-in" : "Check-out"}',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
-                    ),
-                  ],
-                ),
+              Text(
+                label,
+                style: AppTextStyles.labelLarge.copyWith(color: color, fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          if (_inspection!.reviewReason != null && _inspection!.reviewReason!.isNotEmpty) ...[
+          if (_inspection!.reviewReason != null) ...[
             const Padding(
-              padding: EdgeInsets.only(top: AppSpacing.md),
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
               child: Divider(),
             ),
-            const SizedBox(height: AppSpacing.sm),
             Text(
-              'MOTIVO DA DECISÃO:',
-              style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.bold),
+              'OBSERVAÇÃO DO REVISOR:',
+              style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.bold, fontSize: 10),
             ),
             const SizedBox(height: 4),
-            Text(
-              _inspection!.reviewReason!,
-              style: AppTextStyles.bodyMedium,
-            ),
+            Text(_inspection!.reviewReason!, style: AppTextStyles.bodyMedium),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildInfoCard() {
-    final dateFormat = DateFormat('dd/MM/yyyy');
-    final timeFormat = DateFormat('HH:mm');
-
+  Widget _buildVehicleInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
+        color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ambientShadow,
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(child: _buildDetailItem('VEÍCULO', _vehicle?.plate ?? '-', Icons.directions_car_rounded)),
-              Expanded(child: _buildDetailItem('MODELO', _vehicle?.model ?? '-', Icons.info_outline_rounded)),
-            ],
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.directions_car, color: AppColors.primary, size: 32),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_vehicle?.model ?? 'Carregando...', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
+                      Text(_vehicle?.plate ?? '...', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const Divider(height: AppSpacing.xxl),
-          Row(
-            children: [
-              Expanded(child: _buildDetailItem('DATA', dateFormat.format(_inspection!.dateTime), Icons.calendar_today_rounded)),
-              Expanded(child: _buildDetailItem('HORA', timeFormat.format(_inspection!.dateTime), Icons.access_time_rounded)),
-            ],
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest,
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+            ),
+            child: Row(
+              children: [
+                _infoBit(Icons.speed_rounded, 'KM ATUAL', '${_inspection!.kmAtInspection} km'),
+                const Spacer(),
+                _infoBit(Icons.local_gas_station_rounded, 'COMBUST.', '${(_inspection!.fuelLevel * 100).toInt()}%'),
+              ],
+            ),
           ),
-          const Divider(height: AppSpacing.xxl),
-          Row(
-            children: [
-              Expanded(child: _buildDetailItem('QUILOMETRAGEM', '${_inspection!.kmAtInspection} km', Icons.speed_rounded)),
-              Expanded(child: _buildDetailItem('COMBUSTÍVEL', '${(_inspection!.fuelLevel * 100).toInt()}%', Icons.local_gas_station_rounded)),
-            ],
-          ),
-          if (_inspection!.notes.isNotEmpty) ...[
-            const Divider(height: AppSpacing.xxl),
-            _buildDetailItem('SUAS OBSERVAÇÕES', _inspection!.notes, Icons.notes_rounded),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildDetailItem(String label, String value, IconData icon) {
+  Widget _infoBit(IconData icon, String label, String value) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: AppColors.onSurface.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 20, color: AppColors.primary),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
-              Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-            ],
-          ),
+        Icon(icon, size: 18, color: AppColors.primary),
+        const SizedBox(width: AppSpacing.sm),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 9)),
+            Text(value, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+          ],
         ),
       ],
     );
@@ -263,35 +299,38 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'ITENS VERIFICADOS',
-          style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        Row(
+          children: [
+            const Icon(Icons.fact_check_outlined, color: AppColors.onSurfaceVariant, size: 18),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'CHECKLIST DE VERIFICAÇÃO',
+              style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+            ),
+          ],
         ),
         const SizedBox(height: AppSpacing.md),
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.ambientShadow,
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
             children: _inspection!.checklist.map((item) {
-              return ListTile(
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                leading: Icon(
-                  item.isChecked ? Icons.check_circle_outline : Icons.highlight_off_rounded,
-                  color: item.isChecked ? AppColors.success : AppColors.error,
-                  size: 20,
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      item.isChecked ? Icons.check_circle : Icons.error_outline,
+                      size: 18,
+                      color: item.isChecked ? AppColors.success : AppColors.error,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(child: Text(item.title, style: AppTextStyles.bodyMedium)),
+                  ],
                 ),
-                title: Text(item.title, style: AppTextStyles.bodyMedium),
               );
             }).toList(),
           ),
@@ -304,9 +343,24 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'FOTOS ENVIADAS',
-          style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.photo_library_outlined, color: AppColors.onSurfaceVariant, size: 18),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'EVIDÊNCIAS FOTOGRÁFICAS',
+                  style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                ),
+              ],
+            ),
+            Text(
+              '${_inspection!.photos.length} fotos',
+              style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+            ),
+          ],
         ),
         const SizedBox(height: AppSpacing.md),
         GridView.builder(
@@ -316,7 +370,7 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
             crossAxisCount: 2,
             crossAxisSpacing: AppSpacing.md,
             mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: 1.1,
+            childAspectRatio: 1,
           ),
           itemCount: _allRequiredPhotos.length,
           itemBuilder: (context, index) {
@@ -326,62 +380,75 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
               orElse: () => null,
             );
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title.toUpperCase(),
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 9,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Expanded(
-                  child: photo != null ? GestureDetector(
-                    onTap: () => _showFullPhoto(photo.url),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(photo.url, fit: BoxFit.cover),
-                          Positioned(
-                            bottom: 8,
-                            right: 8,
-                            child: Icon(Icons.zoom_in, color: Colors.white.withValues(alpha: 0.8), size: 18),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ) : Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.05)),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.no_photography_outlined, color: AppColors.onSurfaceVariant.withValues(alpha: 0.3)),
-                        const SizedBox(height: 4),
-                        Text(
-                          'NÃO ENVIADA',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
-                            fontSize: 8,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
+            return _buildPhotoCard(title, photo);
           },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhotoCard(String title, InspectionPhoto? photo) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 9),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 4),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.1)),
+            ),
+            child: photo != null ? GestureDetector(
+              onTap: () => _showFullPhoto(photo.url),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  photo.url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) => const Center(child: Icon(Icons.error_outline)),
+                ),
+              ),
+            ) : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.no_photography_outlined, color: AppColors.onSurfaceVariant.withValues(alpha: 0.2), size: 24),
+                  const SizedBox(height: 4),
+                  Text('NÃO ENVIADA', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant.withValues(alpha: 0.2), fontSize: 8)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'OBSERVAÇÕES DO MOTORISTA',
+          style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.05)),
+          ),
+          child: Text(_inspection!.notes, style: AppTextStyles.bodyMedium),
         ),
       ],
     );
@@ -401,15 +468,15 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
               child: Container(
                 width: double.infinity,
                 height: double.infinity,
-                color: Colors.black.withValues(alpha: 0.9),
+                color: Colors.black,
               ),
             ),
-            Image.network(url, fit: BoxFit.contain),
+            InteractiveViewer(child: Image.network(url, fit: BoxFit.contain)),
             Positioned(
               top: 40,
               right: 20,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                icon: const Icon(Icons.close, color: Colors.white, size: 32),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
