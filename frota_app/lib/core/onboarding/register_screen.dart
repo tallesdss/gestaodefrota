@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
-import '../theme/app_spacing.dart';
 import '../routes/app_routes.dart';
+import 'widgets/auth_layout.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,139 +12,238 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _obscurePassword = true;
+  bool _obscureConfirm = true;
+  bool _acceptTerms = false;
+  late AnimationController _animController;
+  late Animation<double> _fadeIn;
+  late Animation<Offset> _slideUp;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideUp = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+    _animController.forward();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _animController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0, leading: const BackButton(color: AppColors.onSurface)),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+    return AuthLayout(
+      formContent: FadeTransition(
+        opacity: _fadeIn,
+        child: SlideTransition(
+          position: _slideUp,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Criar Nova Conta',
-                style: AppTextStyles.displayMedium.copyWith(fontSize: 32),
-              ),
-              Text(
-                'Junte-se à nossa frota de elite.',
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              
-              _InputField(
-                label: 'NOME COMPLETO',
-                hint: 'Seu nome aqui',
-                controller: _nameController,
-                icon: Icons.person_outline,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _InputField(
-                label: 'EMAIL CORPORATIVO',
-                hint: 'exemplo@frota.com',
-                controller: _emailController,
-                icon: Icons.email_outlined,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _InputField(
-                label: 'SENHA DE ACESSO',
-                hint: '••••••••',
-                controller: _passwordController,
-                icon: Icons.lock_outline,
-                obscureText: true,
-              ),
-              
-              const SizedBox(height: AppSpacing.xxl),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () => context.go(AppRoutes.root), // Go to profile selection
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
+              // ── Back Button ──
+              GestureDetector(
+                onTap: () => context.pop(),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    'CADASTRAR E CONTINUAR',
-                    style: AppTextStyles.labelLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
+                  child: const Icon(Icons.arrow_back_rounded, color: AppColors.onSurface, size: 20),
                 ),
               ),
-              
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: 28),
+
+              // ── Header ──
+              Text(
+                'Criar Nova Conta',
+                style: GoogleFonts.manrope(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.onSurface,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Junte-se à nossa plataforma de gestão de frota de elite.',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 36),
+
+              // ── Name ──
+              AuthInputField(
+                label: 'Nome Completo',
+                hint: 'Seu nome aqui',
+                controller: _nameController,
+                keyboardType: TextInputType.name,
+              ),
+              const SizedBox(height: 20),
+
+              // ── Email ──
+              AuthInputField(
+                label: 'E-mail Corporativo',
+                hint: 'exemplo@fleetcommand.com',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 20),
+
+              // ── Password ──
+              AuthInputField(
+                label: 'Senha de Acesso',
+                hint: '••••••••',
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    color: AppColors.onSurfaceVariant,
+                    size: 20,
+                  ),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // ── Confirm Password ──
+              AuthInputField(
+                label: 'Confirmar Senha',
+                hint: '••••••••',
+                controller: _confirmPasswordController,
+                obscureText: _obscureConfirm,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    color: AppColors.onSurfaceVariant,
+                    size: 20,
+                  ),
+                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // ── Terms Checkbox ──
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Já tem uma conta?', style: AppTextStyles.bodySmall),
-                  TextButton(
-                    onPressed: () => context.pop(),
-                    child: Text('Fazer Login', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: Checkbox(
+                      value: _acceptTerms,
+                      onChanged: (v) => setState(() => _acceptTerms = v ?? false),
+                      activeColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      side: BorderSide(color: AppColors.outlineVariant),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.onSurfaceVariant,
+                          height: 1.5,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Li e aceito os '),
+                          TextSpan(
+                            text: 'Termos de Uso',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const TextSpan(text: ' e a '),
+                          TextSpan(
+                            text: 'Política de Privacidade',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
+              const SizedBox(height: 28),
+
+              // ── Submit ──
+              AuthPrimaryButton(
+                label: 'Criar Conta',
+                trailingIcon: Icons.arrow_forward_rounded,
+                onPressed: () => context.go(AppRoutes.root),
+              ),
+              const SizedBox(height: 36),
+
+              // ── Social Login ──
+              const AuthSocialButtons(),
+              const SizedBox(height: 40),
+
+              // ── Footer ──
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Já tem uma conta? ',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Text(
+                        'Fazer Login',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              const AuthFooter(),
+              const SizedBox(height: 16),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _InputField extends StatelessWidget {
-  final String label;
-  final String hint;
-  final TextEditingController controller;
-  final IconData icon;
-  final bool obscureText;
-
-  const _InputField({
-    required this.label,
-    required this.hint,
-    required this.controller,
-    required this.icon,
-    this.obscureText = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(
-            color: AppColors.onSurfaceVariant,
-            letterSpacing: 1.2,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          obscureText: obscureText,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(icon, color: AppColors.primary.withAlpha((0.5 * 255).toInt())),
-            filled: true,
-            fillColor: AppColors.surfaceContainerLow,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
