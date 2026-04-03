@@ -1,7 +1,8 @@
-enum VehicleStatus { 
+enum VehicleStatus {
   available, 
   rented, 
-  maintenance 
+  maintenance,
+  sold
 }
 
 enum ContractType { 

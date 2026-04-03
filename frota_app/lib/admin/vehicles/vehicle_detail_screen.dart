@@ -273,7 +273,14 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
                     ),
                     const SizedBox(height: 8),
-                    StatusBadge(label: _vehicle!.status.name, type: _getTypeByStatus(_vehicle!.status)),
+                    StatusBadge(
+                      label: _vehicle!.status == VehicleStatus.available 
+                          ? 'LIVRE' 
+                          : (_vehicle!.status == VehicleStatus.rented 
+                              ? 'ALUGADO' 
+                              : (_vehicle!.status == VehicleStatus.sold ? 'VENDIDO' : 'MANUTENÇÃO')),
+                      type: _getTypeByStatus(_vehicle!.status),
+                    ),
                   ],
                 ),
               ),
@@ -331,6 +338,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Registrar Venda',
+                  icon: Icons.sell_outlined,
+                  onPressed: _showRegisterSaleModal,
+                  variant: AppButtonVariant.outline,
+                ),
               ),
             ],
           ),
@@ -914,6 +934,71 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
+  void _showRegisterSaleModal() {
+    final saleValueController = TextEditingController();
+    final saleDateController = TextEditingController(text: DateFormat('dd/MM/yyyy').format(DateTime.now()));
+    final fipeValueController = TextEditingController(text: _vehicle!.fipeValue?.toString() ?? '');
+    final installmentsPaidController = TextEditingController();
+    final installmentValueController = TextEditingController();
+
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Registrar Venda do Veículo',
+      content: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: AppTextField(label: 'Valor da Venda', controller: saleValueController, keyboardType: TextInputType.number, prefixIcon: Icons.sell_outlined, hintText: '0,00')),
+              const SizedBox(width: 16),
+              Expanded(child: AppTextField(label: 'Data da Venda', controller: saleDateController, prefixIcon: Icons.calendar_today_outlined, readOnly: true, onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2030),
+                );
+                if (date != null) {
+                  saleDateController.text = DateFormat('dd/MM/yyyy').format(date);
+                }
+              })),
+            ],
+          ),
+          const SizedBox(height: 16),
+          AppTextField(label: 'Valor Tabela FIPE (Atual)', controller: fipeValueController, keyboardType: TextInputType.number, prefixIcon: Icons.analytics_outlined),
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: AppTextField(label: 'Qtd. Parcelas Pagas', controller: installmentsPaidController, keyboardType: TextInputType.number, prefixIcon: Icons.format_list_numbered)),
+              const SizedBox(width: 16),
+              Expanded(child: AppTextField(label: 'Valor da Parcela', controller: installmentValueController, keyboardType: TextInputType.number, prefixIcon: Icons.payments_outlined)),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        AppButton(
+          label: 'Confirmar Venda',
+          onPressed: () {
+            // Mock sale registration logic
+            setState(() {
+              _vehicle = _vehicle!.copyWith(status: VehicleStatus.sold);
+            });
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Venda de ${_vehicle!.plate} registrada com sucesso!'),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   void _showRentalValueUpdateModal() {
     final rentalController = TextEditingController(text: _vehicle!.rentalValue?.toString() ?? '');
     RentalType selectedType = _vehicle!.rentalType ?? RentalType.weekly;
@@ -1188,7 +1273,51 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: Text('Selecione um motorista da lista abaixo para vincular a este veículo.', style: AppTextStyles.bodySmall),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: 'Em Manutenção',
+                      icon: Icons.build_outlined,
+                      variant: AppButtonVariant.outline,
+                      onPressed: () {
+                        setState(() {
+                          _vehicle = _vehicle!.copyWith(
+                            status: VehicleStatus.maintenance,
+                            currentDriverId: '',
+                            currentDriverName: 'Nenhum',
+                          );
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppButton(
+                      label: 'Tornar Livre',
+                      icon: Icons.check_circle_outline,
+                      variant: AppButtonVariant.outline,
+                      onPressed: () {
+                        setState(() {
+                          _vehicle = _vehicle!.copyWith(
+                            status: VehicleStatus.available,
+                            currentDriverId: '',
+                            currentDriverName: 'Nenhum',
+                          );
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text('Ou vincule um novo motorista:', style: AppTextStyles.labelLarge),
             ),
             Expanded(
               child: ListView.separated(
@@ -1228,6 +1357,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                               _vehicle = _vehicle!.copyWith(
                                 currentDriverId: driver.id,
                                 currentDriverName: driver.name,
+                                status: VehicleStatus.rented,
                               );
                             });
                             Navigator.pop(context);
@@ -1409,6 +1539,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       case VehicleStatus.available: return BadgeType.active;
       case VehicleStatus.rented: return BadgeType.neutral;
       case VehicleStatus.maintenance: return BadgeType.error;
+      case VehicleStatus.sold: return BadgeType.neutral;
     }
   }
 

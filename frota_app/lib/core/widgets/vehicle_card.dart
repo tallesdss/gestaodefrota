@@ -59,7 +59,11 @@ class VehicleCard extends StatelessWidget {
                         ),
                       ),
                       StatusBadge(
-                        label: vehicle.status.name,
+                        label: vehicle.status == VehicleStatus.available 
+                            ? 'LIVRE' 
+                            : (vehicle.status == VehicleStatus.rented 
+                                ? 'ALUGADO' 
+                                : (vehicle.status == VehicleStatus.sold ? 'VENDIDO' : 'MANUTENÇÃO')),
                         type: _getTypeByStatus(vehicle.status),
                       ),
                     ],
@@ -98,6 +102,7 @@ class VehicleCard extends StatelessWidget {
       case VehicleStatus.available: return BadgeType.active;
       case VehicleStatus.rented: return BadgeType.neutral;
       case VehicleStatus.maintenance: return BadgeType.error;
+      case VehicleStatus.sold: return BadgeType.neutral;
     }
   }
 }
