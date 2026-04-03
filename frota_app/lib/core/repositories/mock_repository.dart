@@ -49,10 +49,28 @@ class MockRepository {
     return mockContracts;
   }
 
-  // Maintenances
   Future<List<MaintenanceEntry>> getMaintenances() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return mockMaintenances;
+  }
+
+  Future<List<MaintenanceEntry>> getMaintenancesByVehicle(String vehicleId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return mockMaintenances.where((m) => m.vehicleId == vehicleId).toList();
+  }
+
+  Future<MaintenanceEntry?> getMaintenanceById(String id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      return mockMaintenances.firstWhere((m) => m.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> addMaintenance(MaintenanceEntry entry) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    mockMaintenances.add(entry);
   }
 
   // Inspections

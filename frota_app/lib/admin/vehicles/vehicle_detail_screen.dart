@@ -8,7 +8,9 @@ import '../../core/repositories/mock_repository.dart';
 import '../../models/vehicle.dart';
 import '../../models/financial_entry.dart';
 import '../../models/driver.dart';
+import '../../models/maintenance_entry.dart';
 import '../../core/widgets/status_badge.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/widgets/app_dialogs.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
@@ -25,6 +27,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   final MockRepository _repository = MockRepository();
   Vehicle? _vehicle;
   List<FinancialEntry> _financials = [];
+  List<MaintenanceEntry> _maintenances = [];
   bool _isLoading = true;
 
   @override
@@ -37,9 +40,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     try {
       final v = await _repository.getVehicleById(widget.vehicleId);
       final f = await _repository.getFinancialEntriesByVehicle(widget.vehicleId);
+      final m = await _repository.getMaintenancesByVehicle(widget.vehicleId);
       setState(() {
         _vehicle = v;
         _financials = f;
+        _maintenances = m;
         _isLoading = false;
       });
     } catch (e) {
@@ -124,6 +129,15 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             const SizedBox(height: AppSpacing.xxl),
 
             // Usage History
+            _buildSectionTitle(
+              'Manutenções Realizadas',
+              icon: Icons.settings_suggest_outlined,
+              onEdit: () => context.push('/admin/maintenance/form?vehicleId=${_vehicle!.id}'),
+              onAllTap: () => context.push('/admin/vehicles/${_vehicle!.id}/maintenance'),
+            ),
+            _buildMaintenanceList(currencyFormat, dateFormat),
+            const SizedBox(height: AppSpacing.xxl),
+
             _buildSectionTitle(
               'Histórico de Motoristas',
               onAllTap: () => context.push('/admin/vehicles/${_vehicle!.id}/usage'),
@@ -1239,6 +1253,105 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       case VehicleStatus.available: return BadgeType.active;
       case VehicleStatus.rented: return BadgeType.neutral;
       case VehicleStatus.maintenance: return BadgeType.error;
+    }
+  }
+
+  Widget _buildMaintenanceList(NumberFormat currencyFormat, DateFormat dateFormat) {
+    if (_maintenances.isEmpty) {
+      return _buildEmptyCard('Nenhuma manutenção registrada');
+    }
+
+    final recentMaintenances = _maintenances.reversed.take(3).toList();
+
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: recentMaintenances.length,
+            separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+            itemBuilder: (context, index) {
+              final m = recentMaintenances[index];
+              final isPaid = m.status == MaintenanceStatus.paid;
+              
+              return ListTile(
+                onTap: () => context.push(AppRoutes.adminMaintenanceDetail.replaceFirst(':id', m.id)),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryContainer.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(_getCategoryIcon(m.type), color: AppColors.primary, size: 20),
+                ),
+                title: Text(m.description, style: AppTextStyles.labelLarge),
+                subtitle: Text(
+                  '${dateFormat.format(m.date)} • ${m.workshop}',
+                  style: AppTextStyles.bodySmall,
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          currencyFormat.format(m.cost),
+                          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          m.status.label.toUpperCase(),
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: isPaid ? Colors.green : Colors.orange,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.onSurfaceVariant),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () => context.push(AppRoutes.adminVehicleMaintenanceHistory.replaceFirst(':id', widget.vehicleId)),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+            ),
+            child: const Text('VER TODOS OS LANÇAMENTOS'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getCategoryIcon(MaintenanceType type) {
+    switch (type) {
+      case MaintenanceType.oilChange: return Icons.oil_barrel_outlined;
+      case MaintenanceType.tires: return Icons.tire_repair_outlined;
+      case MaintenanceType.brakes: return Icons.disc_full_outlined;
+      case MaintenanceType.suspension: return Icons.settings_input_component_outlined;
+      case MaintenanceType.generalRevision: return Icons.build_circle_outlined;
+      case MaintenanceType.motor: return Icons.electrical_services_outlined;
+      case MaintenanceType.transmission: return Icons.settings_suggest_outlined;
+      case MaintenanceType.electrical: return Icons.electric_bolt_outlined;
+      case MaintenanceType.bodywork: return Icons.car_repair_outlined;
+      case MaintenanceType.other: return Icons.miscellaneous_services_outlined;
     }
   }
 }

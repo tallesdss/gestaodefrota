@@ -20,17 +20,24 @@ import '../../admin/users/notifications_screen.dart';
 import '../../admin/contracts/contract_list_screen.dart';
 import '../../admin/contracts/contract_form_screen.dart';
 import '../../admin/maintenance/maintenance_list_screen.dart';
+import '../../admin/maintenance/workshop_list_screen.dart';
+import '../../admin/maintenance/workshop_detail_screen.dart';
+import '../../admin/maintenance/workshop_form_screen.dart';
 import '../../admin/inspections/inspection_audit_screen.dart';
 import '../../admin/inspections/inspection_form_screen.dart';
 import '../../admin/inspections/inspection_detail_screen.dart';
 import '../../admin/financial/financial_list_screen.dart';
 import '../../admin/financial/financial_flow_detail_screen.dart';
 import '../../admin/financial/delinquency_list_screen.dart';
+import '../../admin/maintenance/maintenance_detail_screen.dart';
+import '../../admin/maintenance/maintenance_form_screen.dart';
+import '../../admin/vehicles/vehicle_maintenance_history_screen.dart';
 import '../../admin/admin_scaffold.dart';
 import '../../admin/vehicles/vehicle_form_screen.dart';
 import '../../models/driver.dart';
 import '../../models/manager.dart';
 import '../../models/contract.dart';
+import '../../models/workshop.dart';
 import '../../admin/vehicles/vehicle_usage_history_screen.dart';
 import '../../admin/vehicles/vehicle_inspection_history_screen.dart';
 import '../../admin/control_panel/control_panel_screen.dart';
@@ -100,6 +107,12 @@ class AppRoutes {
   static const String adminCashFlowForm = '/admin/control-panel/cash-flow-form';
   static const String adminManagerSearch = '/admin/managers/search';
   static const String adminFinancialReport = '/admin/control-panel/report';
+  static const String adminWorkshops = '/admin/workshops';
+  static const String adminWorkshopDetail = '/admin/workshops/detail/:id';
+  static const String adminWorkshopForm = '/admin/workshops/form';
+  static const String adminVehicleMaintenanceHistory = '/admin/vehicles/:id/maintenance';
+  static const String adminMaintenanceDetail = '/admin/maintenance/detail/:id';
+  static const String adminMaintenanceForm = '/admin/maintenance/form';
 
 
 
@@ -109,6 +122,11 @@ class AppRoutes {
   static const String gestorInspectionAudit = '/gestor/inspections';
   static const String gestorVehicleList = '/gestor/vehicles';
   static const String gestorAudit = '/gestor/audit';
+  static const String gestorNotifications = '/gestor/notifications';
+  static const String gestorProfile = '/gestor/profile';
+  static const String gestorVehicleMaintenanceHistory = '/gestor/vehicles/:id/maintenance';
+  static const String gestorMaintenanceDetail = '/gestor/maintenance/detail/:id';
+  static const String gestorMaintenanceForm = '/gestor/maintenance/form';
   static const String gestorVehicleDetail = '/gestor/vehicles/detail/:id';
   static const String gestorDriverProfile = '/gestor/drivers/profile/:id';
   static const String gestorInspectionDetail = '/gestor/inspections/:id';
@@ -323,6 +341,45 @@ class AppRoutes {
             path: adminFinancialReport,
             builder: (context, state) => const FinancialReportScreen(),
           ),
+          GoRoute(
+            path: adminWorkshops,
+            builder: (context, state) => const WorkshopListScreen(),
+          ),
+          GoRoute(
+            path: adminWorkshopDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return WorkshopDetailScreen(workshopId: id);
+            },
+          ),
+          GoRoute(
+            path: adminWorkshopForm,
+            builder: (context, state) {
+              final workshop = state.extra as Workshop?;
+              return WorkshopFormScreen(workshop: workshop);
+            },
+          ),
+          GoRoute(
+            path: adminVehicleMaintenanceHistory,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return MaintenanceHistoryScreen(vehicleId: id);
+            },
+          ),
+          GoRoute(
+            path: adminMaintenanceDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return MaintenanceDetailScreen(maintenanceId: id);
+            },
+          ),
+          GoRoute(
+            path: adminMaintenanceForm,
+            builder: (context, state) {
+              final vehicleId = state.extra as String?;
+              return MaintenanceFormScreen(initialVehicleId: vehicleId);
+            },
+          ),
         ],
       ),
 
@@ -443,6 +500,27 @@ class AppRoutes {
           GoRoute(
             path: '/gestor/profile',
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: gestorVehicleMaintenanceHistory,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return MaintenanceHistoryScreen(vehicleId: id);
+            },
+          ),
+          GoRoute(
+            path: gestorMaintenanceDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return MaintenanceDetailScreen(maintenanceId: id);
+            },
+          ),
+          GoRoute(
+            path: gestorMaintenanceForm,
+            builder: (context, state) {
+              final vehicleId = state.extra as String?;
+              return MaintenanceFormScreen(initialVehicleId: vehicleId);
+            },
           ),
         ],
       ),

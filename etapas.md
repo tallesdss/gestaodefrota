@@ -38,10 +38,16 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
     - [x] **Manutenção Preventiva:** Registro e controle de trocas de óleo, pneus e revisões futuras.
     - [x] **Auditoria de Vistorias:** Tela de revisão estrutural para comparar fotos de Check-in vs Check-out e geração de laudo premium.
 
+- [x] **FASE 6: Gestão de Oficinas (Centro de Manutenção Corretiva)**
+    - [x] **Módulo de Oficinas Credenciadas:** Listagem editorial com filtros, ratings de prestação de serviço e status de credenciamento.
+    - [x] **Perfil 360 da Oficina:**
+        - [x] **Dashboard Financeiro:** KPIs de Valor Pago, Saldo a Pagar e Histórico de Gasto Médio.
+        - [x] **Linha do Tempo de Manutenções:** Lista completa de serviços realizados em todos os veículos da frota.
+        - [x] **Gestão de Suprimentos:** Lista de peças compradas/trocadas e controle de estoque (mock).
+        - [x] **Repositório Fiscal:** Central de notas fiscais eletrônicas (NFe) e recibos digitalizados.
+    - [x] **Fluxo de Credenciamento (CRUD):** Cadastro completo de novas oficinas parceiras com dados técnicos e bancários.
+
 - [x] **FASE 5: Polimento & UX Premium**
-    - [x] **Micro-interações:** Animações de transição (Hero) e feedbacks táteis.
-    - [x] **Relatórios PDF:** Geração de extratos financeiros e checklists de vistoria em PDF.
-    - [x] **Estados de Carregamento:** Implementação de skeletons e feedback visual de progresso.
 
 ---
 

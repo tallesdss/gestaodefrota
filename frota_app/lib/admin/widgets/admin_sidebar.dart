@@ -84,6 +84,12 @@ class AdminSidebar extends StatelessWidget {
             isActive: activeRoute.startsWith('$prefix/inspections'),
             onTap: () => context.go('$prefix/inspections'),
           ),
+          _SidebarItem(
+            icon: Icons.build_circle_outlined,
+            label: 'Oficina',
+            isActive: activeRoute.startsWith('$prefix/workshops'),
+            onTap: () => context.go('$prefix/workshops'),
+          ),
           if (!isGestor)
             _SidebarItem(
               icon: Icons.settings_applications_outlined,
