@@ -14,7 +14,8 @@ class VehicleFormScreen extends StatefulWidget {
 
 class _VehicleFormScreenState extends State<VehicleFormScreen> {
   int _currentStep = 0;
-  final List<String> _stepTitles = ['Dados Básicos', 'Especificações', 'Documentação'];
+  final List<String> _stepTitles = ['Dados Básicos', 'Especificações', 'Financeiro', 'Documentação'];
+  bool _isEncumbered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +138,52 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
           ],
         );
       case 2:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppTextField(label: 'Valor de Compra (R\$)', hintText: '0,00', keyboardType: TextInputType.number),
+            const SizedBox(height: 24),
+            AppTextField(label: 'Valor da Tabela FIPE (R\$)', hintText: '0,00', keyboardType: TextInputType.number),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Veículo Alienado?', style: AppTextStyles.labelLarge),
+                          Text('O veículo possui gravame financeiro?', style: AppTextStyles.bodySmall),
+                        ],
+                      ),
+                      Switch(
+                        value: _isEncumbered,
+                        activeThumbColor: Colors.white,
+                        activeTrackColor: AppColors.primary,
+                        onChanged: (val) => setState(() => _isEncumbered = val),
+                      ),
+                    ],
+                  ),
+                  if (_isEncumbered) ...[
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    const AppTextField(label: 'Instituição Financeira / Banco', hintText: 'Ex: Banco do Brasil, Santander...'),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        );
+      case 3:
         return Column(
           children: [
             const AppTextField(label: 'Data de Vencimento do Licenciamento', hintText: 'DD/MM/AAAA'),

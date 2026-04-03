@@ -108,6 +108,10 @@ class Vehicle {
   final List<RentalValueHistory> rentalHistory;
   final RentalType? rentalType;
   final int? rentalDueDay;
+  final double? purchaseValue;
+  final double? fipeValue;
+  final bool isEncumbered;
+  final String? encumberedBank;
 
   Vehicle({
     required this.id,
@@ -133,6 +137,10 @@ class Vehicle {
     this.rentalHistory = const [],
     this.rentalType,
     this.rentalDueDay,
+    this.purchaseValue,
+    this.fipeValue,
+    this.isEncumbered = false,
+    this.encumberedBank,
   });
 
   factory Vehicle.fromMap(Map<String, dynamic> map) {
@@ -160,6 +168,10 @@ class Vehicle {
       rentalHistory: (map['rentalHistory'] as List? ?? []).map((e) => RentalValueHistory.fromMap(e)).toList(),
       rentalType: map['rentalType'] != null ? RentalType.values.firstWhere((e) => e.name == map['rentalType']) : null,
       rentalDueDay: map['rentalDueDay'],
+      purchaseValue: map['purchaseValue']?.toDouble(),
+      fipeValue: map['fipeValue']?.toDouble(),
+      isEncumbered: map['isEncumbered'] ?? false,
+      encumberedBank: map['encumberedBank'],
     );
   }
 
@@ -188,6 +200,10 @@ class Vehicle {
       'rentalHistory': rentalHistory.map((e) => e.toMap()).toList(),
       'rentalType': rentalType?.name,
       'rentalDueDay': rentalDueDay,
+      'purchaseValue': purchaseValue,
+      'fipeValue': fipeValue,
+      'isEncumbered': isEncumbered,
+      'encumberedBank': encumberedBank,
     };
   }
   Vehicle copyWith({
@@ -214,6 +230,10 @@ class Vehicle {
     List<RentalValueHistory>? rentalHistory,
     RentalType? rentalType,
     int? rentalDueDay,
+    double? purchaseValue,
+    double? fipeValue,
+    bool? isEncumbered,
+    String? encumberedBank,
   }) {
     return Vehicle(
       id: id ?? this.id,
@@ -239,6 +259,10 @@ class Vehicle {
       rentalHistory: rentalHistory ?? this.rentalHistory,
       rentalType: rentalType ?? this.rentalType,
       rentalDueDay: rentalDueDay ?? this.rentalDueDay,
+      purchaseValue: purchaseValue ?? this.purchaseValue,
+      fipeValue: fipeValue ?? this.fipeValue,
+      isEncumbered: isEncumbered ?? this.isEncumbered,
+      encumberedBank: encumberedBank ?? this.encumberedBank,
     );
   }
 }

@@ -16,6 +16,10 @@ List<Vehicle> mockVehicles = [
     ipvaExpiry: DateTime(2025, 05, 10),
     insuranceExpiry: DateTime(2025, 08, 15),
     licensingExpiry: DateTime(2025, 09, 20),
+    purchaseValue: 85000.0,
+    fipeValue: 82000.0,
+    isEncumbered: true,
+    encumberedBank: 'Banco Santander',
     rentalValue: 2400.0,
     rentalHistory: [
       RentalValueHistory(value: 2000.0, date: DateTime(2023, 01, 01)),
@@ -59,6 +63,9 @@ List<Vehicle> mockVehicles = [
     ipvaExpiry: DateTime(2025, 04, 05),
     insuranceExpiry: DateTime(2025, 07, 12),
     licensingExpiry: DateTime(2025, 10, 18),
+    purchaseValue: 72000.0,
+    fipeValue: 68500.0,
+    isEncumbered: false,
     rentalValue: 2100.0,
     rentalHistory: [
       RentalValueHistory(value: 2000.0, date: DateTime(2023, 01, 15)),

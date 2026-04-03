@@ -31,15 +31,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   bool _isLoading = true;
   
   // Financial Overview States
-  int _selectedMonth = DateTime.now().month;
-  int _selectedYear = DateTime.now().year;
+  int? _selectedYear; // null means 'Tudo'
 
-  final List<String> _months = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
-
-  final List<int> _years = [2024, 2025, 2026];
+  final List<int?> _yearOptions = [null, 2026, 2025, 2024];
 
   @override
   void initState() {
@@ -102,6 +96,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               onAllTap: () => context.push('/admin/financial/flow?vehicleId=${widget.vehicleId}'),
             ),
             _buildFinancialOverview(currencyFormat),
+            const SizedBox(height: AppSpacing.xxl),
+
+            // Property Financials (Purchase, FIPE, Alienation)
+            _buildSectionTitle('Informações Patrimoniais', onEdit: _showVehicleInfoModal),
+            _buildPropertyFinancialsCard(currencyFormat),
             const SizedBox(height: AppSpacing.xxl),
 
             // Current Driver Section
@@ -280,6 +279,80 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPropertyFinancialsCard(NumberFormat currencyFormat) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildFinanceItem(
+                'Valor de Compra', 
+                _vehicle!.purchaseValue != null ? currencyFormat.format(_vehicle!.purchaseValue) : 'Não informado',
+                Icons.shopping_bag_outlined,
+              ),
+              const SizedBox(width: AppSpacing.xl),
+              _buildFinanceItem(
+                'Tabela FIPE', 
+                _vehicle!.fipeValue != null ? currencyFormat.format(_vehicle!.fipeValue) : 'Não informado',
+                Icons.analytics_outlined,
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Divider(),
+          ),
+          Row(
+            children: [
+              Icon(
+                _vehicle!.isEncumbered ? Icons.lock_outline : Icons.lock_open_outlined,
+                size: 20,
+                color: _vehicle!.isEncumbered ? Colors.orange : Colors.green,
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Status de Alienação', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                  Text(
+                    _vehicle!.isEncumbered 
+                        ? 'Alienado (${_vehicle!.encumberedBank ?? "Banco não informado"})' 
+                        : 'Livre / Sem Gravame',
+                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinanceItem(String label, String value, IconData icon) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: AppColors.primary),
+              const SizedBox(width: 4),
+              Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -736,27 +809,86 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   void _showVehicleInfoModal() {
+
     final brandController = TextEditingController(text: _vehicle!.brand);
     final modelController = TextEditingController(text: _vehicle!.model);
     final yearController = TextEditingController(text: _vehicle!.year.toString());
     final plateController = TextEditingController(text: _vehicle!.plate);
     final colorController = TextEditingController(text: _vehicle!.color);
+    final purchaseValueController = TextEditingController(text: _vehicle!.purchaseValue?.toString() ?? '');
+    final fipeValueController = TextEditingController(text: _vehicle!.fipeValue?.toString() ?? '');
+    final bankController = TextEditingController(text: _vehicle!.encumberedBank ?? '');
+    bool isEncumbered = _vehicle!.isEncumbered;
 
     AppDialogs.showBottomSheet(
       context: context,
       title: 'Editar Informações',
-      content: Column(
-        children: [
-          AppTextField(label: 'Marca', controller: brandController),
-          const SizedBox(height: 16),
-          AppTextField(label: 'Modelo', controller: modelController),
-          const SizedBox(height: 16),
-          AppTextField(label: 'Ano', controller: yearController, keyboardType: TextInputType.number),
-          const SizedBox(height: 16),
-          AppTextField(label: 'Cor', controller: colorController),
-          const SizedBox(height: 16),
-          AppTextField(label: 'Placa', controller: plateController),
-        ],
+      content: StatefulBuilder(
+        builder: (context, setModalState) {
+          return Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(child: AppTextField(label: 'Marca', controller: brandController)),
+                  const SizedBox(width: 16),
+                  Expanded(child: AppTextField(label: 'Modelo', controller: modelController)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: AppTextField(label: 'Ano', controller: yearController, keyboardType: TextInputType.number)),
+                  const SizedBox(width: 16),
+                  Expanded(child: AppTextField(label: 'Placa', controller: plateController)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              AppTextField(label: 'Cor', controller: colorController),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: AppTextField(label: 'Valor de Compra', controller: purchaseValueController, keyboardType: TextInputType.number, prefixIcon: Icons.payments_outlined)),
+                  const SizedBox(width: 16),
+                  Expanded(child: AppTextField(label: 'Valor Tabela FIPE', controller: fipeValueController, keyboardType: TextInputType.number, prefixIcon: Icons.analytics_outlined)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Veículo Alienado?', style: AppTextStyles.labelLarge),
+                        Switch(
+                          value: isEncumbered,
+                          activeThumbColor: Colors.white,
+                          activeTrackColor: AppColors.primary,
+                          onChanged: (value) {
+                            setModalState(() {
+                              isEncumbered = value;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    if (isEncumbered) ...[
+                      const SizedBox(height: 12),
+                      AppTextField(label: 'Banco / Instituição', controller: bankController, hintText: 'A qual banco?'),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
       actions: [
         AppButton(
@@ -769,6 +901,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 year: int.tryParse(yearController.text) ?? _vehicle!.year,
                 plate: plateController.text,
                 color: colorController.text,
+                purchaseValue: double.tryParse(purchaseValueController.text),
+                fipeValue: double.tryParse(fipeValueController.text),
+                isEncumbered: isEncumbered,
+                encumberedBank: isEncumbered ? bankController.text : null,
               );
             });
             Navigator.pop(context);
@@ -1363,7 +1499,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   Widget _buildFinancialOverview(NumberFormat currencyFormat) {
     // Filter financials for the selected period
     final periodFinancials = _financials.where((f) {
-      return f.date.month == _selectedMonth && f.date.year == _selectedYear;
+      if (_selectedYear == null) return true;
+      return f.date.year == _selectedYear;
     }).toList();
 
     double totalIncome = 0;
@@ -1379,7 +1516,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
     // Add maintenance costs for the period as expenses
     final periodMaintenances = _maintenances.where((m) {
-      return m.date.month == _selectedMonth && m.date.year == _selectedYear;
+      if (_selectedYear == null) return true;
+      return m.date.year == _selectedYear;
     }).toList();
 
     for (var m in periodMaintenances) {
@@ -1396,47 +1534,34 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           children: [
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
-                    value: _selectedMonth,
-                    isExpanded: true,
-                    items: List.generate(12, (index) {
-                      return DropdownMenuItem(
-                        value: index + 1,
-                        child: Text(_months[index], style: AppTextStyles.labelLarge),
-                      );
-                    }),
-                    onChanged: (val) => setState(() => _selectedMonth = val!),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
+                  child: DropdownButton<int?>(
                     value: _selectedYear,
                     isExpanded: true,
-                    items: _years.map((y) {
-                      return DropdownMenuItem(
+                    icon: const Icon(Icons.calendar_today_outlined, size: 18, color: AppColors.primary),
+                    items: _yearOptions.map((y) {
+                      return DropdownMenuItem<int?>(
                         value: y,
-                        child: Text(y.toString(), style: AppTextStyles.labelLarge),
+                        child: Text(
+                          y == null ? 'Todo o Histórico' : 'Exercício $y',
+                          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+                        ),
                       );
                     }).toList(),
-                    onChanged: (val) => setState(() => _selectedYear = val!),
+                    onChanged: (val) => setState(() => _selectedYear = val),
                   ),
                 ),
               ),
