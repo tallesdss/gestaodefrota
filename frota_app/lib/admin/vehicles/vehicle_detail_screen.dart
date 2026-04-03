@@ -29,6 +29,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   List<FinancialEntry> _financials = [];
   List<MaintenanceEntry> _maintenances = [];
   bool _isLoading = true;
+  
+  // Financial Overview States
+  int _selectedMonth = DateTime.now().month;
+  int _selectedYear = DateTime.now().year;
+
+  final List<String> _months = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  final List<int> _years = [2024, 2025, 2026];
 
   @override
   void initState() {
@@ -82,6 +93,15 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             // Vehicle Header Card
             _buildSectionTitle('Informações do Veículo', onEdit: _showVehicleInfoModal),
             _buildVehicleHeader(),
+            const SizedBox(height: AppSpacing.xxl),
+
+            // Financial Overview Section
+            _buildSectionTitle(
+              'Visão Financeira', 
+              icon: Icons.bar_chart_outlined,
+              onAllTap: () => context.push('/admin/financial/flow?vehicleId=${widget.vehicleId}'),
+            ),
+            _buildFinancialOverview(currencyFormat),
             const SizedBox(height: AppSpacing.xxl),
 
             // Current Driver Section
@@ -1337,6 +1357,217 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFinancialOverview(NumberFormat currencyFormat) {
+    // Filter financials for the selected period
+    final periodFinancials = _financials.where((f) {
+      return f.date.month == _selectedMonth && f.date.year == _selectedYear;
+    }).toList();
+
+    double totalIncome = 0;
+    double totalExpense = 0;
+
+    for (var f in periodFinancials) {
+      if (f.type == FinancialType.income) {
+        totalIncome += f.amount;
+      } else {
+        totalExpense += f.amount;
+      }
+    }
+
+    // Add maintenance costs for the period as expenses
+    final periodMaintenances = _maintenances.where((m) {
+      return m.date.month == _selectedMonth && m.date.year == _selectedYear;
+    }).toList();
+
+    for (var m in periodMaintenances) {
+      totalExpense += m.cost;
+    }
+
+    final profit = totalIncome - totalExpense;
+    final isProfitable = profit >= 0;
+
+    return Column(
+      children: [
+        // Filters
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: _selectedMonth,
+                    isExpanded: true,
+                    items: List.generate(12, (index) {
+                      return DropdownMenuItem(
+                        value: index + 1,
+                        child: Text(_months[index], style: AppTextStyles.labelLarge),
+                      );
+                    }),
+                    onChanged: (val) => setState(() => _selectedMonth = val!),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: _selectedYear,
+                    isExpanded: true,
+                    items: _years.map((y) {
+                      return DropdownMenuItem(
+                        value: y,
+                        child: Text(y.toString(), style: AppTextStyles.labelLarge),
+                      );
+                    }).toList(),
+                    onChanged: (val) => setState(() => _selectedYear = val!),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+
+        // Summary Cards
+        Row(
+          children: [
+            Expanded(
+              child: _buildSimpleOverviewCard(
+                'Ganhos',
+                currencyFormat.format(totalIncome),
+                Icons.trending_up,
+                Colors.green,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _buildSimpleOverviewCard(
+                'Gastos',
+                currencyFormat.format(totalExpense),
+                Icons.trending_down,
+                Colors.red,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        
+        // Profit Card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isProfitable 
+                ? [Colors.green.withValues(alpha: 0.1), Colors.green.withValues(alpha: 0.05)]
+                : [Colors.red.withValues(alpha: 0.1), Colors.red.withValues(alpha: 0.05)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: (isProfitable ? Colors.green : Colors.red).withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'LUCRO LÍQUIDO', 
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: (isProfitable ? Colors.green : Colors.red).shade700,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    currencyFormat.format(profit),
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      color: isProfitable ? Colors.green.shade800 : Colors.red.shade800,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: (isProfitable ? Colors.green : Colors.red).withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isProfitable ? Icons.account_balance_wallet_outlined : Icons.warning_amber_rounded,
+                  color: isProfitable ? Colors.green.shade800 : Colors.red.shade800,
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        if (!isProfitable)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, size: 14, color: Colors.red),
+                const SizedBox(width: 4),
+                Text(
+                  'Este veículo não foi lucrativo no período selecionado.',
+                  style: AppTextStyles.bodySmall.copyWith(color: Colors.red.shade700, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSimpleOverviewCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Text(title, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 
