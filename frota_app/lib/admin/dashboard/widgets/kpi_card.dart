@@ -38,9 +38,7 @@ class KpiCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor ?? AppColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(16),
-          border: Border(
-            left: BorderSide(color: accentColor, width: 3),
-          ),
+          border: Border(left: BorderSide(color: accentColor, width: 3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +68,9 @@ class KpiCard extends StatelessWidget {
             Text(
               value,
               style: AppTextStyles.displayMedium.copyWith(
-                color: title == 'ATENÇÃO' ? AppColors.error : AppColors.onSurface,
+                color: title == 'ATENÇÃO'
+                    ? AppColors.error
+                    : AppColors.onSurface,
                 fontSize: 32,
               ),
             ),

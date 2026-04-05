@@ -61,11 +61,7 @@ class FleetStatusChart extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xxl),
-          _LegendItem(
-            color: AppColors.primary,
-            label: 'Alugado',
-            count: 58,
-          ),
+          _LegendItem(color: AppColors.primary, label: 'Alugado', count: 58),
           const SizedBox(height: AppSpacing.sm),
           _LegendItem(
             color: AppColors.surfaceContainerLow,
@@ -73,11 +69,7 @@ class FleetStatusChart extends StatelessWidget {
             count: 5,
           ),
           const SizedBox(height: AppSpacing.sm),
-          _LegendItem(
-            color: AppColors.tertiary,
-            label: 'Oficina',
-            count: 2,
-          ),
+          _LegendItem(color: AppColors.tertiary, label: 'Oficina', count: 2),
         ],
       ),
     );
@@ -125,10 +117,7 @@ class _LegendItem extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: AppSpacing.md),
         Text(
@@ -140,9 +129,7 @@ class _LegendItem extends StatelessWidget {
         const Spacer(),
         Text(
           '$count',
-          style: AppTextStyles.labelLarge.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );

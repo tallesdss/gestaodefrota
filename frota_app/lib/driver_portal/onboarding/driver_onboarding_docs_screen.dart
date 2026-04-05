@@ -11,10 +11,12 @@ class DriverOnboardingDocsScreen extends StatefulWidget {
   const DriverOnboardingDocsScreen({super.key});
 
   @override
-  State<DriverOnboardingDocsScreen> createState() => _DriverOnboardingDocsScreenState();
+  State<DriverOnboardingDocsScreen> createState() =>
+      _DriverOnboardingDocsScreenState();
 }
 
-class _DriverOnboardingDocsScreenState extends State<DriverOnboardingDocsScreen> {
+class _DriverOnboardingDocsScreenState
+    extends State<DriverOnboardingDocsScreen> {
   int _currentStep = 0;
   bool _cnhUploaded = false;
   bool _residenceUploaded = false;
@@ -126,9 +128,7 @@ class _DriverOnboardingDocsScreenState extends State<DriverOnboardingDocsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _currentStep == 0
-                ? 'Capture sua CNH'
-                : 'Comprovante de Residência',
+            _currentStep == 0 ? 'Capture sua CNH' : 'Comprovante de Residência',
             style: AppTextStyles.labelLarge.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.onSurface,
@@ -249,10 +249,7 @@ class _DriverOnboardingDocsScreenState extends State<DriverOnboardingDocsScreen>
                 letterSpacing: 2,
               ),
             ),
-            Text(
-              'Validando Documentos...',
-              style: AppTextStyles.headlineSmall,
-            ),
+            Text('Validando Documentos...', style: AppTextStyles.headlineSmall),
             const SizedBox(height: AppSpacing.md),
             Text(
               'Nossa IA está analisando a nitidez e a validade dos seus dados.',

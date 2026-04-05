@@ -11,7 +11,8 @@ class FinancialStatementScreen extends StatefulWidget {
   const FinancialStatementScreen({super.key});
 
   @override
-  State<FinancialStatementScreen> createState() => _FinancialStatementScreenState();
+  State<FinancialStatementScreen> createState() =>
+      _FinancialStatementScreenState();
 }
 
 class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
@@ -135,7 +136,11 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   Widget _buildFinancialSummary() {
     double totalPending = mockEntries
         .where((e) => !e.isPaid)
-        .fold(0, (sum, e) => sum + (e.type == FinancialType.expense ? e.amount : -e.amount));
+        .fold(
+          0,
+          (sum, e) =>
+              sum + (e.type == FinancialType.expense ? e.amount : -e.amount),
+        );
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -186,9 +191,17 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
           const SizedBox(height: AppSpacing.xl),
           Row(
             children: [
-              _buildSummaryItem('PAGO', 'R\$ 1.650,00', Colors.white.withValues(alpha: 0.8)),
+              _buildSummaryItem(
+                'PAGO',
+                'R\$ 1.650,00',
+                Colors.white.withValues(alpha: 0.8),
+              ),
               const SizedBox(width: AppSpacing.xxl),
-              _buildSummaryItem('CRÉDITOS', 'R\$ 50,00', Colors.white.withValues(alpha: 0.8)),
+              _buildSummaryItem(
+                'CRÉDITOS',
+                'R\$ 50,00',
+                Colors.white.withValues(alpha: 0.8),
+              ),
             ],
           ),
         ],
@@ -262,12 +275,14 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
 
   Widget _buildTransactionCard(FinancialEntry entry) {
     final isExpense = entry.type == FinancialType.expense;
-    final statusColor = entry.isPaid 
-        ? Colors.green 
+    final statusColor = entry.isPaid
+        ? Colors.green
         : (entry.isLate ? AppColors.error : AppColors.secondary);
 
     return InkWell(
-      onTap: entry.isPaid ? null : () => context.push(AppRoutes.driverPixCheckout, extra: entry),
+      onTap: entry.isPaid
+          ? null
+          : () => context.push(AppRoutes.driverPixCheckout, extra: entry),
       borderRadius: BorderRadius.circular(24),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -288,7 +303,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (isExpense ? AppColors.error : Colors.green).withValues(alpha: 0.1),
+                color: (isExpense ? AppColors.error : Colors.green).withValues(
+                  alpha: 0.1,
+                ),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
@@ -328,13 +345,18 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    entry.isPaid ? 'PAGO' : (entry.isLate ? 'ATRASADO' : 'PENDENTE'),
+                    entry.isPaid
+                        ? 'PAGO'
+                        : (entry.isLate ? 'ATRASADO' : 'PENDENTE'),
                     style: AppTextStyles.labelSmall.copyWith(
                       color: statusColor,
                       fontSize: 8,

@@ -21,7 +21,7 @@ class InspectionDetailScreen extends StatefulWidget {
 class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
   final MockRepository _repository = MockRepository();
   final TextEditingController _reasonController = TextEditingController();
-  
+
   Inspection? _inspection;
   Vehicle? _vehicle;
   Driver? _driver;
@@ -62,10 +62,12 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
       try {
         v = await _repository.getVehicleById(insp.vehicleId);
       } catch (_) {}
-      
+
       Driver? d;
       try {
-        d = (await _repository.getDrivers()).firstWhere((d) => d.id == insp.driverId);
+        d = (await _repository.getDrivers()).firstWhere(
+          (d) => d.id == insp.driverId,
+        );
       } catch (_) {}
 
       setState(() {
@@ -85,7 +87,9 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
   Future<void> _handleReview(InspectionStatus newStatus) async {
     if (_reasonController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, informe o motivo da decisão.')),
+        const SnackBar(
+          content: Text('Por favor, informe o motivo da decisão.'),
+        ),
       );
       return;
     }
@@ -100,14 +104,18 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
       );
 
       await _repository.updateInspection(updated);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(newStatus == InspectionStatus.approved 
-                ? 'Vistoria aprovada com sucesso!' 
-                : 'Vistoria reprovada.'),
-            backgroundColor: newStatus == InspectionStatus.approved ? AppColors.success : AppColors.error,
+            content: Text(
+              newStatus == InspectionStatus.approved
+                  ? 'Vistoria aprovada com sucesso!'
+                  : 'Vistoria reprovada.',
+            ),
+            backgroundColor: newStatus == InspectionStatus.approved
+                ? AppColors.success
+                : AppColors.error,
           ),
         );
         Navigator.pop(context, true);
@@ -119,8 +127,14 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_inspection == null) return const Scaffold(body: Center(child: Text('Vistoria não encontrada')));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_inspection == null) {
+      return const Scaffold(
+        body: Center(child: Text('Vistoria não encontrada')),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -163,7 +177,10 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
       children: [
         Text(
           'ITENS DE VERIFICAÇÃO',
-          style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         Container(
@@ -182,18 +199,22 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
           child: Column(
             children: _inspection!.checklist.map((item) {
               return CheckboxListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                ),
                 title: Text(item.title, style: AppTextStyles.bodyMedium),
                 value: item.isChecked,
                 activeColor: AppColors.primary,
                 onChanged: _inspection!.status == InspectionStatus.pending
-                  ? (val) {
-                      setState(() {
-                         final index = _inspection!.checklist.indexOf(item);
-                         _inspection!.checklist[index] = item.copyWith(isChecked: val ?? false);
-                      });
-                    }
-                  : null,
+                    ? (val) {
+                        setState(() {
+                          final index = _inspection!.checklist.indexOf(item);
+                          _inspection!.checklist[index] = item.copyWith(
+                            isChecked: val ?? false,
+                          );
+                        });
+                      }
+                    : null,
                 controlAffinity: ListTileControlAffinity.leading,
               );
             }).toList(),
@@ -250,7 +271,9 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                 ),
                 Text(
                   'Vistoria de ${_inspection!.type == InspectionType.checkin ? "Check-in" : "Check-out"}',
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -281,27 +304,67 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
         children: [
           Row(
             children: [
-              Expanded(child: _buildDetailItem('VEÍCULO', _vehicle?.plate ?? '-', Icons.directions_car_rounded)),
-              Expanded(child: _buildDetailItem('MOTORISTA', _driver?.name ?? '-', Icons.person_rounded)),
+              Expanded(
+                child: _buildDetailItem(
+                  'VEÍCULO',
+                  _vehicle?.plate ?? '-',
+                  Icons.directions_car_rounded,
+                ),
+              ),
+              Expanded(
+                child: _buildDetailItem(
+                  'MOTORISTA',
+                  _driver?.name ?? '-',
+                  Icons.person_rounded,
+                ),
+              ),
             ],
           ),
           const Divider(height: AppSpacing.xxl),
           Row(
             children: [
-              Expanded(child: _buildDetailItem('DATA', dateFormat.format(_inspection!.dateTime), Icons.calendar_today_rounded)),
-              Expanded(child: _buildDetailItem('HORA', timeFormat.format(_inspection!.dateTime), Icons.access_time_rounded)),
+              Expanded(
+                child: _buildDetailItem(
+                  'DATA',
+                  dateFormat.format(_inspection!.dateTime),
+                  Icons.calendar_today_rounded,
+                ),
+              ),
+              Expanded(
+                child: _buildDetailItem(
+                  'HORA',
+                  timeFormat.format(_inspection!.dateTime),
+                  Icons.access_time_rounded,
+                ),
+              ),
             ],
           ),
           const Divider(height: AppSpacing.xxl),
           Row(
             children: [
-              Expanded(child: _buildDetailItem('QUILOMETRAGEM', '${_inspection!.kmAtInspection} km', Icons.speed_rounded)),
-              Expanded(child: _buildDetailItem('COMBUSTÍVEL', '${(_inspection!.fuelLevel * 100).toInt()}%', Icons.local_gas_station_rounded)),
+              Expanded(
+                child: _buildDetailItem(
+                  'QUILOMETRAGEM',
+                  '${_inspection!.kmAtInspection} km',
+                  Icons.speed_rounded,
+                ),
+              ),
+              Expanded(
+                child: _buildDetailItem(
+                  'COMBUSTÍVEL',
+                  '${(_inspection!.fuelLevel * 100).toInt()}%',
+                  Icons.local_gas_station_rounded,
+                ),
+              ),
             ],
           ),
           if (_inspection!.notes.isNotEmpty) ...[
             const Divider(height: AppSpacing.xxl),
-            _buildDetailItem('OBSERVAÇÕES DO MOTORISTA', _inspection!.notes, Icons.notes_rounded),
+            _buildDetailItem(
+              'OBSERVAÇÕES DO MOTORISTA',
+              _inspection!.notes,
+              Icons.notes_rounded,
+            ),
           ],
         ],
       ),
@@ -324,8 +387,19 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
-              Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  fontSize: 10,
+                ),
+              ),
+              Text(
+                value,
+                style: AppTextStyles.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ),
@@ -339,7 +413,10 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
       children: [
         Text(
           'GALERIA DE FOTOS',
-          style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         GridView.builder(
@@ -354,10 +431,12 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
           itemCount: _allRequiredPhotos.length,
           itemBuilder: (context, index) {
             final title = _allRequiredPhotos[index];
-            final photo = _inspection!.photos.cast<InspectionPhoto?>().firstWhere(
-              (p) => p?.title.toLowerCase() == title.toLowerCase(),
-              orElse: () => null,
-            );
+            final photo = _inspection!.photos
+                .cast<InspectionPhoto?>()
+                .firstWhere(
+                  (p) => p?.title.toLowerCase() == title.toLowerCase(),
+                  orElse: () => null,
+                );
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,43 +453,60 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                 ),
                 const SizedBox(height: 4),
                 Expanded(
-                  child: photo != null ? GestureDetector(
-                    onTap: () => _showFullPhoto(photo.url),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(photo.url, fit: BoxFit.cover),
-                          Positioned(
-                            bottom: 8,
-                            right: 8,
-                            child: Icon(Icons.zoom_in, color: Colors.white.withValues(alpha: 0.8), size: 18),
+                  child: photo != null
+                      ? GestureDetector(
+                          onTap: () => _showFullPhoto(photo.url),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.network(photo.url, fit: BoxFit.cover),
+                                Positioned(
+                                  bottom: 8,
+                                  right: 8,
+                                  child: Icon(
+                                    Icons.zoom_in,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    size: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ) : Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.05)),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.no_photography_outlined, color: AppColors.onSurfaceVariant.withValues(alpha: 0.3)),
-                        const SizedBox(height: 4),
-                        Text(
-                          'NÃO ENVIADA',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
-                            fontSize: 8,
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.onSurface.withValues(
+                                alpha: 0.05,
+                              ),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.no_photography_outlined,
+                                color: AppColors.onSurfaceVariant.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'NÃO ENVIADA',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: AppColors.onSurfaceVariant.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  fontSize: 8,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             );
@@ -460,7 +556,10 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
       children: [
         Text(
           'DECISÃO FINAL',
-          style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         Container(
@@ -468,7 +567,9 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.1)),
+            border: Border.all(
+              color: AppColors.onSurface.withValues(alpha: 0.1),
+            ),
           ),
           child: Column(
             children: [
@@ -479,7 +580,9 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                 decoration: InputDecoration(
                   hintText: 'Justifique a decisão para o motorista...',
                   labelText: 'Motivo da Aprovação/Reprovação',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   alignLabelWithHint: true,
                 ),
               ),
@@ -489,31 +592,58 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: _isSubmitting ? null : () => _handleReview(InspectionStatus.rejected),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => _handleReview(InspectionStatus.rejected),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error,
                           side: const BorderSide(color: AppColors.error),
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: _isSubmitting 
-                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('REPROVAR', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'REPROVAR',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : () => _handleReview(InspectionStatus.approved),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => _handleReview(InspectionStatus.approved),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.success,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: _isSubmitting 
-                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('APROVAR', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'APROVAR',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                       ),
                     ),
                   ],
@@ -522,11 +652,17 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    Icon(Icons.person_outline_rounded, size: 16, color: AppColors.onSurfaceVariant),
+                    Icon(
+                      Icons.person_outline_rounded,
+                      size: 16,
+                      color: AppColors.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Auditado por: ${_inspection!.reviewerId ?? "Sistema"}',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

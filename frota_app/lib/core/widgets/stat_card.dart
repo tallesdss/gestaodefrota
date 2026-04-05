@@ -38,11 +38,7 @@ class StatCard extends StatelessWidget {
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
-              Icon(
-                icon,
-                color: iconColor ?? AppColors.primary,
-                size: 20,
-              ),
+              Icon(icon, color: iconColor ?? AppColors.primary, size: 20),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),

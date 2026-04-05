@@ -59,7 +59,10 @@ class _ManagerListScreenState extends State<ManagerListScreen> {
                 itemBuilder: (context, index) {
                   final manager = _managers[index];
                   return GestureDetector(
-                    onTap: () => context.push(AppRoutes.adminManagerForm, extra: manager),
+                    onTap: () => context.push(
+                      AppRoutes.adminManagerForm,
+                      extra: manager,
+                    ),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: AppSpacing.md),
                       padding: const EdgeInsets.all(AppSpacing.md),
@@ -79,17 +82,34 @@ class _ManagerListScreenState extends State<ManagerListScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(manager.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                                Text(manager.email, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                                Text(
+                                  manager.name,
+                                  style: AppTextStyles.labelLarge.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  manager.email,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                ),
                                 const SizedBox(height: 4),
                                 StatusBadge(
-                                  label: manager.isApproved ? 'APROVADO' : 'PENDENTE',
-                                  type: manager.isApproved ? BadgeType.active : BadgeType.warning,
+                                  label: manager.isApproved
+                                      ? 'APROVADO'
+                                      : 'PENDENTE',
+                                  type: manager.isApproved
+                                      ? BadgeType.active
+                                      : BadgeType.warning,
                                 ),
                               ],
                             ),
                           ),
-                          const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
+                          const Icon(
+                            Icons.chevron_right,
+                            color: AppColors.outlineVariant,
+                          ),
                         ],
                       ),
                     ),

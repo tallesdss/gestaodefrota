@@ -13,7 +13,10 @@ class FinancialReportScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'RELATÓRIO CONSOLIDADO',
-          style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.bold),
+          style: AppTextStyles.labelLarge.copyWith(
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -69,16 +72,10 @@ class FinancialReportScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Revenue Breakdown Chart (Simulated)
-                Expanded(
-                  flex: 2,
-                  child: _buildChartSection(),
-                ),
+                Expanded(flex: 2, child: _buildChartSection()),
                 const SizedBox(width: AppSpacing.xl),
                 // Expense Breakdown
-                Expanded(
-                  flex: 1,
-                  child: _buildExpenseBreakdown(),
-                ),
+                Expanded(flex: 1, child: _buildExpenseBreakdown()),
               ],
             ),
             const SizedBox(height: AppSpacing.xxl),
@@ -93,7 +90,10 @@ class FinancialReportScreen extends StatelessWidget {
 
   Widget _buildPeriodSelector() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(30),
@@ -106,7 +106,9 @@ class FinancialReportScreen extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             'Março 2024',
-            style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold),
+            style: AppTextStyles.bodySmall.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const Icon(Icons.arrow_drop_down),
         ],
@@ -114,7 +116,13 @@ class FinancialReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryCard(String title, String value, String change, Color color, IconData icon) {
+  Widget _buildSummaryCard(
+    String title,
+    String value,
+    String change,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -150,7 +158,10 @@ class FinancialReportScreen extends StatelessWidget {
                 ),
                 child: Text(
                   change,
-                  style: AppTextStyles.labelSmall.copyWith(color: color, fontWeight: FontWeight.bold),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -158,12 +169,18 @@ class FinancialReportScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             title,
-            style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, letterSpacing: 1.1),
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.onSurfaceVariant,
+              letterSpacing: 1.1,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.bold, color: AppColors.onSurface),
+            style: AppTextStyles.headlineSmall.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.onSurface,
+            ),
           ),
         ],
       ),
@@ -183,7 +200,10 @@ class FinancialReportScreen extends StatelessWidget {
         children: [
           Text(
             'FLUXO MENSAL',
-            style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+            style: AppTextStyles.labelMedium.copyWith(
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           SizedBox(
@@ -242,16 +262,28 @@ class FinancialReportScreen extends StatelessWidget {
         children: [
           Text(
             'DESPESAS POR TIPO',
-            style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+            style: AppTextStyles.labelMedium.copyWith(
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           Row(
             children: [
-              const Expanded(flex: 70, child: Divider(thickness: 8, color: Colors.purple)),
+              const Expanded(
+                flex: 70,
+                child: Divider(thickness: 8, color: Colors.purple),
+              ),
               const SizedBox(width: 4),
-              const Expanded(flex: 20, child: Divider(thickness: 8, color: AppColors.success)),
+              const Expanded(
+                flex: 20,
+                child: Divider(thickness: 8, color: AppColors.success),
+              ),
               const SizedBox(width: 4),
-              const Expanded(flex: 10, child: Divider(thickness: 8, color: AppColors.accent)),
+              const Expanded(
+                flex: 10,
+                child: Divider(thickness: 8, color: AppColors.accent),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -271,12 +303,21 @@ class FinancialReportScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(label, style: AppTextStyles.bodySmall),
             ],
           ),
-          Text(value, style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: AppTextStyles.bodySmall.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -288,7 +329,10 @@ class FinancialReportScreen extends StatelessWidget {
       children: [
         Text(
           'TRANSAÇÕES RECENTES',
-          style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         Container(
@@ -299,13 +343,33 @@ class FinancialReportScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              _buildTransactionRow('Entrada de Caixa', 'Mar 28', '+ R\$ 2.500', AppColors.success),
+              _buildTransactionRow(
+                'Entrada de Caixa',
+                'Mar 28',
+                '+ R\$ 2.500',
+                AppColors.success,
+              ),
               const Divider(height: 1),
-              _buildTransactionRow('Pagamento Salário - João', 'Mar 25', '- R\$ 3.200', AppColors.error),
+              _buildTransactionRow(
+                'Pagamento Salário - João',
+                'Mar 25',
+                '- R\$ 3.200',
+                AppColors.error,
+              ),
               const Divider(height: 1),
-              _buildTransactionRow('Manutenção Veículo ABC-1234', 'Mar 22', '- R\$ 450', AppColors.error),
+              _buildTransactionRow(
+                'Manutenção Veículo ABC-1234',
+                'Mar 22',
+                '- R\$ 450',
+                AppColors.error,
+              ),
               const Divider(height: 1),
-              _buildTransactionRow('Aporte Capital', 'Mar 15', '+ R\$ 10.000', AppColors.success),
+              _buildTransactionRow(
+                'Aporte Capital',
+                'Mar 15',
+                '+ R\$ 10.000',
+                AppColors.success,
+              ),
             ],
           ),
         ),
@@ -313,7 +377,12 @@ class FinancialReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionRow(String label, String date, String value, Color color) {
+  Widget _buildTransactionRow(
+    String label,
+    String date,
+    String value,
+    Color color,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
@@ -322,13 +391,26 @@ class FinancialReportScreen extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-              Text(date, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              Text(
+                label,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                date,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
           Text(
             value,
-            style: AppTextStyles.bodyMedium.copyWith(color: color, fontWeight: FontWeight.bold),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

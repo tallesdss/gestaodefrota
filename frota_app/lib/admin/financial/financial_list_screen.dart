@@ -45,7 +45,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Status de pagamento atualizado para: ${!entry.isPaid ? "PAGO" : "PENDENTE"}'),
+        content: Text(
+          'Status de pagamento atualizado para: ${!entry.isPaid ? "PAGO" : "PENDENTE"}',
+        ),
         behavior: SnackBarBehavior.floating,
         backgroundColor: !entry.isPaid ? AppColors.success : AppColors.error,
       ),
@@ -56,9 +58,14 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
     AppDialogs.showModal(
       context: context,
       title: 'Excluir Lançamento',
-      content: Text('Tem certeza que deseja excluir o lançamento "${entry.description}"? Esta ação não pode ser desfeita.'),
+      content: Text(
+        'Tem certeza que deseja excluir o lançamento "${entry.description}"? Esta ação não pode ser desfeita.',
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         ElevatedButton(
           onPressed: () {
             setState(() {
@@ -72,7 +79,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               ),
             );
           },
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.error,
+            foregroundColor: Colors.white,
+          ),
           child: const Text('Excluir'),
         ),
       ],
@@ -86,15 +96,25 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       content: Column(
         children: [
           ListTile(
-            leading: Icon(entry.isPaid ? Icons.pending_actions_outlined : Icons.check_circle_outline, color: AppColors.primary),
-            title: Text(entry.isPaid ? 'Marcar como Pendente' : 'Marcar como Pago'),
+            leading: Icon(
+              entry.isPaid
+                  ? Icons.pending_actions_outlined
+                  : Icons.check_circle_outline,
+              color: AppColors.primary,
+            ),
+            title: Text(
+              entry.isPaid ? 'Marcar como Pendente' : 'Marcar como Pago',
+            ),
             onTap: () {
               Navigator.pop(context);
               _togglePaymentStatus(entry);
             },
           ),
           ListTile(
-            leading: const Icon(Icons.edit_outlined, color: AppColors.onSurfaceVariant),
+            leading: const Icon(
+              Icons.edit_outlined,
+              color: AppColors.onSurfaceVariant,
+            ),
             title: const Text('Editar Lançamento'),
             onTap: () {
               Navigator.pop(context);
@@ -103,7 +123,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.delete_outline, color: AppColors.error),
-            title: const Text('Excluir Lançamento', style: TextStyle(color: AppColors.error)),
+            title: const Text(
+              'Excluir Lançamento',
+              style: TextStyle(color: AppColors.error),
+            ),
             onTap: () {
               Navigator.pop(context);
               _confirmDelete(entry);
@@ -137,15 +160,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 2,
-                child: _buildKpiGrid(),
-              ),
+              Expanded(flex: 2, child: _buildKpiGrid()),
               const SizedBox(width: AppSpacing.xxl),
-              Expanded(
-                flex: 1,
-                child: _buildProfitRanking(),
-              ),
+              Expanded(flex: 1, child: _buildProfitRanking()),
             ],
           ),
           const SizedBox(height: AppSpacing.xxl),
@@ -176,7 +193,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             const SizedBox(height: 4),
             Text(
               'Controle de receitas, despesas e rentabilidade da frota.',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -187,7 +206,8 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               label: 'Exportar PDF',
               color: AppColors.surfaceContainerLow,
               textColor: AppColors.onSurface,
-              onPressed: () => ReportGenerator.generateFinancialReport(_entries),
+              onPressed: () =>
+                  ReportGenerator.generateFinancialReport(_entries),
             ),
             const SizedBox(width: AppSpacing.md),
             _buildSmallButton(
@@ -217,7 +237,15 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
         color: useGradient ? null : color,
         gradient: useGradient ? AppColors.primaryGradient : null,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: useGradient ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2))] : null,
+        boxShadow: useGradient
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -232,7 +260,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
                 const SizedBox(width: 8),
                 Text(
                   label,
-                  style: AppTextStyles.labelMedium.copyWith(color: textColor, fontWeight: FontWeight.bold),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -251,7 +282,13 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _buildFilterItem('PERÍODO', 'Selecione a data', isDate: true)),
+          Expanded(
+            child: _buildFilterItem(
+              'PERÍODO',
+              'Selecione a data',
+              isDate: true,
+            ),
+          ),
           const SizedBox(width: AppSpacing.xl),
           Expanded(child: _buildFilterItem('VEÍCULO', 'Todos os Veículos')),
           const SizedBox(width: AppSpacing.xl),
@@ -263,10 +300,15 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               elevation: 0,
             ),
-            child: const Text('Aplicar Filtros', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Aplicar Filtros',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -297,7 +339,13 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(value, style: AppTextStyles.bodyMedium),
-              Icon(isDate ? Icons.calendar_month_outlined : Icons.keyboard_arrow_down, size: 18, color: AppColors.onSurfaceVariant),
+              Icon(
+                isDate
+                    ? Icons.calendar_month_outlined
+                    : Icons.keyboard_arrow_down,
+                size: 18,
+                color: AppColors.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -345,13 +393,25 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
     );
   }
 
-  Widget _buildKpiCard(String label, String value, String trend, Color color, IconData icon) {
+  Widget _buildKpiCard(
+    String label,
+    String value,
+    String trend,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
         border: Border(top: BorderSide(color: color, width: 4)),
       ),
       child: Column(
@@ -368,7 +428,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
           const SizedBox(height: 12),
           Text(
             value,
-            style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w900, fontSize: 22),
+            style: AppTextStyles.headlineSmall.copyWith(
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -377,7 +440,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               const SizedBox(width: 4),
               Text(
                 trend,
-                style: AppTextStyles.labelSmall.copyWith(color: color, fontWeight: FontWeight.bold),
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -392,7 +458,13 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,23 +474,54 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             children: [
               Text(
                 'Top Rentabilidade',
-                style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: AppTextStyles.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
-              const Icon(Icons.emoji_events_outlined, size: 20, color: AppColors.onSurfaceVariant),
+              const Icon(
+                Icons.emoji_events_outlined,
+                size: 20,
+                color: AppColors.onSurfaceVariant,
+              ),
             ],
           ),
           const SizedBox(height: 20),
-          _buildRankingItem('01', 'Toyota Corolla', 'ABC-1234', 'R\$ 8.420', AppColors.primary),
+          _buildRankingItem(
+            '01',
+            'Toyota Corolla',
+            'ABC-1234',
+            'R\$ 8.420',
+            AppColors.primary,
+          ),
           const SizedBox(height: 16),
-          _buildRankingItem('02', 'Jeep Compass', 'GHI-5544', 'R\$ 7.150', AppColors.primary),
+          _buildRankingItem(
+            '02',
+            'Jeep Compass',
+            'GHI-5544',
+            'R\$ 7.150',
+            AppColors.primary,
+          ),
           const SizedBox(height: 16),
-          _buildRankingItem('03', 'Honda Civic', 'LMN-4422', 'R\$ 6.980', AppColors.primary),
+          _buildRankingItem(
+            '03',
+            'Honda Civic',
+            'LMN-4422',
+            'R\$ 6.980',
+            AppColors.primary,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRankingItem(String rank, String name, String plate, String value, Color color) {
+  Widget _buildRankingItem(
+    String rank,
+    String name,
+    String plate,
+    String value,
+    Color color,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -428,7 +531,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: rank == '01' ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surfaceContainerLow,
+                color: rank == '01'
+                    ? AppColors.primary.withValues(alpha: 0.1)
+                    : AppColors.surfaceContainerLow,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -436,7 +541,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
                 rank,
                 style: AppTextStyles.labelSmall.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: rank == '01' ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: rank == '01'
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant,
                 ),
               ),
             ),
@@ -444,15 +551,28 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                Text(plate, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                Text(
+                  name,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  plate,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ],
         ),
         Text(
           '+ $value',
-          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w900, color: color),
+          style: AppTextStyles.labelLarge.copyWith(
+            fontWeight: FontWeight.w900,
+            color: color,
+          ),
         ),
       ],
     );
@@ -463,7 +583,13 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -474,7 +600,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               children: [
                 Text(
                   'Detalhamento de Fluxo',
-                  style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
                 ),
                 TextButton(
                   onPressed: () => context.push(AppRoutes.adminFinancialFlow),
@@ -497,7 +626,8 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: 5, // Show 5 as per HTML
-            separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.surfaceContainerLow),
+            separatorBuilder: (context, index) =>
+                const Divider(height: 1, color: AppColors.surfaceContainerLow),
             itemBuilder: (context, index) {
               if (index >= _entries.length) return const SizedBox.shrink();
               return _buildTransactionRow(_entries[index]);
@@ -547,20 +677,35 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
       child: Row(
         children: [
-          Expanded(flex: 1, child: Text(_formatDate(entry.date), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500))),
+          Expanded(
+            flex: 1,
+            child: Text(
+              _formatDate(entry.date),
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
           Expanded(
             flex: 2,
             child: Row(
               children: [
                 Icon(
-                  entry.category.toLowerCase().contains('manutenção') ? Icons.build_outlined : entry.category.toLowerCase().contains('multa') ? Icons.report_problem_outlined : Icons.add_circle_outline,
+                  entry.category.toLowerCase().contains('manutenção')
+                      ? Icons.build_outlined
+                      : entry.category.toLowerCase().contains('multa')
+                      ? Icons.report_problem_outlined
+                      : Icons.add_circle_outline,
                   size: 18,
                   color: amountColor,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   entry.description,
-                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: amountColor),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: amountColor,
+                  ),
                 ),
               ],
             ),
@@ -570,8 +715,18 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Corolla ABC-1234', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)), // Mocked vehicle
-                Text('Ricardo Silva', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)), // Mocked driver
+                Text(
+                  'Corolla ABC-1234',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ), // Mocked vehicle
+                Text(
+                  'Ricardo Silva',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ), // Mocked driver
               ],
             ),
           ),
@@ -579,7 +734,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             flex: 1,
             child: Text(
               '$sign${entry.amount.toStringAsFixed(2).replaceAll('.', ',')}',
-              style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w900, color: amountColor),
+              style: AppTextStyles.labelLarge.copyWith(
+                fontWeight: FontWeight.w900,
+                color: amountColor,
+              ),
             ),
           ),
           Expanded(
@@ -587,7 +745,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: entry.isPaid ? AppColors.primaryContainer.withValues(alpha: 0.1) : AppColors.errorContainer.withValues(alpha: 0.5),
+                color: entry.isPaid
+                    ? AppColors.primaryContainer.withValues(alpha: 0.1)
+                    : AppColors.errorContainer.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(20),
               ),
               alignment: Alignment.center,
@@ -604,7 +764,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
           ),
           IconButton(
             onPressed: () => _showEntryActions(entry),
-            icon: const Icon(Icons.more_vert, color: AppColors.onSurfaceVariant),
+            icon: const Icon(
+              Icons.more_vert,
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -620,7 +783,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
         children: [
           Text(
             'Exibindo 5 de ${_entries.length} transações no período',
-            style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w500),
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           Row(
             children: [
@@ -638,7 +804,12 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
     );
   }
 
-  Widget _buildPageButton(IconData? icon, {String? text, bool active = false, bool enabled = true}) {
+  Widget _buildPageButton(
+    IconData? icon, {
+    String? text,
+    bool active = false,
+    bool enabled = true,
+  }) {
     return Container(
       width: 32,
       height: 32,
@@ -649,7 +820,13 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       ),
       alignment: Alignment.center,
       child: icon != null
-          ? Icon(icon, size: 16, color: enabled ? (active ? Colors.white : AppColors.onSurfaceVariant) : AppColors.onSurfaceVariant.withValues(alpha: 0.3))
+          ? Icon(
+              icon,
+              size: 16,
+              color: enabled
+                  ? (active ? Colors.white : AppColors.onSurfaceVariant)
+                  : AppColors.onSurfaceVariant.withValues(alpha: 0.3),
+            )
           : Text(
               text!,
               style: AppTextStyles.labelSmall.copyWith(
@@ -664,4 +841,3 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 }
-

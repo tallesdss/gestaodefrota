@@ -25,39 +25,63 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
-            
+
             _buildSection(
               title: 'Interface e Experiência',
               children: [
-                _buildSwitchTile('Modo Escuro (Manual)', 'Alternar tema do sistema', false),
-                _buildSwitchTile('Reduzir Movimento', 'Otimizar animações', true),
-                _buildSwitchTile('Notificações Push', 'Receber no desktop', true),
+                _buildSwitchTile(
+                  'Modo Escuro (Manual)',
+                  'Alternar tema do sistema',
+                  false,
+                ),
+                _buildSwitchTile(
+                  'Reduzir Movimento',
+                  'Otimizar animações',
+                  true,
+                ),
+                _buildSwitchTile(
+                  'Notificações Push',
+                  'Receber no desktop',
+                  true,
+                ),
               ],
             ),
-            
+
             const SizedBox(height: AppSpacing.xxl),
-            
+
             _buildSection(
               title: 'Unidades e Formatos',
               children: [
-                _buildDropdownTile('Unidade de Medida', 'Quilômetros (Km)', ['Quilômetros (Km)', 'Milhas (Mi)']),
-                _buildDropdownTile('Consumo Médio', 'Km/L', ['Km/L', 'L/100km']),
-                _buildDropdownTile('Moeda', 'Real (BRL)', ['Real (BRL)', 'Dólar (USD)']),
+                _buildDropdownTile('Unidade de Medida', 'Quilômetros (Km)', [
+                  'Quilômetros (Km)',
+                  'Milhas (Mi)',
+                ]),
+                _buildDropdownTile('Consumo Médio', 'Km/L', [
+                  'Km/L',
+                  'L/100km',
+                ]),
+                _buildDropdownTile('Moeda', 'Real (BRL)', [
+                  'Real (BRL)',
+                  'Dólar (USD)',
+                ]),
               ],
             ),
-            
+
             const SizedBox(height: AppSpacing.xxl),
-            
+
             _buildSection(
               title: 'Configurações de API e Integração',
               children: [
-                _buildTextTile('Webhook URL', 'https://api.gestaodefrota.com/v1/events'),
+                _buildTextTile(
+                  'Webhook URL',
+                  'https://api.gestaodefrota.com/v1/events',
+                ),
                 _buildTextTile('API Key', '• • • • • • • • • • • • • • • •'),
               ],
             ),
-            
+
             const SizedBox(height: AppSpacing.xxxl),
-            
+
             Row(
               children: [
                 AppButton(
@@ -79,7 +103,10 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection({required String title, required List<Widget> children}) {
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -109,10 +136,7 @@ class SettingsScreen extends StatelessWidget {
               final Widget widget = entry.value;
               final bool isLast = index == children.length - 1;
               return Column(
-                children: [
-                  widget,
-                  if (!isLast) const Divider(height: 1),
-                ],
+                children: [widget, if (!isLast) const Divider(height: 1)],
               );
             }).toList(),
           ),
@@ -133,13 +157,23 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDropdownTile(String title, String current, List<String> options) {
+  Widget _buildDropdownTile(
+    String title,
+    String current,
+    List<String> options,
+  ) {
     return ListTile(
       title: Text(title, style: AppTextStyles.labelLarge),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(current, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          Text(
+            current,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(width: 8),
           const Icon(Icons.keyboard_arrow_down_rounded),
         ],
@@ -154,7 +188,12 @@ class SettingsScreen extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(value, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+          Text(
+            value,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(width: 12),
           const Icon(Icons.content_copy_rounded, size: 16),
         ],

@@ -1,13 +1,6 @@
-enum InspectionType { 
-  checkin, 
-  checkout 
-}
+enum InspectionType { checkin, checkout }
 
-enum InspectionStatus { 
-  pending, 
-  approved, 
-  rejected 
-}
+enum InspectionStatus { pending, approved, rejected }
 
 class InspectionPhoto {
   final String url;
@@ -23,10 +16,7 @@ class InspectionPhoto {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'url': url,
-      'title': title,
-    };
+    return {'url': url, 'title': title};
   }
 }
 
@@ -44,10 +34,7 @@ class ChecklistItem {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'isChecked': isChecked,
-    };
+    return {'title': title, 'isChecked': isChecked};
   }
 
   ChecklistItem copyWith({String? title, bool? isChecked}) {
@@ -97,19 +84,23 @@ class Inspection {
       vehicleId: map['vehicleId'],
       driverId: map['driverId'],
       type: InspectionType.values.firstWhere((e) => e.name == map['type']),
-      status: map['status'] != null 
+      status: map['status'] != null
           ? InspectionStatus.values.firstWhere((e) => e.name == map['status'])
           : InspectionStatus.pending,
       dateTime: DateTime.parse(map['dateTime']),
       kmAtInspection: map['kmAtInspection'],
       fuelLevel: map['fuelLevel'].toDouble(),
       photos: (map['photos'] as List)
-          .map((p) => p is String 
-              ? InspectionPhoto(url: p, title: 'Foto') 
-              : InspectionPhoto.fromMap(p as Map<String, dynamic>))
+          .map(
+            (p) => p is String
+                ? InspectionPhoto(url: p, title: 'Foto')
+                : InspectionPhoto.fromMap(p as Map<String, dynamic>),
+          )
           .toList(),
       checklist: map['checklist'] != null
-          ? (map['checklist'] as List).map((c) => ChecklistItem.fromMap(c)).toList()
+          ? (map['checklist'] as List)
+                .map((c) => ChecklistItem.fromMap(c))
+                .toList()
           : [],
       notes: map['notes'],
       hasNewDamage: map['hasNewDamage'] as bool,

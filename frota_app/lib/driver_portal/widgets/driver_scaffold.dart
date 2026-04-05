@@ -8,11 +8,7 @@ class DriverScaffold extends StatelessWidget {
   final Widget child;
   final GoRouterState state;
 
-  const DriverScaffold({
-    super.key,
-    required this.child,
-    required this.state,
-  });
+  const DriverScaffold({super.key, required this.child, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +21,13 @@ class DriverScaffold extends StatelessWidget {
         children: [
           if (isDesktop) DriverSidebar(activeRoute: location),
           Expanded(
-            child: Column(
-              children: [
-                Expanded(child: child),
-              ],
-            ),
+            child: Column(children: [Expanded(child: child)]),
           ),
         ],
       ),
-      bottomNavigationBar: !isDesktop ? _buildBottomNavigationBar(context, location) : null,
+      bottomNavigationBar: !isDesktop
+          ? _buildBottomNavigationBar(context, location)
+          : null,
     );
   }
 
@@ -86,8 +80,14 @@ class DriverScaffold extends StatelessWidget {
         backgroundColor: AppColors.surfaceContainerLowest,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+        ),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),

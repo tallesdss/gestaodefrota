@@ -15,12 +15,14 @@ class DriverInspectionDetailScreen extends StatefulWidget {
   const DriverInspectionDetailScreen({super.key, required this.inspectionId});
 
   @override
-  State<DriverInspectionDetailScreen> createState() => _DriverInspectionDetailScreenState();
+  State<DriverInspectionDetailScreen> createState() =>
+      _DriverInspectionDetailScreenState();
 }
 
-class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScreen> {
+class _DriverInspectionDetailScreenState
+    extends State<DriverInspectionDetailScreen> {
   final MockRepository _repository = MockRepository();
-  
+
   Inspection? _inspection;
   Vehicle? _vehicle;
   bool _isLoading = true;
@@ -65,7 +67,7 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
           licensingExpiry: DateTime.now(),
         );
       }
-      
+
       if (mounted) {
         setState(() {
           _inspection = insp;
@@ -80,8 +82,14 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_inspection == null) return const Scaffold(body: Center(child: Text('Vistoria não encontrada')));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_inspection == null) {
+      return const Scaffold(
+        body: Center(child: Text('Vistoria não encontrada')),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -142,14 +150,23 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
     return Container(
       width: double.infinity,
       color: AppColors.surface,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.md,
+      ),
       child: Row(
         children: [
           _summaryText('ID', '#${_inspection!.id.split('_').last}'),
           const Spacer(),
-          _summaryText('DATA', DateFormat('dd/MM/yy').format(_inspection!.dateTime)),
+          _summaryText(
+            'DATA',
+            DateFormat('dd/MM/yy').format(_inspection!.dateTime),
+          ),
           const SizedBox(width: AppSpacing.lg),
-          _summaryText('HORA', DateFormat('HH:mm').format(_inspection!.dateTime)),
+          _summaryText(
+            'HORA',
+            DateFormat('HH:mm').format(_inspection!.dateTime),
+          ),
         ],
       ),
     );
@@ -159,8 +176,19 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
-        Text(value, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.onSurfaceVariant,
+            fontSize: 10,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -205,7 +233,10 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
               const SizedBox(width: AppSpacing.md),
               Text(
                 label,
-                style: AppTextStyles.labelLarge.copyWith(color: color, fontWeight: FontWeight.bold),
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -216,7 +247,11 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
             ),
             Text(
               'OBSERVAÇÃO DO REVISOR:',
-              style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.bold, fontSize: 10),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+              ),
             ),
             const SizedBox(height: 4),
             Text(_inspection!.reviewReason!, style: AppTextStyles.bodyMedium),
@@ -245,15 +280,29 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
                     color: AppColors.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.directions_car, color: AppColors.primary, size: 32),
+                  child: const Icon(
+                    Icons.directions_car,
+                    color: AppColors.primary,
+                    size: 32,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_vehicle?.model ?? 'Carregando...', style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
-                      Text(_vehicle?.plate ?? '...', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                      Text(
+                        _vehicle?.model ?? 'Carregando...',
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        _vehicle?.plate ?? '...',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -264,13 +313,23 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
             padding: const EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerLowest,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(24),
+              ),
             ),
             child: Row(
               children: [
-                _infoBit(Icons.speed_rounded, 'KM ATUAL', '${_inspection!.kmAtInspection} km'),
+                _infoBit(
+                  Icons.speed_rounded,
+                  'KM ATUAL',
+                  '${_inspection!.kmAtInspection} km',
+                ),
                 const Spacer(),
-                _infoBit(Icons.local_gas_station_rounded, 'COMBUST.', '${(_inspection!.fuelLevel * 100).toInt()}%'),
+                _infoBit(
+                  Icons.local_gas_station_rounded,
+                  'COMBUST.',
+                  '${(_inspection!.fuelLevel * 100).toInt()}%',
+                ),
               ],
             ),
           ),
@@ -287,8 +346,19 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 9)),
-            Text(value, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+                fontSize: 9,
+              ),
+            ),
+            Text(
+              value,
+              style: AppTextStyles.labelMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ],
@@ -301,11 +371,18 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
       children: [
         Row(
           children: [
-            const Icon(Icons.fact_check_outlined, color: AppColors.onSurfaceVariant, size: 18),
+            const Icon(
+              Icons.fact_check_outlined,
+              color: AppColors.onSurfaceVariant,
+              size: 18,
+            ),
             const SizedBox(width: AppSpacing.sm),
             Text(
               'CHECKLIST DE VERIFICAÇÃO',
-              style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+              style: AppTextStyles.labelSmall.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
             ),
           ],
         ),
@@ -325,10 +402,14 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
                     Icon(
                       item.isChecked ? Icons.check_circle : Icons.error_outline,
                       size: 18,
-                      color: item.isChecked ? AppColors.success : AppColors.error,
+                      color: item.isChecked
+                          ? AppColors.success
+                          : AppColors.error,
                     ),
                     const SizedBox(width: AppSpacing.md),
-                    Expanded(child: Text(item.title, style: AppTextStyles.bodyMedium)),
+                    Expanded(
+                      child: Text(item.title, style: AppTextStyles.bodyMedium),
+                    ),
                   ],
                 ),
               );
@@ -348,17 +429,26 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
           children: [
             Row(
               children: [
-                const Icon(Icons.photo_library_outlined, color: AppColors.onSurfaceVariant, size: 18),
+                const Icon(
+                  Icons.photo_library_outlined,
+                  color: AppColors.onSurfaceVariant,
+                  size: 18,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   'EVIDÊNCIAS FOTOGRÁFICAS',
-                  style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ],
             ),
             Text(
               '${_inspection!.photos.length} fotos',
-              style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -375,10 +465,12 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
           itemCount: _allRequiredPhotos.length,
           itemBuilder: (context, index) {
             final title = _allRequiredPhotos[index];
-            final photo = _inspection!.photos.cast<InspectionPhoto?>().firstWhere(
-              (p) => p?.title.toLowerCase() == title.toLowerCase(),
-              orElse: () => null,
-            );
+            final photo = _inspection!.photos
+                .cast<InspectionPhoto?>()
+                .firstWhere(
+                  (p) => p?.title.toLowerCase() == title.toLowerCase(),
+                  orElse: () => null,
+                );
 
             return _buildPhotoCard(title, photo);
           },
@@ -393,7 +485,10 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
       children: [
         Text(
           title.toUpperCase(),
-          style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 9),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.onSurfaceVariant,
+            fontSize: 9,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -403,28 +498,47 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.1)),
-            ),
-            child: photo != null ? GestureDetector(
-              onTap: () => _showFullPhoto(photo.url),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  photo.url,
-                  fit: BoxFit.cover,
-                  errorBuilder: (c, e, s) => const Center(child: Icon(Icons.error_outline)),
-                ),
-              ),
-            ) : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.no_photography_outlined, color: AppColors.onSurfaceVariant.withValues(alpha: 0.2), size: 24),
-                  const SizedBox(height: 4),
-                  Text('NÃO ENVIADA', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant.withValues(alpha: 0.2), fontSize: 8)),
-                ],
+              border: Border.all(
+                color: AppColors.onSurface.withValues(alpha: 0.1),
               ),
             ),
+            child: photo != null
+                ? GestureDetector(
+                    onTap: () => _showFullPhoto(photo.url),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        photo.url,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) =>
+                            const Center(child: Icon(Icons.error_outline)),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.no_photography_outlined,
+                          color: AppColors.onSurfaceVariant.withValues(
+                            alpha: 0.2,
+                          ),
+                          size: 24,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'NÃO ENVIADA',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.onSurfaceVariant.withValues(
+                              alpha: 0.2,
+                            ),
+                            fontSize: 8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ),
       ],
@@ -437,7 +551,10 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
       children: [
         Text(
           'OBSERVAÇÕES DO MOTORISTA',
-          style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          style: AppTextStyles.labelSmall.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         Container(
@@ -446,7 +563,9 @@ class _DriverInspectionDetailScreenState extends State<DriverInspectionDetailScr
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.05)),
+            border: Border.all(
+              color: AppColors.onSurface.withValues(alpha: 0.05),
+            ),
           ),
           child: Text(_inspection!.notes, style: AppTextStyles.bodyMedium),
         ),

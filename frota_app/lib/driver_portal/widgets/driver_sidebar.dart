@@ -8,10 +8,7 @@ import '../../core/routes/app_routes.dart';
 class DriverSidebar extends StatelessWidget {
   final String activeRoute;
 
-  const DriverSidebar({
-    super.key,
-    required this.activeRoute,
-  });
+  const DriverSidebar({super.key, required this.activeRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -124,10 +121,7 @@ class _SidebarItem extends StatelessWidget {
             decoration: BoxDecoration(
               border: isActive
                   ? const Border(
-                      left: BorderSide(
-                        color: AppColors.primary,
-                        width: 4,
-                      ),
+                      left: BorderSide(color: AppColors.primary, width: 4),
                     )
                   : null,
             ),
@@ -136,14 +130,22 @@ class _SidebarItem extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xl),
                 Icon(
                   icon,
-                  color: color ?? (isActive ? AppColors.primary : AppColors.onSurfaceVariant),
+                  color:
+                      color ??
+                      (isActive
+                          ? AppColors.primary
+                          : AppColors.onSurfaceVariant),
                   size: 20,
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
                   label,
                   style: AppTextStyles.labelLarge.copyWith(
-                    color: color ?? (isActive ? AppColors.primary : AppColors.onSurfaceVariant),
+                    color:
+                        color ??
+                        (isActive
+                            ? AppColors.primary
+                            : AppColors.onSurfaceVariant),
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),

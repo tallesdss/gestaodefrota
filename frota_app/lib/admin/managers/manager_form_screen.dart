@@ -48,7 +48,10 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
       appBar: AppBar(
         title: Text(
           isEditing ? 'EDITAR GESTOR' : 'NOVO GESTOR',
-          style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.bold),
+          style: AppTextStyles.labelLarge.copyWith(
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -64,15 +67,35 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
               children: [
                 _buildSectionTitle('DADOS PESSOAIS'),
                 const SizedBox(height: AppSpacing.md),
-                _buildTextField(_nameController, 'Nome Completo', Icons.person_outline),
+                _buildTextField(
+                  _nameController,
+                  'Nome Completo',
+                  Icons.person_outline,
+                ),
                 const SizedBox(height: AppSpacing.md),
-                _buildTextField(_emailController, 'E-mail', Icons.email_outlined),
+                _buildTextField(
+                  _emailController,
+                  'E-mail',
+                  Icons.email_outlined,
+                ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField(_phoneController, 'Telefone', Icons.phone_outlined)),
+                    Expanded(
+                      child: _buildTextField(
+                        _phoneController,
+                        'Telefone',
+                        Icons.phone_outlined,
+                      ),
+                    ),
                     const SizedBox(width: AppSpacing.md),
-                    Expanded(child: _buildTextField(_cpfController, 'CPF', Icons.badge_outlined)),
+                    Expanded(
+                      child: _buildTextField(
+                        _cpfController,
+                        'CPF',
+                        Icons.badge_outlined,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -103,11 +126,15 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: Text(
                       isEditing ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR GESTOR',
-                      style: AppTextStyles.labelLarge.copyWith(color: AppColors.onPrimary),
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.onPrimary,
+                      ),
                     ),
                   ),
                 ),
@@ -144,7 +171,11 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -157,7 +188,8 @@ class _ManagerFormScreenState extends State<ManagerFormScreen> {
           borderSide: BorderSide.none,
         ),
       ),
-      validator: (val) => val == null || val.isEmpty ? 'Campo obrigatório' : null,
+      validator: (val) =>
+          val == null || val.isEmpty ? 'Campo obrigatório' : null,
     );
   }
 

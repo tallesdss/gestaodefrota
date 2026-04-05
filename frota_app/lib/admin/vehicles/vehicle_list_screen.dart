@@ -43,9 +43,13 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
       if (filter == 'Todos') {
         _filteredVehicles = _vehicles;
       } else if (filter == 'Alugados') {
-        _filteredVehicles = _vehicles.where((v) => v.status == VehicleStatus.rented).toList();
+        _filteredVehicles = _vehicles
+            .where((v) => v.status == VehicleStatus.rented)
+            .toList();
       } else if (filter == 'Livres') {
-        _filteredVehicles = _vehicles.where((v) => v.status == VehicleStatus.available).toList();
+        _filteredVehicles = _vehicles
+            .where((v) => v.status == VehicleStatus.available)
+            .toList();
       }
     });
   }
@@ -72,7 +76,10 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.filter_list_outlined, color: AppColors.onSurface),
+            icon: const Icon(
+              Icons.filter_list_outlined,
+              color: AppColors.onSurface,
+            ),
           ),
         ],
       ),
@@ -96,19 +103,24 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                 // Grid View
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
                     child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: AppSpacing.xl,
-                        mainAxisSpacing: AppSpacing.xl,
-                        childAspectRatio: 0.82,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: AppSpacing.xl,
+                            mainAxisSpacing: AppSpacing.xl,
+                            childAspectRatio: 0.82,
+                          ),
                       itemCount: _filteredVehicles.length,
                       itemBuilder: (context, index) {
                         return VehicleGridCard(
                           vehicle: _filteredVehicles[index],
-                          onTap: () => context.push('/admin/vehicles/detail/${_filteredVehicles[index].id}'),
+                          onTap: () => context.push(
+                            '/admin/vehicles/detail/${_filteredVehicles[index].id}',
+                          ),
                         );
                       },
                     ),

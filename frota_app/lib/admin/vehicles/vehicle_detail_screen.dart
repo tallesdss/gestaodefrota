@@ -29,7 +29,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   List<FinancialEntry> _financials = [];
   List<MaintenanceEntry> _maintenances = [];
   bool _isLoading = true;
-  
+
   // Financial Overview States
   int? _selectedYear; // null means 'Tudo'
 
@@ -44,7 +44,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   Future<void> _fetchData() async {
     try {
       final v = await _repository.getVehicleById(widget.vehicleId);
-      final f = await _repository.getFinancialEntriesByVehicle(widget.vehicleId);
+      final f = await _repository.getFinancialEntriesByVehicle(
+        widget.vehicleId,
+      );
       final m = await _repository.getMaintenancesByVehicle(widget.vehicleId);
       setState(() {
         _vehicle = v;
@@ -64,12 +66,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_vehicle == null) return const Scaffold(body: Center(child: Text('Veículo não encontrado')));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_vehicle == null) {
+      return const Scaffold(
+        body: Center(child: Text('Veículo não encontrado')),
+      );
+    }
 
     final dateFormat = DateFormat('dd/MM/yyyy');
     final timeFormat = DateFormat('HH:mm');
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
+    final currencyFormat = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: r'R$',
+    );
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -80,26 +91,37 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         leading: const BackButton(color: AppColors.onSurface),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Vehicle Header Card
-            _buildSectionTitle('Informações do Veículo', onEdit: _showVehicleInfoModal),
+            _buildSectionTitle(
+              'Informações do Veículo',
+              onEdit: _showVehicleInfoModal,
+            ),
             _buildVehicleHeader(),
             const SizedBox(height: AppSpacing.xxl),
 
             // Financial Overview Section
             _buildSectionTitle(
-              'Visão Financeira', 
+              'Visão Financeira',
               icon: Icons.bar_chart_outlined,
-              onAllTap: () => context.push('/admin/financial/flow?vehicleId=${widget.vehicleId}'),
+              onAllTap: () => context.push(
+                '/admin/financial/flow?vehicleId=${widget.vehicleId}',
+              ),
             ),
             _buildFinancialOverview(currencyFormat),
             const SizedBox(height: AppSpacing.xxl),
 
             // Property Financials (Purchase, FIPE, Alienation)
-            _buildSectionTitle('Informações Patrimoniais', onEdit: _showVehicleInfoModal),
+            _buildSectionTitle(
+              'Informações Patrimoniais',
+              onEdit: _showVehicleInfoModal,
+            ),
             _buildPropertyFinancialsCard(currencyFormat),
             const SizedBox(height: AppSpacing.xxl),
 
@@ -109,18 +131,24 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             const SizedBox(height: AppSpacing.xxl),
 
             // Kilometrage Update
-            _buildSectionTitle('Última Atualização de KM', onEdit: _showKmUpdateModal),
+            _buildSectionTitle(
+              'Última Atualização de KM',
+              onEdit: _showKmUpdateModal,
+            ),
             _buildKmUpdateCard(dateFormat, timeFormat),
             const SizedBox(height: AppSpacing.xxl),
 
             // Documents Status
-            _buildSectionTitle('Vencimento de Documentos', onEdit: _showDocumentsModal),
+            _buildSectionTitle(
+              'Vencimento de Documentos',
+              onEdit: _showDocumentsModal,
+            ),
             _buildDocumentsCard(dateFormat),
             const SizedBox(height: AppSpacing.xxl),
 
             // Rental Value History
             _buildSectionTitle(
-              'Valor do Aluguel', 
+              'Valor do Aluguel',
               icon: Icons.payments_outlined,
               onEdit: _showRentalValueUpdateModal,
             ),
@@ -129,9 +157,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
             // Financial Summary (Gains and Expenses)
             _buildSectionTitle(
-              'Ganhos e Gastos', 
+              'Ganhos e Gastos',
               onEdit: () => _showFinancialModal(FinancialType.income),
-              onAllTap: () => context.push('/admin/financial/flow?vehicleId=${_vehicle!.id}'),
+              onAllTap: () => context.push(
+                '/admin/financial/flow?vehicleId=${_vehicle!.id}',
+              ),
               icon: Icons.add_circle_outline,
             ),
             _buildFinancialList(currencyFormat, dateFormat),
@@ -139,9 +169,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
             // Fines List
             _buildSectionTitle(
-              'Multas', 
-              onEdit: () => _showFinancialModal(FinancialType.expense, category: 'multa'),
-              onAllTap: () => context.push('/admin/financial/flow?vehicleId=${_vehicle!.id}'),
+              'Multas',
+              onEdit: () =>
+                  _showFinancialModal(FinancialType.expense, category: 'multa'),
+              onAllTap: () => context.push(
+                '/admin/financial/flow?vehicleId=${_vehicle!.id}',
+              ),
               icon: Icons.add_circle_outline,
             ),
             _buildFinesList(currencyFormat, dateFormat),
@@ -151,15 +184,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             _buildSectionTitle(
               'Manutenções Realizadas',
               icon: Icons.settings_suggest_outlined,
-              onEdit: () => context.push('/admin/maintenance/form?vehicleId=${_vehicle!.id}'),
-              onAllTap: () => context.push('/admin/vehicles/${_vehicle!.id}/maintenance'),
+              onEdit: () => context.push(
+                '/admin/maintenance/form?vehicleId=${_vehicle!.id}',
+              ),
+              onAllTap: () =>
+                  context.push('/admin/vehicles/${_vehicle!.id}/maintenance'),
             ),
             _buildMaintenanceList(currencyFormat, dateFormat),
             const SizedBox(height: AppSpacing.xxl),
 
             _buildSectionTitle(
               'Histórico de Motoristas',
-              onAllTap: () => context.push('/admin/vehicles/${_vehicle!.id}/usage'),
+              onAllTap: () =>
+                  context.push('/admin/vehicles/${_vehicle!.id}/usage'),
             ),
             _buildUsageHistory(dateFormat),
             const SizedBox(height: AppSpacing.xxl),
@@ -167,7 +204,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             // Inspection History
             _buildSectionTitle(
               'Histórico de Vistorias',
-              onAllTap: () => context.push('/admin/vehicles/${_vehicle!.id}/inspections'),
+              onAllTap: () =>
+                  context.push('/admin/vehicles/${_vehicle!.id}/inspections'),
             ),
             _buildInspectionHistoryPreview(dateFormat),
             const SizedBox(height: AppSpacing.xxl),
@@ -177,7 +215,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title, {VoidCallback? onEdit, IconData icon = Icons.edit_outlined, VoidCallback? onAllTap}) {
+  Widget _buildSectionTitle(
+    String title, {
+    VoidCallback? onEdit,
+    IconData icon = Icons.edit_outlined,
+    VoidCallback? onAllTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
@@ -185,7 +228,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         children: [
           Text(
             title,
-            style: AppTextStyles.headlineSmall.copyWith(fontSize: 18, color: AppColors.onSurface),
+            style: AppTextStyles.headlineSmall.copyWith(
+              fontSize: 18,
+              color: AppColors.onSurface,
+            ),
           ),
           Row(
             children: [
@@ -193,9 +239,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 TextButton(
                   onPressed: onAllTap,
                   child: Text(
-                    'VER TUDO', 
+                    'VER TUDO',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.primary, 
+                      color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
@@ -253,7 +299,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -270,15 +320,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     ),
                     Text(
                       'Ano: ${_vehicle!.year} | ${_vehicle!.color}',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     StatusBadge(
-                      label: _vehicle!.status == VehicleStatus.available 
-                          ? 'LIVRE' 
-                          : (_vehicle!.status == VehicleStatus.rented 
-                              ? 'ALUGADO' 
-                              : (_vehicle!.status == VehicleStatus.sold ? 'VENDIDO' : 'MANUTENÇÃO')),
+                      label: _vehicle!.status == VehicleStatus.available
+                          ? 'LIVRE'
+                          : (_vehicle!.status == VehicleStatus.rented
+                                ? 'ALUGADO'
+                                : (_vehicle!.status == VehicleStatus.sold
+                                      ? 'VENDIDO'
+                                      : 'MANUTENÇÃO')),
                       type: _getTypeByStatus(_vehicle!.status),
                     ),
                   ],
@@ -303,14 +357,18 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           Row(
             children: [
               _buildFinanceItem(
-                'Valor de Compra', 
-                _vehicle!.purchaseValue != null ? currencyFormat.format(_vehicle!.purchaseValue) : 'Não informado',
+                'Valor de Compra',
+                _vehicle!.purchaseValue != null
+                    ? currencyFormat.format(_vehicle!.purchaseValue)
+                    : 'Não informado',
                 Icons.shopping_bag_outlined,
               ),
               const SizedBox(width: AppSpacing.xl),
               _buildFinanceItem(
-                'Tabela FIPE', 
-                _vehicle!.fipeValue != null ? currencyFormat.format(_vehicle!.fipeValue) : 'Não informado',
+                'Tabela FIPE',
+                _vehicle!.fipeValue != null
+                    ? currencyFormat.format(_vehicle!.fipeValue)
+                    : 'Não informado',
                 Icons.analytics_outlined,
               ),
             ],
@@ -322,7 +380,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           Row(
             children: [
               Icon(
-                _vehicle!.isEncumbered ? Icons.lock_outline : Icons.lock_open_outlined,
+                _vehicle!.isEncumbered
+                    ? Icons.lock_outline
+                    : Icons.lock_open_outlined,
                 size: 20,
                 color: _vehicle!.isEncumbered ? Colors.orange : Colors.green,
               ),
@@ -330,12 +390,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Status de Alienação', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
                   Text(
-                    _vehicle!.isEncumbered 
-                        ? 'Alienado (${_vehicle!.encumberedBank ?? "Banco não informado"})' 
+                    'Status de Alienação',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    _vehicle!.isEncumbered
+                        ? 'Alienado (${_vehicle!.encumberedBank ?? "Banco não informado"})'
                         : 'Livre / Sem Gravame',
-                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                    style: AppTextStyles.labelLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -368,11 +435,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             children: [
               Icon(icon, size: 14, color: AppColors.primary),
               const SizedBox(width: 4),
-              Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+              Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: AppTextStyles.labelLarge.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -387,13 +464,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Center(
-          child: Text('Nenhum motorista vinculado no momento', style: AppTextStyles.bodyMedium),
+          child: Text(
+            'Nenhum motorista vinculado no momento',
+            style: AppTextStyles.bodyMedium,
+          ),
         ),
       );
     }
 
     return InkWell(
-      onTap: () => context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}'),
+      onTap: () =>
+          context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}'),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -415,10 +496,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_vehicle!.currentDriverName!, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        _vehicle!.currentDriverName!,
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Text(
                         'Vinculado em: ${dateFormat.format(_vehicle!.usageHistory.firstWhere((h) => h.driverId == _vehicle!.currentDriverId).startDate)}',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -456,10 +544,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${_vehicle!.currentKm} KM', style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primary)),
+              Text(
+                '${_vehicle!.currentKm} KM',
+                style: AppTextStyles.headlineSmall.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
               Text(
                 'Atualizado em ${dateFormat.format(_vehicle!.lastKmUpdateDate!)} às ${timeFormat.format(_vehicle!.lastKmUpdateDate!)}',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -467,7 +562,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text('Anterior', style: AppTextStyles.labelSmall),
-              Text('${_vehicle!.lastKmValue ?? "-"} KM', style: AppTextStyles.labelLarge),
+              Text(
+                '${_vehicle!.lastKmValue ?? "-"} KM',
+                style: AppTextStyles.labelLarge,
+              ),
             ],
           ),
         ],
@@ -476,6 +574,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   Widget _buildDocumentsCard(DateFormat dateFormat) {
+    final currencyFormat = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: r'R$',
+    );
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
@@ -483,18 +585,93 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDocRow('IPVA', _vehicle!.ipvaExpiry, dateFormat),
+          _buildDocRow(
+            'IPVA',
+            _vehicle!.ipvaExpiry,
+            _vehicle!.ipvaValue,
+            dateFormat,
+            currencyFormat,
+          ),
           _buildDocDivider(),
-          _buildDocRow('Seguro', _vehicle!.insuranceExpiry, dateFormat),
+          _buildDocRow(
+            'Seguro',
+            _vehicle!.insuranceExpiry,
+            _vehicle!.insuranceValue,
+            dateFormat,
+            currencyFormat,
+          ),
           _buildDocDivider(),
-          _buildDocRow('Licenciamento', _vehicle!.licensingExpiry, dateFormat),
+          _buildDocRow(
+            'Licenciamento',
+            _vehicle!.licensingExpiry,
+            _vehicle!.licensingValue,
+            dateFormat,
+            currencyFormat,
+          ),
+
+          if (_vehicle!.financingInstallmentValue != null) ...[
+            _buildDocDivider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.account_balance_outlined,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Financiamento', style: AppTextStyles.labelLarge),
+                        Text(
+                          '${_vehicle!.financingInstallmentsPaid ?? 0} parcelas pagas',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      currencyFormat.format(
+                        _vehicle!.financingInstallmentValue,
+                      ),
+                      style: AppTextStyles.labelLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Vence dia ${_vehicle!.financingDueDay?.toString().padLeft(2, '0') ?? "N/I"}',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildDocRow(String label, DateTime expiry, DateFormat dateFormat) {
+  Widget _buildDocRow(
+    String label,
+    DateTime expiry,
+    double? value,
+    DateFormat dateFormat,
+    NumberFormat currencyFormat,
+  ) {
     final isExpired = expiry.isBefore(DateTime.now());
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -502,12 +679,26 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         Row(
           children: [
             Icon(
-              isExpired ? Icons.warning_amber_rounded : Icons.description_outlined,
+              isExpired
+                  ? Icons.warning_amber_rounded
+                  : Icons.description_outlined,
               color: isExpired ? Colors.orange : AppColors.primary,
               size: 20,
             ),
             const SizedBox(width: 12),
-            Text(label, style: AppTextStyles.labelLarge),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: AppTextStyles.labelLarge),
+                if (value != null)
+                  Text(
+                    currencyFormat.format(value),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
         Text(
@@ -521,10 +712,18 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
-  Widget _buildDocDivider() => Divider(height: 24, color: AppColors.outlineVariant.withValues(alpha: 0.2));
+  Widget _buildDocDivider() => Divider(
+    height: 24,
+    color: AppColors.outlineVariant.withValues(alpha: 0.2),
+  );
 
-  Widget _buildFinancialList(NumberFormat currencyFormat, DateFormat dateFormat) {
-    final transactions = _financials.where((f) => f.category != 'multa').toList();
+  Widget _buildFinancialList(
+    NumberFormat currencyFormat,
+    DateFormat dateFormat,
+  ) {
+    final transactions = _financials
+        .where((f) => f.category != 'multa')
+        .toList();
     if (transactions.isEmpty) {
       return _buildEmptyCard('Sem movimentações financeiras');
     }
@@ -538,13 +737,18 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: transactions.length,
-        separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          color: AppColors.outlineVariant.withValues(alpha: 0.1),
+        ),
         itemBuilder: (context, index) {
           final f = transactions[index];
           final isIncome = f.type == FinancialType.income;
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: isIncome ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+              backgroundColor: isIncome
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
               child: Icon(
                 isIncome ? Icons.arrow_upward : Icons.arrow_downward,
                 color: isIncome ? Colors.green : Colors.red,
@@ -552,7 +756,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               ),
             ),
             title: Text(f.description, style: AppTextStyles.labelLarge),
-            subtitle: Text(dateFormat.format(f.date), style: AppTextStyles.bodySmall),
+            subtitle: Text(
+              dateFormat.format(f.date),
+              style: AppTextStyles.bodySmall,
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -566,7 +773,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 const SizedBox(width: 8),
                 IconButton(
                   onPressed: () => _showFinancialModal(f.type, entry: f),
-                  icon: const Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -593,16 +804,26 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: fines.length,
-        separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          color: AppColors.outlineVariant.withValues(alpha: 0.1),
+        ),
         itemBuilder: (context, index) {
           final f = fines[index];
           return ListTile(
             leading: CircleAvatar(
               backgroundColor: Colors.orange.withValues(alpha: 0.1),
-              child: const Icon(Icons.gavel_outlined, color: Colors.orange, size: 18),
+              child: const Icon(
+                Icons.gavel_outlined,
+                color: Colors.orange,
+                size: 18,
+              ),
             ),
             title: Text(f.description, style: AppTextStyles.labelLarge),
-            subtitle: Text(dateFormat.format(f.date), style: AppTextStyles.bodySmall),
+            subtitle: Text(
+              dateFormat.format(f.date),
+              style: AppTextStyles.bodySmall,
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -610,7 +831,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(currencyFormat.format(f.amount), style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      currencyFormat.format(f.amount),
+                      style: AppTextStyles.labelLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Text(
                       f.isPaid ? 'PAGO' : 'PENDENTE',
                       style: AppTextStyles.labelSmall.copyWith(
@@ -622,8 +848,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: () => _showFinancialModal(FinancialType.expense, category: 'multa', entry: f),
-                  icon: const Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
+                  onPressed: () => _showFinancialModal(
+                    FinancialType.expense,
+                    category: 'multa',
+                    entry: f,
+                  ),
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -649,7 +883,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _vehicle!.usageHistory.length,
-        separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          color: AppColors.outlineVariant.withValues(alpha: 0.1),
+        ),
         itemBuilder: (context, index) {
           final h = _vehicle!.usageHistory[index];
           final isActive = h.endDate == null;
@@ -658,7 +895,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               isActive ? Icons.timeline : Icons.history,
               color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
             ),
-            title: Text(h.driverName, style: AppTextStyles.labelLarge.copyWith(fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
+            title: Text(
+              h.driverName,
+              style: AppTextStyles.labelLarge.copyWith(
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
             subtitle: Text(
               '${dateFormat.format(h.startDate)} - ${h.endDate != null ? dateFormat.format(h.endDate!) : "Atual"}',
               style: AppTextStyles.bodySmall,
@@ -668,7 +910,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text('${h.startKm} KM', style: AppTextStyles.labelSmall),
-                if (h.endKm != null) Text('${h.endKm} KM', style: AppTextStyles.labelSmall),
+                if (h.endKm != null)
+                  Text('${h.endKm} KM', style: AppTextStyles.labelSmall),
               ],
             ),
           );
@@ -680,53 +923,74 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   Widget _buildInspectionHistoryPreview(DateFormat dateFormat) {
     // Hardcoded preview for now, consistent with DriverProfile
     final inspections = [
-      {'type': 'CHECK-IN', 'date': '12/03/2026', 'km': '15.420', 'status': 'APROVADO'},
+      {
+        'type': 'CHECK-IN',
+        'date': '12/03/2026',
+        'km': '15.420',
+        'status': 'APROVADO',
+      },
     ];
 
     return Column(
-      children: inspections.map((i) => Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              i['type'] == 'CHECK-IN' ? Icons.login_rounded : Icons.logout_rounded,
-              color: i['type'] == 'CHECK-IN' ? AppColors.success : AppColors.secondary,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      children: inspections
+          .map(
+            (i) => Container(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
                 children: [
-                  Text(i['type']!, style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold)),
-                  Text('KM: ${i['km']}', style: AppTextStyles.bodySmall),
+                  Icon(
+                    i['type'] == 'CHECK-IN'
+                        ? Icons.login_rounded
+                        : Icons.logout_rounded,
+                    color: i['type'] == 'CHECK-IN'
+                        ? AppColors.success
+                        : AppColors.secondary,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          i['type']!,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text('KM: ${i['km']}', style: AppTextStyles.bodySmall),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(i['date']!, style: AppTextStyles.labelSmall),
+                      Text(
+                        i['status']!,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(i['date']!, style: AppTextStyles.labelSmall),
-                Text(
-                  i['status']!,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.success,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      )).toList(),
+          )
+          .toList(),
     );
   }
 
-  Widget _buildRentalHistoryCard(NumberFormat currencyFormat, DateFormat dateFormat) {
+  Widget _buildRentalHistoryCard(
+    NumberFormat currencyFormat,
+    DateFormat dateFormat,
+  ) {
     if (_vehicle!.rentalHistory.isEmpty && _vehicle!.rentalValue == null) {
       return _buildEmptyCard('Sem histórico de aluguel');
     }
@@ -750,13 +1014,22 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 children: [
                   Text('Valor Atual', style: AppTextStyles.labelSmall),
                   Text(
-                    _vehicle!.rentalValue != null ? currencyFormat.format(_vehicle!.rentalValue) : 'Não definido',
-                    style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                    _vehicle!.rentalValue != null
+                        ? currencyFormat.format(_vehicle!.rentalValue)
+                        : 'Não definido',
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  if (_vehicle!.rentalValue != null && _vehicle!.rentalType != null && _vehicle!.rentalDueDay != null)
+                  if (_vehicle!.rentalValue != null &&
+                      _vehicle!.rentalType != null &&
+                      _vehicle!.rentalDueDay != null)
                     Text(
                       '${_vehicle!.rentalType == RentalType.weekly ? "Semanal" : "Mensal"} • ${_vehicle!.rentalType == RentalType.weekly ? _getDayLabel(_vehicle!.rentalDueDay!) : "Todo dia ${_vehicle!.rentalDueDay!.toString().padLeft(2, '0')}"}',
-                      style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                 ],
               ),
@@ -772,7 +1045,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: Divider(),
             ),
-            Text('Histórico de Alterações', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Histórico de Alterações',
+              style: AppTextStyles.labelMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
             ListView.separated(
               shrinkWrap: true,
@@ -784,8 +1062,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(currencyFormat.format(item.value), style: AppTextStyles.bodyMedium),
-                    Text(dateFormat.format(item.date), style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                    Text(
+                      currencyFormat.format(item.value),
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    Text(
+                      dateFormat.format(item.date),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 );
               },
@@ -798,7 +1084,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     onPressed: () {
                       // Optionally implement a full history screen
                     },
-                    child: Text('Ver Histórico Completo', style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
+                    child: Text(
+                      'Ver Histórico Completo',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -817,27 +1108,47 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Center(
-        child: Text(text, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+        child: Text(
+          text,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }
 
   String _getDayLabel(int day) {
-    const labels = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const labels = [
+      'Segunda',
+      'Terça',
+      'Quarta',
+      'Quinta',
+      'Sexta',
+      'Sábado',
+      'Domingo',
+    ];
     if (day >= 1 && day <= 7) return labels[day - 1];
     return '';
   }
 
   void _showVehicleInfoModal() {
-
     final brandController = TextEditingController(text: _vehicle!.brand);
     final modelController = TextEditingController(text: _vehicle!.model);
-    final yearController = TextEditingController(text: _vehicle!.year.toString());
+    final yearController = TextEditingController(
+      text: _vehicle!.year.toString(),
+    );
     final plateController = TextEditingController(text: _vehicle!.plate);
     final colorController = TextEditingController(text: _vehicle!.color);
-    final purchaseValueController = TextEditingController(text: _vehicle!.purchaseValue?.toString() ?? '');
-    final fipeValueController = TextEditingController(text: _vehicle!.fipeValue?.toString() ?? '');
-    final bankController = TextEditingController(text: _vehicle!.encumberedBank ?? '');
+    final purchaseValueController = TextEditingController(
+      text: _vehicle!.purchaseValue?.toString() ?? '',
+    );
+    final fipeValueController = TextEditingController(
+      text: _vehicle!.fipeValue?.toString() ?? '',
+    );
+    final bankController = TextEditingController(
+      text: _vehicle!.encumberedBank ?? '',
+    );
     bool isEncumbered = _vehicle!.isEncumbered;
 
     AppDialogs.showBottomSheet(
@@ -849,17 +1160,38 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             children: [
               Row(
                 children: [
-                  Expanded(child: AppTextField(label: 'Marca', controller: brandController)),
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Marca',
+                      controller: brandController,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: AppTextField(label: 'Modelo', controller: modelController)),
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Modelo',
+                      controller: modelController,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: AppTextField(label: 'Ano', controller: yearController, keyboardType: TextInputType.number)),
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Ano',
+                      controller: yearController,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: AppTextField(label: 'Placa', controller: plateController)),
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Placa',
+                      controller: plateController,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -869,9 +1201,23 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: AppTextField(label: 'Valor de Compra', controller: purchaseValueController, keyboardType: TextInputType.number, prefixIcon: Icons.payments_outlined)),
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Valor de Compra',
+                      controller: purchaseValueController,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icons.payments_outlined,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: AppTextField(label: 'Valor Tabela FIPE', controller: fipeValueController, keyboardType: TextInputType.number, prefixIcon: Icons.analytics_outlined)),
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Valor Tabela FIPE',
+                      controller: fipeValueController,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icons.analytics_outlined,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -886,7 +1232,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Veículo Alienado?', style: AppTextStyles.labelLarge),
+                        Text(
+                          'Veículo Alienado?',
+                          style: AppTextStyles.labelLarge,
+                        ),
                         Switch(
                           value: isEncumbered,
                           activeThumbColor: Colors.white,
@@ -901,7 +1250,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     ),
                     if (isEncumbered) ...[
                       const SizedBox(height: 12),
-                      AppTextField(label: 'Banco / Instituição', controller: bankController, hintText: 'A qual banco?'),
+                      AppTextField(
+                        label: 'Banco / Instituição',
+                        controller: bankController,
+                        hintText: 'A qual banco?',
+                      ),
                     ],
                   ],
                 ),
@@ -936,8 +1289,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   void _showRegisterSaleModal() {
     final saleValueController = TextEditingController();
-    final saleDateController = TextEditingController(text: DateFormat('dd/MM/yyyy').format(DateTime.now()));
-    final fipeValueController = TextEditingController(text: _vehicle!.fipeValue?.toString() ?? '');
+    final saleDateController = TextEditingController(
+      text: DateFormat('dd/MM/yyyy').format(DateTime.now()),
+    );
+    final fipeValueController = TextEditingController(
+      text: _vehicle!.fipeValue?.toString() ?? '',
+    );
     final installmentsPaidController = TextEditingController();
     final installmentValueController = TextEditingController();
 
@@ -948,31 +1305,68 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         children: [
           Row(
             children: [
-              Expanded(child: AppTextField(label: 'Valor da Venda', controller: saleValueController, keyboardType: TextInputType.number, prefixIcon: Icons.sell_outlined, hintText: '0,00')),
+              Expanded(
+                child: AppTextField(
+                  label: 'Valor da Venda',
+                  controller: saleValueController,
+                  keyboardType: TextInputType.number,
+                  prefixIcon: Icons.sell_outlined,
+                  hintText: '0,00',
+                ),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: AppTextField(label: 'Data da Venda', controller: saleDateController, prefixIcon: Icons.calendar_today_outlined, readOnly: true, onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2030),
-                );
-                if (date != null) {
-                  saleDateController.text = DateFormat('dd/MM/yyyy').format(date);
-                }
-              })),
+              Expanded(
+                child: AppTextField(
+                  label: 'Data da Venda',
+                  controller: saleDateController,
+                  prefixIcon: Icons.calendar_today_outlined,
+                  readOnly: true,
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2030),
+                    );
+                    if (date != null) {
+                      saleDateController.text = DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(date);
+                    }
+                  },
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
-          AppTextField(label: 'Valor Tabela FIPE (Atual)', controller: fipeValueController, keyboardType: TextInputType.number, prefixIcon: Icons.analytics_outlined),
+          AppTextField(
+            label: 'Valor Tabela FIPE (Atual)',
+            controller: fipeValueController,
+            keyboardType: TextInputType.number,
+            prefixIcon: Icons.analytics_outlined,
+          ),
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: AppTextField(label: 'Qtd. Parcelas Pagas', controller: installmentsPaidController, keyboardType: TextInputType.number, prefixIcon: Icons.format_list_numbered)),
+              Expanded(
+                child: AppTextField(
+                  label: 'Qtd. Parcelas Pagas',
+                  controller: installmentsPaidController,
+                  keyboardType: TextInputType.number,
+                  prefixIcon: Icons.format_list_numbered,
+                ),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: AppTextField(label: 'Valor da Parcela', controller: installmentValueController, keyboardType: TextInputType.number, prefixIcon: Icons.payments_outlined)),
+              Expanded(
+                child: AppTextField(
+                  label: 'Valor da Parcela',
+                  controller: installmentValueController,
+                  keyboardType: TextInputType.number,
+                  prefixIcon: Icons.payments_outlined,
+                ),
+              ),
             ],
           ),
         ],
@@ -988,7 +1382,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Venda de ${_vehicle!.plate} registrada com sucesso!'),
+                content: Text(
+                  'Venda de ${_vehicle!.plate} registrada com sucesso!',
+                ),
                 backgroundColor: Colors.green,
                 behavior: SnackBarBehavior.floating,
               ),
@@ -1000,7 +1396,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   void _showRentalValueUpdateModal() {
-    final rentalController = TextEditingController(text: _vehicle!.rentalValue?.toString() ?? '');
+    final rentalController = TextEditingController(
+      text: _vehicle!.rentalValue?.toString() ?? '',
+    );
     RentalType selectedType = _vehicle!.rentalType ?? RentalType.weekly;
     int? selectedDay = _vehicle!.rentalDueDay;
 
@@ -1015,12 +1413,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               AppTextField(
                 label: 'Novo Valor do Aluguel',
                 controller: rentalController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 prefixIcon: Icons.attach_money,
                 hintText: '0,00',
               ),
               const SizedBox(height: 24),
-              Text('Ciclo de Faturamento', style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                'Ciclo de Faturamento',
+                style: AppTextStyles.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -1030,7 +1435,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     selectedType == RentalType.weekly,
                     () => setModalState(() {
                       selectedType = RentalType.weekly;
-                      selectedDay = selectedDay != null && selectedDay! > 7 ? 1 : selectedDay;
+                      selectedDay = selectedDay != null && selectedDay! > 7
+                          ? 1
+                          : selectedDay;
                     }),
                   ),
                   const SizedBox(width: 12),
@@ -1038,14 +1445,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     'MENSAL',
                     RentalType.monthly,
                     selectedType == RentalType.monthly,
-                    () => setModalState(() => selectedType = RentalType.monthly),
+                    () =>
+                        setModalState(() => selectedType = RentalType.monthly),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
               Text(
-                selectedType == RentalType.weekly ? 'Dia da Semana do Vencimento' : 'Dia do Mês do Vencimento',
-                style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                selectedType == RentalType.weekly
+                    ? 'Dia da Semana do Vencimento'
+                    : 'Dia do Mês do Vencimento',
+                style: AppTextStyles.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 12),
               if (selectedType == RentalType.weekly)
@@ -1053,19 +1465,54 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildDayChip('SEG', 1, selectedDay == 1, () => setModalState(() => selectedDay = 1)),
+                      _buildDayChip(
+                        'SEG',
+                        1,
+                        selectedDay == 1,
+                        () => setModalState(() => selectedDay = 1),
+                      ),
                       const SizedBox(width: 8),
-                      _buildDayChip('TER', 2, selectedDay == 2, () => setModalState(() => selectedDay = 2)),
+                      _buildDayChip(
+                        'TER',
+                        2,
+                        selectedDay == 2,
+                        () => setModalState(() => selectedDay = 2),
+                      ),
                       const SizedBox(width: 8),
-                      _buildDayChip('QUA', 3, selectedDay == 3, () => setModalState(() => selectedDay = 3)),
+                      _buildDayChip(
+                        'QUA',
+                        3,
+                        selectedDay == 3,
+                        () => setModalState(() => selectedDay = 3),
+                      ),
                       const SizedBox(width: 8),
-                      _buildDayChip('QUI', 4, selectedDay == 4, () => setModalState(() => selectedDay = 4)),
+                      _buildDayChip(
+                        'QUI',
+                        4,
+                        selectedDay == 4,
+                        () => setModalState(() => selectedDay = 4),
+                      ),
                       const SizedBox(width: 8),
-                      _buildDayChip('SEX', 5, selectedDay == 5, () => setModalState(() => selectedDay = 5)),
+                      _buildDayChip(
+                        'SEX',
+                        5,
+                        selectedDay == 5,
+                        () => setModalState(() => selectedDay = 5),
+                      ),
                       const SizedBox(width: 8),
-                      _buildDayChip('SAB', 6, selectedDay == 6, () => setModalState(() => selectedDay = 6)),
+                      _buildDayChip(
+                        'SAB',
+                        6,
+                        selectedDay == 6,
+                        () => setModalState(() => selectedDay = 6),
+                      ),
                       const SizedBox(width: 8),
-                      _buildDayChip('DOM', 7, selectedDay == 7, () => setModalState(() => selectedDay = 7)),
+                      _buildDayChip(
+                        'DOM',
+                        7,
+                        selectedDay == 7,
+                        () => setModalState(() => selectedDay = 7),
+                      ),
                     ],
                   ),
                 )
@@ -1090,7 +1537,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               const SizedBox(height: 24),
               Text(
                 'Ao alterar o valor, a data da mudança será registrada no histórico do veículo.',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ],
           );
@@ -1100,16 +1549,22 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         AppButton(
           label: 'Confirmar Alteração',
           onPressed: () {
-            final newValue = double.tryParse(rentalController.text.replaceAll(',', '.')) ?? 0;
+            final newValue =
+                double.tryParse(rentalController.text.replaceAll(',', '.')) ??
+                0;
             if (newValue > 0 && selectedDay != null) {
-              final newHistory = List<RentalValueHistory>.from(_vehicle!.rentalHistory);
+              final newHistory = List<RentalValueHistory>.from(
+                _vehicle!.rentalHistory,
+              );
               if (_vehicle!.rentalValue != null) {
-                newHistory.add(RentalValueHistory(
-                  value: _vehicle!.rentalValue!,
-                  date: DateTime.now(),
-                ));
+                newHistory.add(
+                  RentalValueHistory(
+                    value: _vehicle!.rentalValue!,
+                    date: DateTime.now(),
+                  ),
+                );
               }
-              
+
               setState(() {
                 _vehicle = _vehicle!.copyWith(
                   rentalValue: newValue,
@@ -1119,10 +1574,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 );
               });
               Navigator.pop(context);
-              
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Configurações de aluguel atualizadas com sucesso!'),
+                  content: Text(
+                    'Configurações de aluguel atualizadas com sucesso!',
+                  ),
                   behavior: SnackBarBehavior.floating,
                   backgroundColor: AppColors.success,
                 ),
@@ -1130,8 +1587,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             } else if (selectedDay == null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                   content: Text('Selecione o dia do vencimento.'),
-                   backgroundColor: AppColors.error,
+                  content: Text('Selecione o dia do vencimento.'),
+                  backgroundColor: AppColors.error,
                 ),
               );
             }
@@ -1141,7 +1598,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
-  Widget _buildCycleChip(String label, RentalType type, bool isSelected, VoidCallback onTap) {
+  Widget _buildCycleChip(
+    String label,
+    RentalType type,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -1152,7 +1614,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.outlineVariant.withValues(alpha: 0.3),
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.outlineVariant.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -1170,7 +1634,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
-  Widget _buildDayChip(String label, int value, bool isSelected, VoidCallback onTap) {
+  Widget _buildDayChip(
+    String label,
+    int value,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
@@ -1185,7 +1654,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
-          color: isSelected ? AppColors.primary : AppColors.outlineVariant.withValues(alpha: 0.3),
+          color: isSelected
+              ? AppColors.primary
+              : AppColors.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       showCheckmark: false,
@@ -1193,7 +1664,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   void _showKmUpdateModal() {
-    final kmController = TextEditingController(text: _vehicle!.currentKm.toString());
+    final kmController = TextEditingController(
+      text: _vehicle!.currentKm.toString(),
+    );
     AppDialogs.showBottomSheet(
       context: context,
       title: 'Atualizar Quilometragem',
@@ -1216,7 +1689,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         AppButton(
           label: 'Atualizar KM',
           onPressed: () {
-            final newKm = int.tryParse(kmController.text) ?? _vehicle!.currentKm;
+            final newKm =
+                int.tryParse(kmController.text) ?? _vehicle!.currentKm;
             setState(() {
               _vehicle = _vehicle!.copyWith(
                 lastKmValue: _vehicle!.currentKm,
@@ -1238,11 +1712,20 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       title: 'Editar Foto do Veículo',
       content: Column(
         children: [
-          AppTextField(label: 'URL da Imagem', controller: urlController, hintText: 'https://exemplo.com/foto.jpg'),
+          AppTextField(
+            label: 'URL da Imagem',
+            controller: urlController,
+            hintText: 'https://exemplo.com/foto.jpg',
+          ),
           const SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(_vehicle!.imageUrl, height: 120, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image)),
+            child: Image.network(
+              _vehicle!.imageUrl,
+              height: 120,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+            ),
           ),
         ],
       ),
@@ -1263,7 +1746,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   void _showDriverModal() async {
     final List<Driver> drivers = await _repository.getDrivers();
     if (!mounted) return;
-    
+
     AppDialogs.showBottomSheet(
       context: context,
       title: 'Vincular Novo Motorista',
@@ -1317,7 +1800,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: Text('Ou vincule um novo motorista:', style: AppTextStyles.labelLarge),
+              child: Text(
+                'Ou vincule um novo motorista:',
+                style: AppTextStyles.labelLarge,
+              ),
             ),
             Expanded(
               child: ListView.separated(
@@ -1329,40 +1815,64 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   return Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isCurrent ? AppColors.primaryContainer.withValues(alpha: 0.1) : AppColors.surfaceContainerLowest,
+                      color: isCurrent
+                          ? AppColors.primaryContainer.withValues(alpha: 0.1)
+                          : AppColors.surfaceContainerLowest,
                       borderRadius: BorderRadius.circular(12),
-                      border: isCurrent ? Border.all(color: AppColors.primary.withValues(alpha: 0.3)) : null,
+                      border: isCurrent
+                          ? Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                            )
+                          : null,
                     ),
                     child: Row(
                       children: [
                         CircleAvatar(
                           radius: 18,
                           backgroundColor: AppColors.surfaceContainerLow,
-                          child: const Icon(Icons.person_outline, size: 20, color: AppColors.onSurfaceVariant),
+                          child: const Icon(
+                            Icons.person_outline,
+                            size: 20,
+                            color: AppColors.onSurfaceVariant,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(driver.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                              Text('CPF: ${driver.cpf}', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                              Text(
+                                driver.name,
+                                style: AppTextStyles.labelLarge.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'CPF: ${driver.cpf}',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         AppButton(
                           label: isCurrent ? 'Atual' : 'Selecionar',
-                          onPressed: isCurrent ? null : () {
-                            setState(() {
-                              _vehicle = _vehicle!.copyWith(
-                                currentDriverId: driver.id,
-                                currentDriverName: driver.name,
-                                status: VehicleStatus.rented,
-                              );
-                            });
-                            Navigator.pop(context);
-                          },
-                          variant: isCurrent ? AppButtonVariant.ghost : AppButtonVariant.primary,
+                          onPressed: isCurrent
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _vehicle = _vehicle!.copyWith(
+                                      currentDriverId: driver.id,
+                                      currentDriverName: driver.name,
+                                      status: VehicleStatus.rented,
+                                    );
+                                  });
+                                  Navigator.pop(context);
+                                },
+                          variant: isCurrent
+                              ? AppButtonVariant.ghost
+                              : AppButtonVariant.primary,
                         ),
                       ],
                     ),
@@ -1377,7 +1887,31 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   void _showDocumentsModal() {
-    Future<void> selectDate(BuildContext context, DateTime initialDate, Function(DateTime) onSelected) async {
+    final ipvaValController = TextEditingController(
+      text: _vehicle!.ipvaValue?.toString() ?? '',
+    );
+    final insuranceValController = TextEditingController(
+      text: _vehicle!.insuranceValue?.toString() ?? '',
+    );
+    final licensingValController = TextEditingController(
+      text: _vehicle!.licensingValue?.toString() ?? '',
+    );
+
+    final financingPaidController = TextEditingController(
+      text: _vehicle!.financingInstallmentsPaid?.toString() ?? '',
+    );
+    final financingValController = TextEditingController(
+      text: _vehicle!.financingInstallmentValue?.toString() ?? '',
+    );
+    final financingDayController = TextEditingController(
+      text: _vehicle!.financingDueDay?.toString() ?? '',
+    );
+
+    Future<void> selectDate(
+      BuildContext context,
+      DateTime initialDate,
+      Function(DateTime) onSelected,
+    ) async {
       final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: initialDate,
@@ -1397,48 +1931,206 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
     AppDialogs.showBottomSheet(
       context: context,
-      title: 'Datas de Vencimento',
-      content: Column(
-        children: [
-          _buildDateEditTile('IPVA', _vehicle!.ipvaExpiry, (date) => setState(() => _vehicle = _vehicle!.copyWith(ipvaExpiry: date)), selectDate),
-          _buildDateEditTile('Seguro', _vehicle!.insuranceExpiry, (date) => setState(() => _vehicle = _vehicle!.copyWith(insuranceExpiry: date)), selectDate),
-          _buildDateEditTile('Licenciamento', _vehicle!.licensingExpiry, (date) => setState(() => _vehicle = _vehicle!.copyWith(licensingExpiry: date)), selectDate),
-        ],
+      title: 'Vencimentos e Valores',
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'IPVA',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildDateEditTile(
+              'Data de Vencimento',
+              _vehicle!.ipvaExpiry,
+              (date) => setState(
+                () => _vehicle = _vehicle!.copyWith(ipvaExpiry: date),
+              ),
+              selectDate,
+            ),
+            AppTextField(
+              label: 'Valor IPVA',
+              controller: ipvaValController,
+              keyboardType: TextInputType.number,
+              prefixIcon: Icons.attach_money,
+            ),
+            const SizedBox(height: 24),
+
+            Text(
+              'Seguro',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildDateEditTile(
+              'Data de Vencimento',
+              _vehicle!.insuranceExpiry,
+              (date) => setState(
+                () => _vehicle = _vehicle!.copyWith(insuranceExpiry: date),
+              ),
+              selectDate,
+            ),
+            AppTextField(
+              label: 'Valor Seguro',
+              controller: insuranceValController,
+              keyboardType: TextInputType.number,
+              prefixIcon: Icons.attach_money,
+            ),
+            const SizedBox(height: 24),
+
+            Text(
+              'Licenciamento',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildDateEditTile(
+              'Data de Vencimento',
+              _vehicle!.licensingExpiry,
+              (date) => setState(
+                () => _vehicle = _vehicle!.copyWith(licensingExpiry: date),
+              ),
+              selectDate,
+            ),
+            AppTextField(
+              label: 'Valor Licenciamento',
+              controller: licensingValController,
+              keyboardType: TextInputType.number,
+              prefixIcon: Icons.attach_money,
+            ),
+            const SizedBox(height: 24),
+
+            const Divider(),
+            const SizedBox(height: 16),
+            Text(
+              'Financiamento',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: 'Parc. Pagas',
+                    controller: financingPaidController,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppTextField(
+                    label: 'Dia Venc.',
+                    controller: financingDayController,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              label: 'Valor da Parcela',
+              controller: financingValController,
+              keyboardType: TextInputType.number,
+              prefixIcon: Icons.attach_money,
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
       actions: [
-        AppButton(label: 'Concluir', onPressed: () => Navigator.pop(context)),
+        AppButton(
+          label: 'Salvar Tudo',
+          onPressed: () {
+            setState(() {
+              _vehicle = _vehicle!.copyWith(
+                ipvaValue: double.tryParse(
+                  ipvaValController.text.replaceAll(',', '.'),
+                ),
+                insuranceValue: double.tryParse(
+                  insuranceValController.text.replaceAll(',', '.'),
+                ),
+                licensingValue: double.tryParse(
+                  licensingValController.text.replaceAll(',', '.'),
+                ),
+                financingInstallmentsPaid: int.tryParse(
+                  financingPaidController.text,
+                ),
+                financingInstallmentValue: double.tryParse(
+                  financingValController.text.replaceAll(',', '.'),
+                ),
+                financingDueDay: int.tryParse(financingDayController.text),
+              );
+            });
+            Navigator.pop(context);
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildDateEditTile(String label, DateTime date, Function(DateTime) onSelected, Function selectDate) {
+  Widget _buildDateEditTile(
+    String label,
+    DateTime date,
+    Function(DateTime) onSelected,
+    Function selectDate,
+  ) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(label, style: AppTextStyles.labelLarge),
-      subtitle: Text(DateFormat('dd/MM/yyyy').format(date), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary)),
-      trailing: const Icon(Icons.calendar_month_outlined, color: AppColors.primary),
+      subtitle: Text(
+        DateFormat('dd/MM/yyyy').format(date),
+        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary),
+      ),
+      trailing: const Icon(
+        Icons.calendar_month_outlined,
+        color: AppColors.primary,
+      ),
       onTap: () => selectDate(context, date, onSelected),
     );
   }
 
-  void _showFinancialModal(FinancialType type, {String? category, FinancialEntry? entry}) {
+  void _showFinancialModal(
+    FinancialType type, {
+    String? category,
+    FinancialEntry? entry,
+  }) {
     final descController = TextEditingController(text: entry?.description);
-    final amountController = TextEditingController(text: entry?.amount.toString());
+    final amountController = TextEditingController(
+      text: entry?.amount.toString(),
+    );
     bool isPaidLocal = entry?.isPaid ?? false;
 
     AppDialogs.showBottomSheet(
       context: context,
-      title: entry != null 
-          ? 'Editar Registro' 
-          : (category == 'multa' ? 'Novo Lançamento de Multa' : 'Nova Movimentação'),
+      title: entry != null
+          ? 'Editar Registro'
+          : (category == 'multa'
+                ? 'Novo Lançamento de Multa'
+                : 'Nova Movimentação'),
       content: StatefulBuilder(
         builder: (context, setModalState) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppTextField(label: 'Descrição / Motivo', controller: descController, hintText: 'Ex: Troca de Óleo, Multa por velocidade...'),
+              AppTextField(
+                label: 'Descrição / Motivo',
+                controller: descController,
+                hintText: 'Ex: Troca de Óleo, Multa por velocidade...',
+              ),
               const SizedBox(height: 16),
-              AppTextField(label: r'Valor (R$)', controller: amountController, keyboardType: TextInputType.number, prefixIcon: Icons.attach_money),
+              AppTextField(
+                label: r'Valor (R$)',
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.attach_money,
+              ),
               const SizedBox(height: 24),
               Text('Status de Pagamento', style: AppTextStyles.labelLarge),
               const SizedBox(height: 8),
@@ -1450,16 +2142,28 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: !isPaidLocal ? AppColors.errorContainer.withValues(alpha: 0.1) : Colors.transparent,
+                          color: !isPaidLocal
+                              ? AppColors.errorContainer.withValues(alpha: 0.1)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: !isPaidLocal ? AppColors.error : AppColors.outlineVariant.withValues(alpha: 0.2)),
+                          border: Border.all(
+                            color: !isPaidLocal
+                                ? AppColors.error
+                                : AppColors.outlineVariant.withValues(
+                                    alpha: 0.2,
+                                  ),
+                          ),
                         ),
                         child: Center(
                           child: Text(
-                            'PENDENTE', 
+                            'PENDENTE',
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: !isPaidLocal ? AppColors.error : AppColors.onSurfaceVariant,
-                              fontWeight: !isPaidLocal ? FontWeight.bold : FontWeight.normal,
+                              color: !isPaidLocal
+                                  ? AppColors.error
+                                  : AppColors.onSurfaceVariant,
+                              fontWeight: !isPaidLocal
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -1473,16 +2177,28 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: isPaidLocal ? Colors.green.withValues(alpha: 0.1) : Colors.transparent,
+                          color: isPaidLocal
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isPaidLocal ? Colors.green : AppColors.outlineVariant.withValues(alpha: 0.2)),
+                          border: Border.all(
+                            color: isPaidLocal
+                                ? Colors.green
+                                : AppColors.outlineVariant.withValues(
+                                    alpha: 0.2,
+                                  ),
+                          ),
                         ),
                         child: Center(
                           child: Text(
-                            'PAGO', 
+                            'PAGO',
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: isPaidLocal ? Colors.green : AppColors.onSurfaceVariant,
-                              fontWeight: isPaidLocal ? FontWeight.bold : FontWeight.normal,
+                              color: isPaidLocal
+                                  ? Colors.green
+                                  : AppColors.onSurfaceVariant,
+                              fontWeight: isPaidLocal
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -1493,16 +2209,20 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               ),
             ],
           );
-        }
+        },
       ),
       actions: [
         AppButton(
           label: entry != null ? 'Salvar Edição' : 'Salvar Registro',
           onPressed: () {
-            if (descController.text.isEmpty || amountController.text.isEmpty) return;
-            
-            final updatedAmount = double.tryParse(amountController.text.replaceAll(',', '.')) ?? 0.0;
-            
+            if (descController.text.isEmpty || amountController.text.isEmpty) {
+              return;
+            }
+
+            final updatedAmount =
+                double.tryParse(amountController.text.replaceAll(',', '.')) ??
+                0.0;
+
             setState(() {
               if (entry != null) {
                 final index = _financials.indexWhere((f) => f.id == entry.id);
@@ -1536,14 +2256,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   BadgeType _getTypeByStatus(VehicleStatus status) {
     switch (status) {
-      case VehicleStatus.available: return BadgeType.active;
-      case VehicleStatus.rented: return BadgeType.neutral;
-      case VehicleStatus.maintenance: return BadgeType.error;
-      case VehicleStatus.sold: return BadgeType.neutral;
+      case VehicleStatus.available:
+        return BadgeType.active;
+      case VehicleStatus.rented:
+        return BadgeType.neutral;
+      case VehicleStatus.maintenance:
+        return BadgeType.error;
+      case VehicleStatus.sold:
+        return BadgeType.neutral;
     }
   }
 
-  Widget _buildMaintenanceList(NumberFormat currencyFormat, DateFormat dateFormat) {
+  Widget _buildMaintenanceList(
+    NumberFormat currencyFormat,
+    DateFormat dateFormat,
+  ) {
     if (_maintenances.isEmpty) {
       return _buildEmptyCard('Nenhuma manutenção registrada');
     }
@@ -1556,26 +2283,37 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+            border: Border.all(
+              color: AppColors.outlineVariant.withValues(alpha: 0.1),
+            ),
           ),
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: recentMaintenances.length,
-            separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              color: AppColors.outlineVariant.withValues(alpha: 0.1),
+            ),
             itemBuilder: (context, index) {
               final m = recentMaintenances[index];
               final isPaid = m.status == MaintenanceStatus.paid;
-              
+
               return ListTile(
-                onTap: () => context.push(AppRoutes.adminMaintenanceDetail.replaceFirst(':id', m.id)),
+                onTap: () => context.push(
+                  AppRoutes.adminMaintenanceDetail.replaceFirst(':id', m.id),
+                ),
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: AppColors.primaryContainer.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(_getCategoryIcon(m.type), color: AppColors.primary, size: 20),
+                  child: Icon(
+                    _getCategoryIcon(m.type),
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 title: Text(m.description, style: AppTextStyles.labelLarge),
                 subtitle: Text(
@@ -1591,7 +2329,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       children: [
                         Text(
                           currencyFormat.format(m.cost),
-                          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                          style: AppTextStyles.labelLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           m.status.label.toUpperCase(),
@@ -1603,7 +2343,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       ],
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.onSurfaceVariant),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12,
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ],
                 ),
               );
@@ -1614,10 +2358,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
-            onPressed: () => context.push(AppRoutes.adminVehicleMaintenanceHistory.replaceFirst(':id', widget.vehicleId)),
+            onPressed: () => context.push(
+              AppRoutes.adminVehicleMaintenanceHistory.replaceFirst(
+                ':id',
+                widget.vehicleId,
+              ),
+            ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
             ),
             child: const Text('VER TODOS OS LANÇAMENTOS'),
@@ -1665,11 +2416,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           children: [
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+                  border: Border.all(
+                    color: AppColors.outlineVariant.withValues(alpha: 0.1),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.03),
@@ -1682,13 +2438,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   child: DropdownButton<int?>(
                     value: _selectedYear,
                     isExpanded: true,
-                    icon: const Icon(Icons.calendar_today_outlined, size: 18, color: AppColors.primary),
+                    icon: const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
                     items: _yearOptions.map((y) {
                       return DropdownMenuItem<int?>(
                         value: y,
                         child: Text(
                           y == null ? 'Todo o Histórico' : 'Exercício $y',
-                          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+                          style: AppTextStyles.labelLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -1724,22 +2486,30 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        
+
         // Profit Card
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.xl),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: isProfitable 
-                ? [Colors.green.withValues(alpha: 0.1), Colors.green.withValues(alpha: 0.05)]
-                : [Colors.red.withValues(alpha: 0.1), Colors.red.withValues(alpha: 0.05)],
+              colors: isProfitable
+                  ? [
+                      Colors.green.withValues(alpha: 0.1),
+                      Colors.green.withValues(alpha: 0.05),
+                    ]
+                  : [
+                      Colors.red.withValues(alpha: 0.1),
+                      Colors.red.withValues(alpha: 0.05),
+                    ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: (isProfitable ? Colors.green : Colors.red).withValues(alpha: 0.2),
+              color: (isProfitable ? Colors.green : Colors.red).withValues(
+                alpha: 0.2,
+              ),
             ),
           ),
           child: Row(
@@ -1749,9 +2519,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'LUCRO LÍQUIDO', 
+                    'LUCRO LÍQUIDO',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: (isProfitable ? Colors.green : Colors.red).shade700,
+                      color:
+                          (isProfitable ? Colors.green : Colors.red).shade700,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
                     ),
@@ -1760,7 +2531,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   Text(
                     currencyFormat.format(profit),
                     style: AppTextStyles.headlineSmall.copyWith(
-                      color: isProfitable ? Colors.green.shade800 : Colors.red.shade800,
+                      color: isProfitable
+                          ? Colors.green.shade800
+                          : Colors.red.shade800,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -1769,18 +2542,24 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: (isProfitable ? Colors.green : Colors.red).withValues(alpha: 0.2),
+                  color: (isProfitable ? Colors.green : Colors.red).withValues(
+                    alpha: 0.2,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isProfitable ? Icons.account_balance_wallet_outlined : Icons.warning_amber_rounded,
-                  color: isProfitable ? Colors.green.shade800 : Colors.red.shade800,
+                  isProfitable
+                      ? Icons.account_balance_wallet_outlined
+                      : Icons.warning_amber_rounded,
+                  color: isProfitable
+                      ? Colors.green.shade800
+                      : Colors.red.shade800,
                 ),
               ),
             ],
           ),
         ),
-        
+
         if (!isProfitable)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -1790,7 +2569,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 const SizedBox(width: 4),
                 Text(
                   'Este veículo não foi lucrativo no período selecionado.',
-                  style: AppTextStyles.bodySmall.copyWith(color: Colors.red.shade700, fontSize: 11),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.red.shade700,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -1799,13 +2581,20 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
-  Widget _buildSimpleOverviewCard(String title, String value, IconData icon, Color color) {
+  Widget _buildSimpleOverviewCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.1),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1814,13 +2603,21 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             children: [
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
-              Text(title, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+              Text(
+                title,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+            style: AppTextStyles.labelLarge.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
         ],
       ),
@@ -1829,16 +2626,26 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
 
   IconData _getCategoryIcon(MaintenanceType type) {
     switch (type) {
-      case MaintenanceType.oilChange: return Icons.oil_barrel_outlined;
-      case MaintenanceType.tires: return Icons.tire_repair_outlined;
-      case MaintenanceType.brakes: return Icons.disc_full_outlined;
-      case MaintenanceType.suspension: return Icons.settings_input_component_outlined;
-      case MaintenanceType.generalRevision: return Icons.build_circle_outlined;
-      case MaintenanceType.motor: return Icons.electrical_services_outlined;
-      case MaintenanceType.transmission: return Icons.settings_suggest_outlined;
-      case MaintenanceType.electrical: return Icons.electric_bolt_outlined;
-      case MaintenanceType.bodywork: return Icons.car_repair_outlined;
-      case MaintenanceType.other: return Icons.miscellaneous_services_outlined;
+      case MaintenanceType.oilChange:
+        return Icons.oil_barrel_outlined;
+      case MaintenanceType.tires:
+        return Icons.tire_repair_outlined;
+      case MaintenanceType.brakes:
+        return Icons.disc_full_outlined;
+      case MaintenanceType.suspension:
+        return Icons.settings_input_component_outlined;
+      case MaintenanceType.generalRevision:
+        return Icons.build_circle_outlined;
+      case MaintenanceType.motor:
+        return Icons.electrical_services_outlined;
+      case MaintenanceType.transmission:
+        return Icons.settings_suggest_outlined;
+      case MaintenanceType.electrical:
+        return Icons.electric_bolt_outlined;
+      case MaintenanceType.bodywork:
+        return Icons.car_repair_outlined;
+      case MaintenanceType.other:
+        return Icons.miscellaneous_services_outlined;
     }
   }
 }

@@ -1,9 +1,9 @@
-enum MaintenanceType { 
-  oilChange, 
-  tires, 
-  brakes, 
-  suspension, 
-  generalRevision, 
+enum MaintenanceType {
+  oilChange,
+  tires,
+  brakes,
+  suspension,
+  generalRevision,
   motor,
   transmission,
   electrical,
@@ -12,16 +12,26 @@ enum MaintenanceType {
 
   String get label {
     switch (this) {
-      case MaintenanceType.oilChange: return 'Troca de Óleo';
-      case MaintenanceType.tires: return 'Pneus';
-      case MaintenanceType.brakes: return 'Freios';
-      case MaintenanceType.suspension: return 'Suspensão';
-      case MaintenanceType.generalRevision: return 'Revisão Geral';
-      case MaintenanceType.motor: return 'Motor';
-      case MaintenanceType.transmission: return 'Transmissão';
-      case MaintenanceType.electrical: return 'Elétrica';
-      case MaintenanceType.bodywork: return 'Funilaria';
-      case MaintenanceType.other: return 'Outros';
+      case MaintenanceType.oilChange:
+        return 'Troca de Óleo';
+      case MaintenanceType.tires:
+        return 'Pneus';
+      case MaintenanceType.brakes:
+        return 'Freios';
+      case MaintenanceType.suspension:
+        return 'Suspensão';
+      case MaintenanceType.generalRevision:
+        return 'Revisão Geral';
+      case MaintenanceType.motor:
+        return 'Motor';
+      case MaintenanceType.transmission:
+        return 'Transmissão';
+      case MaintenanceType.electrical:
+        return 'Elétrica';
+      case MaintenanceType.bodywork:
+        return 'Funilaria';
+      case MaintenanceType.other:
+        return 'Outros';
     }
   }
 }
@@ -33,9 +43,12 @@ enum MaintenanceStatus {
 
   String get label {
     switch (this) {
-      case MaintenanceStatus.paid: return 'Pago';
-      case MaintenanceStatus.pending: return 'Pendente';
-      case MaintenanceStatus.cancelled: return 'Cancelado';
+      case MaintenanceStatus.paid:
+        return 'Pago';
+      case MaintenanceStatus.pending:
+        return 'Pendente';
+      case MaintenanceStatus.cancelled:
+        return 'Cancelado';
     }
   }
 }
@@ -64,11 +77,7 @@ class MaintenancePart {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'quantity': quantity,
-      'unitPrice': unitPrice,
-    };
+    return {'name': name, 'quantity': quantity, 'unitPrice': unitPrice};
   }
 }
 
@@ -113,15 +122,23 @@ class MaintenanceEntry {
       vehicleId: map['vehicleId'],
       driverId: map['driverId'],
       driverName: map['driverName'],
-      type: MaintenanceType.values.firstWhere((e) => e.name == (map['type'] ?? 'oilChange'), orElse: () => MaintenanceType.oilChange),
+      type: MaintenanceType.values.firstWhere(
+        (e) => e.name == (map['type'] ?? 'oilChange'),
+        orElse: () => MaintenanceType.oilChange,
+      ),
       description: map['description'] ?? '',
       date: DateTime.parse(map['date'] ?? DateTime.now().toIso8601String()),
       kmAtMaintenance: map['kmAtMaintenance'] ?? 0,
       cost: (map['cost'] ?? 0.0).toDouble(),
       workshop: map['workshop'] ?? '',
       workshopId: map['workshopId'],
-      status: MaintenanceStatus.values.firstWhere((e) => e.name == (map['status'] ?? 'pending'), orElse: () => MaintenanceStatus.pending),
-      parts: (map['parts'] as List? ?? []).map((p) => MaintenancePart.fromMap(p)).toList(),
+      status: MaintenanceStatus.values.firstWhere(
+        (e) => e.name == (map['status'] ?? 'pending'),
+        orElse: () => MaintenanceStatus.pending,
+      ),
+      parts: (map['parts'] as List? ?? [])
+          .map((p) => MaintenancePart.fromMap(p))
+          .toList(),
       invoiceNumber: map['invoiceNumber'],
       invoiceUrl: map['invoiceUrl'],
     );

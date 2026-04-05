@@ -54,7 +54,11 @@ class DriverDocumentsScreen extends StatelessWidget {
       children: [
         IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.onSurface, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.onSurface,
+            size: 20,
+          ),
           padding: EdgeInsets.zero,
           alignment: Alignment.centerLeft,
         ),
@@ -66,10 +70,7 @@ class DriverDocumentsScreen extends StatelessWidget {
             letterSpacing: 2,
           ),
         ),
-        Text(
-          'Central de Arquivos',
-          style: AppTextStyles.headlineMedium,
-        ),
+        Text('Central de Arquivos', style: AppTextStyles.headlineMedium),
       ],
     );
   }
@@ -94,7 +95,11 @@ class DriverDocumentsScreen extends StatelessWidget {
               color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: AppIcon(icon: Icons.file_present_outlined, color: statusColor, size: 24),
+            child: AppIcon(
+              icon: Icons.file_present_outlined,
+              color: statusColor,
+              size: 24,
+            ),
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
@@ -103,15 +108,22 @@ class DriverDocumentsScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   expiry,
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
@@ -130,7 +142,10 @@ class DriverDocumentsScreen extends StatelessWidget {
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.more_vert, color: AppColors.onSurfaceVariant),
+            icon: const Icon(
+              Icons.more_vert,
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -152,7 +167,9 @@ class DriverDocumentsScreen extends StatelessWidget {
           Expanded(
             child: Text(
               'Mantenha seus documentos atualizados para evitar bloqueios automáticos no sistema.',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ),
         ],

@@ -102,11 +102,7 @@ class _ProfileCard extends StatelessWidget {
                 color: AppColors.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 28,
-              ),
+              child: Icon(icon, color: AppColors.primary, size: 28),
             ),
             const SizedBox(width: AppSpacing.lg),
             Expanded(
@@ -129,10 +125,7 @@ class _ProfileCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.outlineVariant,
-            ),
+            const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
           ],
         ),
       ),

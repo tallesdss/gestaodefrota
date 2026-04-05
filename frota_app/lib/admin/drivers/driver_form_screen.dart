@@ -30,8 +30,12 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
     _emailController = TextEditingController(text: widget.driver?.email ?? '');
     _phoneController = TextEditingController(text: widget.driver?.phone ?? '');
     _cpfController = TextEditingController(text: widget.driver?.cpf ?? '');
-    _cnhNumberController = TextEditingController(text: widget.driver?.cnhNumber ?? '');
-    _cnhCategoryController = TextEditingController(text: widget.driver?.cnhCategory ?? '');
+    _cnhNumberController = TextEditingController(
+      text: widget.driver?.cnhNumber ?? '',
+    );
+    _cnhCategoryController = TextEditingController(
+      text: widget.driver?.cnhCategory ?? '',
+    );
     _selectedType = widget.driver?.type ?? DriverType.uber;
     _selectedStatus = widget.driver?.status ?? DriverStatus.active;
   }
@@ -56,7 +60,10 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
       appBar: AppBar(
         title: Text(
           isEditing ? 'EDITAR MOTORISTA' : 'NOVO MOTORISTA',
-          style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.bold),
+          style: AppTextStyles.labelLarge.copyWith(
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -72,15 +79,35 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
               children: [
                 _buildSectionTitle('DADOS PESSOAIS'),
                 const SizedBox(height: AppSpacing.md),
-                _buildTextField(_nameController, 'Nome Completo', Icons.person_outline),
+                _buildTextField(
+                  _nameController,
+                  'Nome Completo',
+                  Icons.person_outline,
+                ),
                 const SizedBox(height: AppSpacing.md),
-                _buildTextField(_emailController, 'E-mail', Icons.email_outlined),
+                _buildTextField(
+                  _emailController,
+                  'E-mail',
+                  Icons.email_outlined,
+                ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField(_phoneController, 'Telefone', Icons.phone_outlined)),
+                    Expanded(
+                      child: _buildTextField(
+                        _phoneController,
+                        'Telefone',
+                        Icons.phone_outlined,
+                      ),
+                    ),
                     const SizedBox(width: AppSpacing.md),
-                    Expanded(child: _buildTextField(_cpfController, 'CPF', Icons.badge_outlined)),
+                    Expanded(
+                      child: _buildTextField(
+                        _cpfController,
+                        'CPF',
+                        Icons.badge_outlined,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -88,9 +115,21 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField(_cnhNumberController, 'Número CNH', Icons.card_membership_outlined)),
+                    Expanded(
+                      child: _buildTextField(
+                        _cnhNumberController,
+                        'Número CNH',
+                        Icons.card_membership_outlined,
+                      ),
+                    ),
                     const SizedBox(width: AppSpacing.md),
-                    Expanded(child: _buildTextField(_cnhCategoryController, 'Categoria', Icons.category_outlined)),
+                    Expanded(
+                      child: _buildTextField(
+                        _cnhCategoryController,
+                        'Categoria',
+                        Icons.category_outlined,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -121,11 +160,15 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: Text(
                       isEditing ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR MOTORISTA',
-                      style: AppTextStyles.labelLarge.copyWith(color: AppColors.onPrimary),
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.onPrimary,
+                      ),
                     ),
                   ),
                 ),
@@ -148,7 +191,11 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -161,7 +208,8 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
           borderSide: BorderSide.none,
         ),
       ),
-      validator: (val) => val == null || val.isEmpty ? 'Campo obrigatório' : null,
+      validator: (val) =>
+          val == null || val.isEmpty ? 'Campo obrigatório' : null,
     );
   }
 

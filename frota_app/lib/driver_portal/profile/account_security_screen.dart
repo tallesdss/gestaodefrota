@@ -45,7 +45,11 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
       children: [
         IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.onSurface, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.onSurface,
+            size: 20,
+          ),
           padding: EdgeInsets.zero,
           alignment: Alignment.centerLeft,
         ),
@@ -57,10 +61,7 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
             letterSpacing: 2,
           ),
         ),
-        Text(
-          'Privacidade e Acesso',
-          style: AppTextStyles.headlineMedium,
-        ),
+        Text('Privacidade e Acesso', style: AppTextStyles.headlineMedium),
       ],
     );
   }
@@ -77,7 +78,11 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
         children: [
           Row(
             children: [
-              const AppIcon(icon: Icons.lock_outline, color: AppColors.primary, size: 20),
+              const AppIcon(
+                icon: Icons.lock_outline,
+                color: AppColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'SENHA DE ACESSO',
@@ -90,7 +95,11 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
           const SizedBox(height: AppSpacing.md),
           const Text(
             '********',
-            style: TextStyle(fontSize: 24, letterSpacing: 4, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 24,
+              letterSpacing: 4,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           AppButton(
@@ -136,8 +145,11 @@ class _AccountSecurityScreenState extends State<AccountSecurityScreen> {
           Switch.adaptive(
             value: _biometricEnabled,
             onChanged: (v) => setState(() => _biometricEnabled = v),
-            thumbColor: WidgetStateProperty.resolveWith((states) => 
-               states.contains(WidgetState.selected) ? AppColors.primary : null),
+            thumbColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+                  ? AppColors.primary
+                  : null,
+            ),
           ),
         ],
       ),

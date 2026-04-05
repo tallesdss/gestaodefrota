@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Profile Header Card
             Container(
               padding: const EdgeInsets.all(AppSpacing.xl),
@@ -47,7 +47,9 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       const CircleAvatar(
                         radius: 50,
-                        backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'),
+                        backgroundImage: NetworkImage(
+                          'https://i.pravatar.cc/150?img=12',
+                        ),
                       ),
                       Positioned(
                         bottom: 0,
@@ -85,9 +87,17 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            _buildBadge('Ativo', AppColors.successContainer, AppColors.success),
+                            _buildBadge(
+                              'Ativo',
+                              AppColors.successContainer,
+                              AppColors.success,
+                            ),
                             const SizedBox(width: 8),
-                            _buildBadge('Verificado', AppColors.surfaceContainerHigh, AppColors.primary),
+                            _buildBadge(
+                              'Verificado',
+                              AppColors.surfaceContainerHigh,
+                              AppColors.primary,
+                            ),
                           ],
                         ),
                       ],
@@ -101,9 +111,9 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.xl),
-            
+
             // Personal Information Section
             _buildSectionTitle('Informações Pessoais'),
             const SizedBox(height: 16),
@@ -121,9 +131,9 @@ class ProfileScreen extends StatelessWidget {
                 _buildInfoItem('Organização', 'Architect Fleet Solutions'),
               ],
             ),
-            
+
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Security Section
             _buildSectionTitle('Segurança'),
             const SizedBox(height: 16),
@@ -134,11 +144,23 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildListTile(Icons.lock_outline, 'Alterar Senha', 'Última alteração há 3 meses'),
+                  _buildListTile(
+                    Icons.lock_outline,
+                    'Alterar Senha',
+                    'Última alteração há 3 meses',
+                  ),
                   const Divider(height: 1),
-                  _buildListTile(Icons.security_outlined, 'Autenticação em Duas Etapas', 'Não configurado'),
+                  _buildListTile(
+                    Icons.security_outlined,
+                    'Autenticação em Duas Etapas',
+                    'Não configurado',
+                  ),
                   const Divider(height: 1),
-                  _buildListTile(Icons.devices_outlined, 'Dispositivos Conectados', '3 dispositivos ativos'),
+                  _buildListTile(
+                    Icons.devices_outlined,
+                    'Dispositivos Conectados',
+                    '3 dispositivos ativos',
+                  ),
                 ],
               ),
             ),
@@ -186,9 +208,19 @@ class ProfileScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+          Text(
+            label,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

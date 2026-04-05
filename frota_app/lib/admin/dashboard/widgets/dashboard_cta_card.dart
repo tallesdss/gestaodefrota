@@ -44,7 +44,9 @@ class DashboardCtaCard extends StatelessWidget {
           Text(
             description,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: isSecondary ? AppColors.onSurfaceVariant : AppColors.onPrimary.withValues(alpha: 0.8),
+              color: isSecondary
+                  ? AppColors.onSurfaceVariant
+                  : AppColors.onPrimary.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -53,8 +55,12 @@ class DashboardCtaCard extends StatelessWidget {
               ElevatedButton(
                 onPressed: onTap,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isSecondary ? AppColors.surfaceContainerLowest : AppColors.onPrimary,
-                  foregroundColor: isSecondary ? AppColors.primary : AppColors.primary,
+                  backgroundColor: isSecondary
+                      ? AppColors.surfaceContainerLowest
+                      : AppColors.onPrimary,
+                  foregroundColor: isSecondary
+                      ? AppColors.primary
+                      : AppColors.primary,
                   minimumSize: const Size(180, 48),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -70,7 +76,9 @@ class DashboardCtaCard extends StatelessWidget {
               if (icon != null)
                 Icon(
                   icon,
-                  color: isSecondary ? AppColors.onSurface.withValues(alpha: 0.05) : AppColors.onPrimary.withValues(alpha: 0.1),
+                  color: isSecondary
+                      ? AppColors.onSurface.withValues(alpha: 0.05)
+                      : AppColors.onPrimary.withValues(alpha: 0.1),
                   size: 64,
                 ),
             ],

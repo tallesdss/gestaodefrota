@@ -2,13 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-enum BadgeType { 
-  active, 
-  warning, 
-  error, 
-  success,
-  neutral 
-}
+enum BadgeType { active, warning, error, success, neutral }
 
 class StatusBadge extends StatelessWidget {
   final String label;
@@ -22,21 +16,31 @@ class StatusBadge extends StatelessWidget {
 
   Color _getBgColor() {
     switch (type) {
-      case BadgeType.active: return AppColors.primary.withAlpha(25);
-      case BadgeType.warning: return AppColors.accent.withAlpha(25);
-      case BadgeType.error: return AppColors.error.withAlpha(25);
-      case BadgeType.success: return AppColors.success.withAlpha(25);
-      case BadgeType.neutral: return AppColors.outlineVariant.withAlpha(51);
+      case BadgeType.active:
+        return AppColors.primary.withAlpha(25);
+      case BadgeType.warning:
+        return AppColors.accent.withAlpha(25);
+      case BadgeType.error:
+        return AppColors.error.withAlpha(25);
+      case BadgeType.success:
+        return AppColors.success.withAlpha(25);
+      case BadgeType.neutral:
+        return AppColors.outlineVariant.withAlpha(51);
     }
   }
 
   Color _getTextColor() {
     switch (type) {
-      case BadgeType.active: return AppColors.primary;
-      case BadgeType.warning: return Colors.orange[800]!;
-      case BadgeType.error: return AppColors.error;
-      case BadgeType.success: return AppColors.success;
-      case BadgeType.neutral: return AppColors.onSurfaceVariant;
+      case BadgeType.active:
+        return AppColors.primary;
+      case BadgeType.warning:
+        return Colors.orange[800]!;
+      case BadgeType.error:
+        return AppColors.error;
+      case BadgeType.success:
+        return AppColors.success;
+      case BadgeType.neutral:
+        return AppColors.onSurfaceVariant;
     }
   }
 

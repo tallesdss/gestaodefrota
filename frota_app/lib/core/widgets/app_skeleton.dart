@@ -24,18 +24,12 @@ class AppSkeleton extends StatelessWidget {
   );
 
   /// Skeleton para uma Linha de Texto
-  factory AppSkeleton.text({double? width}) => AppSkeleton(
-    height: 16,
-    width: width ?? 200,
-    borderRadius: 4,
-  );
+  factory AppSkeleton.text({double? width}) =>
+      AppSkeleton(height: 16, width: width ?? 200, borderRadius: 4);
 
   /// Skeleton para um Avatar
-  factory AppSkeleton.avatar({double size = 48}) => AppSkeleton(
-    width: size,
-    height: size,
-    shape: BoxShape.circle,
-  );
+  factory AppSkeleton.avatar({double size = 48}) =>
+      AppSkeleton(width: size, height: size, shape: BoxShape.circle);
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +42,9 @@ class AppSkeleton extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLow,
-          borderRadius: shape == BoxShape.circle ? null : BorderRadius.circular(borderRadius),
+          borderRadius: shape == BoxShape.circle
+              ? null
+              : BorderRadius.circular(borderRadius),
           shape: shape,
         ),
       ),

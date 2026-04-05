@@ -10,7 +10,8 @@ class InspectionHistoryScreen extends StatefulWidget {
   const InspectionHistoryScreen({super.key});
 
   @override
-  State<InspectionHistoryScreen> createState() => _InspectionHistoryScreenState();
+  State<InspectionHistoryScreen> createState() =>
+      _InspectionHistoryScreenState();
 }
 
 class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
@@ -45,7 +46,8 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
             child: ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.xl),
               itemCount: 10,
-              separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.lg),
+              separatorBuilder: (context, index) =>
+                  const SizedBox(height: AppSpacing.lg),
               itemBuilder: (context, index) {
                 return _buildHistoryCard(context, index);
               },
@@ -58,14 +60,22 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
 
   Widget _buildSearchAndFilters() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.lg),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        0,
+        AppSpacing.xl,
+        AppSpacing.lg,
+      ),
       color: AppColors.surface,
       child: Column(
         children: [
           TextField(
             decoration: InputDecoration(
               hintText: 'Buscar por placa ou veículo...',
-              prefixIcon: const Icon(Icons.search, color: AppColors.onSurfaceVariant),
+              prefixIcon: const Icon(
+                Icons.search,
+                color: AppColors.onSurfaceVariant,
+              ),
               filled: true,
               fillColor: AppColors.surfaceContainerLowest,
               border: OutlineInputBorder(
@@ -92,7 +102,9 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                     labelStyle: AppTextStyles.labelMedium.copyWith(
                       color: isSelected ? Colors.white : AppColors.onSurface,
                     ),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     showCheckmark: false,
                   ),
                 );
@@ -108,20 +120,30 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
     // Mock data logic
     final isOccurrence = index == 2 || index == 5;
     final isCheckIn = !isOccurrence && index % 2 == 0;
-    
-    final type = isOccurrence ? 'OCORRÊNCIA' : (isCheckIn ? 'CHECK-IN' : 'CHECK-OUT');
-    final typeColor = isOccurrence ? AppColors.error : (isCheckIn ? AppColors.success : AppColors.primary);
-    final vehicle = index % 3 == 0 ? 'VW VIRTUS' : (index % 3 == 1 ? 'HYUNDAI HB20' : 'TOYOTA COROLLA');
-    final plate = index % 3 == 0 ? 'BRA2E24' : (index % 3 == 1 ? 'QWE9J12' : 'PLM4K88');
+
+    final type = isOccurrence
+        ? 'OCORRÊNCIA'
+        : (isCheckIn ? 'CHECK-IN' : 'CHECK-OUT');
+    final typeColor = isOccurrence
+        ? AppColors.error
+        : (isCheckIn ? AppColors.success : AppColors.primary);
+    final vehicle = index % 3 == 0
+        ? 'VW VIRTUS'
+        : (index % 3 == 1 ? 'HYUNDAI HB20' : 'TOYOTA COROLLA');
+    final plate = index % 3 == 0
+        ? 'BRA2E24'
+        : (index % 3 == 1 ? 'QWE9J12' : 'PLM4K88');
     final date = '2${9 - index}/03/2026';
-    
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isOccurrence ? AppColors.error.withValues(alpha: 0.2) : Colors.transparent,
+          color: isOccurrence
+              ? AppColors.error.withValues(alpha: 0.2)
+              : Colors.transparent,
           width: 1,
         ),
       ),
@@ -132,7 +154,10 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: typeColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -141,7 +166,9 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      isOccurrence ? Icons.report_problem_outlined : (isCheckIn ? Icons.login : Icons.logout),
+                      isOccurrence
+                          ? Icons.report_problem_outlined
+                          : (isCheckIn ? Icons.login : Icons.logout),
                       size: 14,
                       color: typeColor,
                     ),
@@ -176,7 +203,10 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                   color: AppColors.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.directions_car, color: AppColors.primary),
+                child: const Icon(
+                  Icons.directions_car,
+                  color: AppColors.primary,
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -185,11 +215,15 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                   children: [
                     Text(
                       vehicle,
-                      style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       plate,
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -199,11 +233,15 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                 children: [
                   Text(
                     date,
-                    style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.bold),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '${08 + index}:20',
-                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -214,7 +252,11 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
             children: [
               _buildInfoChip(Icons.speed, '${12450 + (index * 100)} km'),
               const SizedBox(width: AppSpacing.sm),
-              if (!isOccurrence) _buildInfoChip(Icons.photo_library_outlined, '${index + 4} fotos'),
+              if (!isOccurrence)
+                _buildInfoChip(
+                  Icons.photo_library_outlined,
+                  '${index + 4} fotos',
+                ),
               const Spacer(),
               _buildViewDetailsButton(context, index),
             ],
@@ -250,7 +292,12 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
 
   Widget _buildViewDetailsButton(BuildContext context, int index) {
     return InkWell(
-      onTap: () => context.push(AppRoutes.driverInspectionDetail.replaceFirst(':id', 'insp_00${index + 1}')),
+      onTap: () => context.push(
+        AppRoutes.driverInspectionDetail.replaceFirst(
+          ':id',
+          'insp_00${index + 1}',
+        ),
+      ),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -265,7 +312,11 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.arrow_forward_ios, size: 10, color: AppColors.primary),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 10,
+              color: AppColors.primary,
+            ),
           ],
         ),
       ),

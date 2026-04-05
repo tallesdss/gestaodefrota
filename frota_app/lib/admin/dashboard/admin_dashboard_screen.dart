@@ -42,9 +42,9 @@ class AdminDashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  isGestor 
-                    ? 'Supervisão de Fluxo de Caixa e Equipe • Hoje'
-                    : 'Relatório atualizado em tempo real • 24 Out 2023',
+                  isGestor
+                      ? 'Supervisão de Fluxo de Caixa e Equipe • Hoje'
+                      : 'Relatório atualizado em tempo real • 24 Out 2023',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -67,9 +67,9 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        
+
         const SizedBox(height: AppSpacing.xl),
-        
+
         // KPI Row
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -112,11 +112,11 @@ class AdminDashboardScreen extends StatelessWidget {
             ],
           ),
         ),
-        
+
         const SizedBox(height: AppSpacing.xl),
-        
+
         const SizedBox(height: AppSpacing.xl),
-        
+
         // Quick Actions Row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,9 +153,9 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        
+
         const SizedBox(height: AppSpacing.xl),
-        
+
         // Module Navigation Grid (Bento Style)
         Text(
           'Módulos do Sistema',
@@ -165,7 +165,7 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        
+
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -188,7 +188,7 @@ class AdminDashboardScreen extends StatelessWidget {
               onTap: () => context.go('$prefix/financial'),
               color: Colors.green,
             ),
-             ModuleNavCard(
+            ModuleNavCard(
               title: 'Motoristas',
               description: 'Perfis, CNH e histórico de aluguéis.',
               icon: Icons.person_search_outlined,
@@ -220,33 +220,29 @@ class AdminDashboardScreen extends StatelessWidget {
         ),
 
         const SizedBox(height: AppSpacing.xl),
-        
+
         // Middle Section: Status Chart + Recent Delays
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Left: Fleet Status (320px fixed)
-            const SizedBox(
-              width: 320,
-              child: FleetStatusChart(),
-            ),
+            const SizedBox(width: 320, child: FleetStatusChart()),
             const SizedBox(width: AppSpacing.xl),
             // Right: Recent Delays
-            Expanded(
-              child: _RecentDelaysSection(),
-            ),
+            Expanded(child: _RecentDelaysSection()),
           ],
         ),
-        
+
         const SizedBox(height: AppSpacing.xl),
-        
+
         // Bottom Section: CTA Cards
         Row(
           children: [
             Expanded(
               child: DashboardCtaCard(
                 title: 'Monitoramento Ativo',
-                description: 'Acompanhe a localização e o comportamento de condução em tempo real.',
+                description:
+                    'Acompanhe a localização e o comportamento de condução em tempo real.',
                 buttonText: 'Abrir Mapa da Frota',
                 icon: Icons.map_outlined,
                 onTap: () {},
@@ -256,7 +252,8 @@ class AdminDashboardScreen extends StatelessWidget {
             Expanded(
               child: DashboardCtaCard(
                 title: 'Relatórios Automáticos',
-                description: 'Gere o fechamento mensal e notas fiscais com apenas um clique.',
+                description:
+                    'Gere o fechamento mensal e notas fiscais com apenas um clique.',
                 buttonText: 'Configurar Agendamento',
                 icon: Icons.bar_chart_outlined,
                 isSecondary: true,
@@ -265,12 +262,11 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        
+
         const SizedBox(height: AppSpacing.xxxl),
       ],
     );
   }
-
 }
 
 class _RecentDelaysSection extends StatelessWidget {
@@ -320,49 +316,59 @@ class _RecentDelaysSection extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           DelayListItem(
-            imageUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=200&auto=format&fit=crop',
+            imageUrl:
+                'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=200&auto=format&fit=crop',
             model: 'Volkswagen Virtus 2023',
             plate: 'ABC-1D23',
             client: 'João Silva',
             value: 'R\$ 1.250,00',
             delay: '3 dias de atraso',
-            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '1')),
+            onTap: () =>
+                context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '1')),
           ),
           DelayListItem(
-            imageUrl: 'https://images.unsplash.com/photo-1550355291-bbee04a92027?q=80&w=200&auto=format&fit=crop',
+            imageUrl:
+                'https://images.unsplash.com/photo-1550355291-bbee04a92027?q=80&w=200&auto=format&fit=crop',
             model: 'Chevrolet Onix Turbo',
             plate: 'XYZ-9A87',
             client: 'Maria Oliveira',
             value: 'R\$ 890,00',
             delay: '2 dias de atraso',
-            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '2')),
+            onTap: () =>
+                context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '2')),
           ),
           DelayListItem(
-            imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=200&auto=format&fit=crop',
+            imageUrl:
+                'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=200&auto=format&fit=crop',
             model: 'Fiat Cronos Precision',
             plate: 'FGH-5J44',
             client: 'Pedro Santos',
             value: 'R\$ 1.100,00',
             delay: '1 dia de atraso',
-            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '3')),
+            onTap: () =>
+                context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '3')),
           ),
           DelayListItem(
-            imageUrl: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=200&auto=format&fit=crop',
+            imageUrl:
+                'https://images.unsplash.com/photo-1502877338535-766e1452684a?q=80&w=200&auto=format&fit=crop',
             model: 'Renault Kwid Zen',
             plate: 'QWE-2R34',
             client: 'Carla Dias',
             value: 'R\$ 560,00',
             delay: '5 dias de atraso',
-            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '4')),
+            onTap: () =>
+                context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '4')),
           ),
           DelayListItem(
-            imageUrl: 'https://images.unsplash.com/photo-1542362567-b055034193b4?q=80&w=200&auto=format&fit=crop',
+            imageUrl:
+                'https://images.unsplash.com/photo-1542362567-b055034193b4?q=80&w=200&auto=format&fit=crop',
             model: 'Toyota Corolla XEi',
             plate: 'TYU-0P12',
             client: 'Roberto Lima',
             value: 'R\$ 2.450,00',
             delay: '2 dias de atraso',
-            onTap: () => context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '5')),
+            onTap: () =>
+                context.go(AppRoutes.adminVehicleDetail.replaceAll(':id', '5')),
           ),
         ],
       ),

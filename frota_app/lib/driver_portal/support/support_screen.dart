@@ -39,7 +39,11 @@ class DriverSupportScreen extends StatelessWidget {
       children: [
         IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.onSurface, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.onSurface,
+            size: 20,
+          ),
           padding: EdgeInsets.zero,
           alignment: Alignment.centerLeft,
         ),
@@ -51,10 +55,7 @@ class DriverSupportScreen extends StatelessWidget {
             letterSpacing: 2,
           ),
         ),
-        Text(
-          'Central de Ajuda',
-          style: AppTextStyles.headlineMedium,
-        ),
+        Text('Central de Ajuda', style: AppTextStyles.headlineMedium),
       ],
     );
   }
@@ -124,11 +125,7 @@ class DriverSupportScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppIcon(
-              icon: icon,
-              color: color,
-              size: 28,
-            ),
+            AppIcon(icon: icon, color: color, size: 28),
             const SizedBox(height: AppSpacing.md),
             Text(
               title,
@@ -199,7 +196,12 @@ class DriverSupportScreen extends StatelessWidget {
         collapsedShape: const RoundedRectangleBorder(),
         iconColor: AppColors.primary,
         collapsedIconColor: AppColors.onSurfaceVariant,
-        childrenPadding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+        childrenPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
         tilePadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         children: [
           Text(

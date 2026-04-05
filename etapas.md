@@ -23,6 +23,7 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
     - [x] **Gestão de Usuários e Equipe:** Fluxo de criação e edição de perfis para **Gestores** e **Motoristas**.
     - [x] **Auditoria de Cadastro:** Validação e aprovação dos documentos enviados por novos usuários (Self-Registration).
     - [x] **Gestão de Frota:** Listagem editorial com filtros, detalhes técnicos do veículo e histórico de utilização.
+    - [x] **Controle Financeiro de Ativos:** Gestão de valores de IPVA, Seguro e Licenciamento, além de controle detalhado de parcelas de financiamento direto no perfil do veículo.
     - [x] **Detalhamento do Perfil do Motorista (Visualização 360º):**
         - [x] **Análise Financeira:** KPI de total rendido (LTV) e saldo devedor atual (Inadimplência).
         - [x] **Histórico de Ativos:** Lista cronológica de veículos alugados e períodos de posse.
@@ -36,15 +37,16 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
 
 - [x] **FASE 4: Manutenção & Auditoria de Segurança**
     - [x] **Manutenção Preventiva:** Registro e controle de trocas de óleo, pneus e revisões futuras.
+    - [x] **Fluxo de Registro Refinado:** Seleção obrigatória de oficina credenciada e categorização hierárquica (Categoria > Subgrupo > Item) baseada no plano de contas do Painel de Controle.
     - [x] **Auditoria de Vistorias:** Tela de revisão estrutural para comparar fotos de Check-in vs Check-out e geração de laudo premium.
 
 - [x] **FASE 6: Gestão de Oficinas (Centro de Manutenção Corretiva)**
     - [x] **Módulo de Oficinas Credenciadas:** Listagem editorial com filtros, ratings de prestação de serviço e status de credenciamento.
     - [x] **Perfil 360 da Oficina:**
         - [x] **Dashboard Financeiro:** KPIs de Valor Pago, Saldo a Pagar e Histórico de Gasto Médio.
-        - [x] **Linha do Tempo de Manutenções:** Lista completa de serviços realizados em todos os veículos da frota.
-        - [x] **Gestão de Suprimentos:** Lista de peças compradas/trocadas e controle de estoque (mock).
-        - [x] **Repositório Fiscal:** Central de notas fiscais eletrônicas (NFe) e recibos digitalizados.
+        - [x] **Linha do Tempo de Manutenções:** Lista completa de serviços realizados com CRUD (Adição, Edição e Exclusão).
+        - [x] **Gestão de Suprimentos:** Registro e histórico de peças adquiridas com CRUD completo per veículo.
+        - [x] **Repositório Fiscal:** Central de notas fiscais eletrônicas (NFe) e recibos com suporte a visualização de documentos digitalizados (images).
     - [x] **Fluxo de Credenciamento (CRUD):** Cadastro completo de novas oficinas parceiras com dados técnicos e bancários.
 
 - [x] **FASE 5: Polimento & UX Premium**

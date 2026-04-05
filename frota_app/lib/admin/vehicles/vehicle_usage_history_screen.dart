@@ -12,7 +12,8 @@ class VehicleUsageHistoryScreen extends StatefulWidget {
   const VehicleUsageHistoryScreen({super.key, required this.vehicleId});
 
   @override
-  State<VehicleUsageHistoryScreen> createState() => _VehicleUsageHistoryScreenState();
+  State<VehicleUsageHistoryScreen> createState() =>
+      _VehicleUsageHistoryScreenState();
 }
 
 class _VehicleUsageHistoryScreenState extends State<VehicleUsageHistoryScreen> {
@@ -36,8 +37,14 @@ class _VehicleUsageHistoryScreenState extends State<VehicleUsageHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_vehicle == null) return const Scaffold(body: Center(child: Text('Veículo não encontrado')));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_vehicle == null) {
+      return const Scaffold(
+        body: Center(child: Text('Veículo não encontrado')),
+      );
+    }
 
     final dateFormat = DateFormat('dd/MM/yyyy');
 
@@ -62,7 +69,7 @@ class _VehicleUsageHistoryScreenState extends State<VehicleUsageHistoryScreen> {
         itemBuilder: (context, index) {
           final h = _vehicle!.usageHistory[index];
           final isActive = h.endDate == null;
-          
+
           return Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
@@ -80,10 +87,14 @@ class _VehicleUsageHistoryScreenState extends State<VehicleUsageHistoryScreen> {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: isActive ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surfaceContainerLow,
+                  backgroundColor: isActive
+                      ? AppColors.primary.withValues(alpha: 0.1)
+                      : AppColors.surfaceContainerLow,
                   child: Icon(
                     isActive ? Icons.directions_car : Icons.history,
-                    color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                    color: isActive
+                        ? AppColors.primary
+                        : AppColors.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -93,11 +104,15 @@ class _VehicleUsageHistoryScreenState extends State<VehicleUsageHistoryScreen> {
                     children: [
                       Text(
                         h.driverName,
-                        style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         '${dateFormat.format(h.startDate)} - ${h.endDate != null ? dateFormat.format(h.endDate!) : "Em andamento"}',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -105,12 +120,34 @@ class _VehicleUsageHistoryScreenState extends State<VehicleUsageHistoryScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('KM INICIAL', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
-                    Text('${h.startKm}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      'KM INICIAL',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                    ),
+                    Text(
+                      '${h.startKm}',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     if (h.endKm != null) ...[
                       const SizedBox(height: 4),
-                      Text('KM FINAL', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
-                      Text('${h.endKm}', style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        'KM FINAL',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
+                      ),
+                      Text(
+                        '${h.endKm}',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ],
                 ),

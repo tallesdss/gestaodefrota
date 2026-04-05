@@ -17,11 +17,7 @@ class AuthLayout extends StatelessWidget {
       body: Row(
         children: [
           // ── Left Hero Panel (Desktop only) ──
-          if (isDesktop)
-            Expanded(
-              flex: 3,
-              child: _HeroPanel(),
-            ),
+          if (isDesktop) Expanded(flex: 3, child: _HeroPanel()),
           // ── Right Form Panel ──
           Expanded(
             flex: isDesktop ? 2 : 1,
@@ -70,7 +66,11 @@ class _MobileLogo extends StatelessWidget {
             gradient: AppColors.primaryGradient,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.shield_outlined, color: Colors.white, size: 20),
+          child: const Icon(
+            Icons.shield_outlined,
+            color: Colors.white,
+            size: 20,
+          ),
         ),
         const SizedBox(width: 12),
         Text(
@@ -99,7 +99,9 @@ class _HeroPanel extends StatelessWidget {
           'https://lh3.googleusercontent.com/aida-public/AB6AXuBlk32BZlptszs7Y8DovfLSCWoM0Wz2pviBI-xAIyYiO35hgwV8IL_ePNNd9XJhukJjs4cizb1mfBB7MYDZ6q49z3_8dUvpWJsy4ZH4_XrkDLEdLg7lr7CWCKYeYluN1fJvZhxwFkNjbtJCOfo2mOILb22I8K8sR39uxC3eQo3XyRYcDgARWxZmNs1YSENadx_wb1Qmbjpq1dCl-QlpHoQkgPEuri6u3TMjdZZ5WrzdqB87T3aA_0tlI5JS2xyilUwLW_qrraoPmYQs',
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) => Container(
-            decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+            decoration: const BoxDecoration(
+              gradient: AppColors.primaryGradient,
+            ),
           ),
         ),
         // Gradient Overlay
@@ -132,7 +134,11 @@ class _HeroPanel extends StatelessWidget {
                       gradient: AppColors.primaryGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.shield_outlined, color: Colors.white, size: 24),
+                    child: const Icon(
+                      Icons.shield_outlined,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -151,7 +157,10 @@ class _HeroPanel extends StatelessWidget {
 
               // Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryContainer.withAlpha(77),
                   borderRadius: BorderRadius.circular(100),
@@ -202,7 +211,9 @@ class _HeroPanel extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.only(top: 32),
                 decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: Colors.white.withAlpha(26))),
+                  border: Border(
+                    top: BorderSide(color: Colors.white.withAlpha(26)),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -313,7 +324,10 @@ class AuthInputField extends StatelessWidget {
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: AppColors.surfaceContainerLow,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 16,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide.none,
@@ -371,7 +385,9 @@ class AuthPrimaryButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
             padding: EdgeInsets.zero,
           ),
           child: Row(
@@ -408,7 +424,9 @@ class AuthSocialButtons extends StatelessWidget {
         // Divider
         Row(
           children: [
-            Expanded(child: Container(height: 1, color: AppColors.surfaceContainerLow)),
+            Expanded(
+              child: Container(height: 1, color: AppColors.surfaceContainerLow),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
@@ -421,7 +439,9 @@ class AuthSocialButtons extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(child: Container(height: 1, color: AppColors.surfaceContainerLow)),
+            Expanded(
+              child: Container(height: 1, color: AppColors.surfaceContainerLow),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -479,7 +499,9 @@ class _SocialButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           backgroundColor: AppColors.surfaceContainerLowest,
           side: BorderSide(color: AppColors.outlineVariant.withAlpha(77)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
     );
@@ -519,7 +541,10 @@ class _FooterLink extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: onPressed,
-      style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.zero,
+        minimumSize: Size.zero,
+      ),
       child: Text(
         label.toUpperCase(),
         style: GoogleFonts.inter(

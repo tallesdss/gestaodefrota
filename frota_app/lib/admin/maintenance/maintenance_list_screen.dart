@@ -58,7 +58,12 @@ class _MaintenanceListScreenState extends State<MaintenanceListScreen> {
                 itemBuilder: (context, index) {
                   final entry = _maintenances[index];
                   return InkWell(
-                    onTap: () => context.push(AppRoutes.adminMaintenanceDetail.replaceFirst(':id', entry.id)),
+                    onTap: () => context.push(
+                      AppRoutes.adminMaintenanceDetail.replaceFirst(
+                        ':id',
+                        entry.id,
+                      ),
+                    ),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: AppSpacing.md),
                       padding: const EdgeInsets.all(AppSpacing.md),
@@ -75,7 +80,9 @@ class _MaintenanceListScreenState extends State<MaintenanceListScreen> {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: _getCategoryColor(entry.type).withAlpha(30),
+                                  color: _getCategoryColor(
+                                    entry.type,
+                                  ).withAlpha(30),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
@@ -91,11 +98,15 @@ class _MaintenanceListScreenState extends State<MaintenanceListScreen> {
                                   children: [
                                     Text(
                                       entry.type.label,
-                                      style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                      style: AppTextStyles.labelLarge.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     Text(
                                       'Veículo ID: ${entry.vehicleId}',
-                                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -105,14 +116,20 @@ class _MaintenanceListScreenState extends State<MaintenanceListScreen> {
                                 children: [
                                   Text(
                                     'R\$ ${entry.cost.toStringAsFixed(2)}',
-                                    style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+                                    style: AppTextStyles.labelLarge.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   Text(
                                     entry.status.label.toUpperCase(),
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
-                                      color: entry.status == MaintenanceStatus.paid ? Colors.green : Colors.orange,
+                                      color:
+                                          entry.status == MaintenanceStatus.paid
+                                          ? Colors.green
+                                          : Colors.orange,
                                     ),
                                   ),
                                 ],
@@ -120,7 +137,10 @@ class _MaintenanceListScreenState extends State<MaintenanceListScreen> {
                             ],
                           ),
                           const SizedBox(height: AppSpacing.md),
-                          Text(entry.description, style: AppTextStyles.bodyMedium),
+                          Text(
+                            entry.description,
+                            style: AppTextStyles.bodyMedium,
+                          ),
                           const SizedBox(height: AppSpacing.md),
                           const Divider(),
                           const SizedBox(height: AppSpacing.sm),
@@ -129,19 +149,38 @@ class _MaintenanceListScreenState extends State<MaintenanceListScreen> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.onSurfaceVariant),
+                                  const Icon(
+                                    Icons.calendar_today_outlined,
+                                    size: 14,
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
                                   const SizedBox(width: 4),
-                                  Text(_formatDate(entry.date), style: AppTextStyles.bodySmall),
+                                  Text(
+                                    _formatDate(entry.date),
+                                    style: AppTextStyles.bodySmall,
+                                  ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  const Icon(Icons.speed_outlined, size: 14, color: AppColors.onSurfaceVariant),
+                                  const Icon(
+                                    Icons.speed_outlined,
+                                    size: 14,
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
                                   const SizedBox(width: 4),
-                                  Text('${entry.kmAtMaintenance} KM', style: AppTextStyles.bodySmall),
+                                  Text(
+                                    '${entry.kmAtMaintenance} KM',
+                                    style: AppTextStyles.bodySmall,
+                                  ),
                                 ],
                               ),
-                              Text(entry.workshop, style: AppTextStyles.bodySmall.copyWith(fontStyle: FontStyle.italic)),
+                              Text(
+                                entry.workshop,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -167,31 +206,51 @@ class _MaintenanceListScreenState extends State<MaintenanceListScreen> {
 
   IconData _getCategoryIcon(MaintenanceType type) {
     switch (type) {
-      case MaintenanceType.oilChange: return Icons.oil_barrel_outlined;
-      case MaintenanceType.tires: return Icons.tire_repair_outlined;
-      case MaintenanceType.brakes: return Icons.disc_full_outlined;
-      case MaintenanceType.suspension: return Icons.settings_input_component_outlined;
-      case MaintenanceType.generalRevision: return Icons.build_circle_outlined;
-      case MaintenanceType.motor: return Icons.electrical_services_outlined;
-      case MaintenanceType.transmission: return Icons.settings_suggest_outlined;
-      case MaintenanceType.electrical: return Icons.electric_bolt_outlined;
-      case MaintenanceType.bodywork: return Icons.car_repair_outlined;
-      case MaintenanceType.other: return Icons.miscellaneous_services_outlined;
+      case MaintenanceType.oilChange:
+        return Icons.oil_barrel_outlined;
+      case MaintenanceType.tires:
+        return Icons.tire_repair_outlined;
+      case MaintenanceType.brakes:
+        return Icons.disc_full_outlined;
+      case MaintenanceType.suspension:
+        return Icons.settings_input_component_outlined;
+      case MaintenanceType.generalRevision:
+        return Icons.build_circle_outlined;
+      case MaintenanceType.motor:
+        return Icons.electrical_services_outlined;
+      case MaintenanceType.transmission:
+        return Icons.settings_suggest_outlined;
+      case MaintenanceType.electrical:
+        return Icons.electric_bolt_outlined;
+      case MaintenanceType.bodywork:
+        return Icons.car_repair_outlined;
+      case MaintenanceType.other:
+        return Icons.miscellaneous_services_outlined;
     }
   }
 
   Color _getCategoryColor(MaintenanceType type) {
     switch (type) {
-      case MaintenanceType.oilChange: return Colors.orange;
-      case MaintenanceType.tires: return Colors.blue;
-      case MaintenanceType.brakes: return Colors.red;
-      case MaintenanceType.suspension: return Colors.purple;
-      case MaintenanceType.motor: return Colors.indigo;
-      case MaintenanceType.generalRevision: return AppColors.primary;
-      case MaintenanceType.transmission: return Colors.teal;
-      case MaintenanceType.electrical: return Colors.amber;
-      case MaintenanceType.bodywork: return Colors.brown;
-      case MaintenanceType.other: return Colors.grey;
+      case MaintenanceType.oilChange:
+        return Colors.orange;
+      case MaintenanceType.tires:
+        return Colors.blue;
+      case MaintenanceType.brakes:
+        return Colors.red;
+      case MaintenanceType.suspension:
+        return Colors.purple;
+      case MaintenanceType.motor:
+        return Colors.indigo;
+      case MaintenanceType.generalRevision:
+        return AppColors.primary;
+      case MaintenanceType.transmission:
+        return Colors.teal;
+      case MaintenanceType.electrical:
+        return Colors.amber;
+      case MaintenanceType.bodywork:
+        return Colors.brown;
+      case MaintenanceType.other:
+        return Colors.grey;
     }
   }
 }

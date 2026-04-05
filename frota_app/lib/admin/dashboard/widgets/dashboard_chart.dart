@@ -42,14 +42,20 @@ class DashboardChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: AppColors.outlineVariant.withAlpha((0.1 * 255).toInt()),
+                    color: AppColors.outlineVariant.withAlpha(
+                      (0.1 * 255).toInt(),
+                    ),
                     strokeWidth: 1,
                   ),
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -60,7 +66,9 @@ class DashboardChart extends StatelessWidget {
                         if (value >= 0 && value < days.length) {
                           return Text(
                             days[value.toInt()],
-                            style: AppTextStyles.labelMedium.copyWith(fontSize: 10),
+                            style: AppTextStyles.labelMedium.copyWith(
+                              fontSize: 10,
+                            ),
                           );
                         }
                         return const Text('');
@@ -73,8 +81,10 @@ class DashboardChart extends StatelessWidget {
                       interval: 500,
                       getTitlesWidget: (value, meta) {
                         return Text(
-                          '${(value/1000).toStringAsFixed(1)}k',
-                          style: AppTextStyles.labelMedium.copyWith(fontSize: 10),
+                          '${(value / 1000).toStringAsFixed(1)}k',
+                          style: AppTextStyles.labelMedium.copyWith(
+                            fontSize: 10,
+                          ),
                         );
                       },
                       reservedSize: 30,
@@ -100,7 +110,10 @@ class DashboardChart extends StatelessWidget {
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
-                        colors: [AppColors.primary.withAlpha((0.1 * 255).toInt()), AppColors.primary.withAlpha(0)],
+                        colors: [
+                          AppColors.primary.withAlpha((0.1 * 255).toInt()),
+                          AppColors.primary.withAlpha(0),
+                        ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
@@ -150,10 +163,7 @@ class _LegendItem extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(fontSize: 12),
-        ),
+        Text(label, style: AppTextStyles.labelMedium.copyWith(fontSize: 12)),
       ],
     );
   }

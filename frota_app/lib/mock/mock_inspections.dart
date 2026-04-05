@@ -11,13 +11,32 @@ List<Inspection> mockInspections = [
     kmAtInspection: 12450,
     fuelLevel: 0.85,
     photos: [
-      InspectionPhoto(url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=800', title: 'Frente do veículo'),
-      InspectionPhoto(url: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=800', title: 'Traseira'),
-      InspectionPhoto(url: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=800', title: 'Painel ligado (KM visível)'),
-      InspectionPhoto(url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800', title: 'Pneus'),
+      InspectionPhoto(
+        url:
+            'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=800',
+        title: 'Frente do veículo',
+      ),
+      InspectionPhoto(
+        url:
+            'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=800',
+        title: 'Traseira',
+      ),
+      InspectionPhoto(
+        url:
+            'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=800',
+        title: 'Painel ligado (KM visível)',
+      ),
+      InspectionPhoto(
+        url:
+            'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800',
+        title: 'Pneus',
+      ),
     ],
     checklist: [
-      ChecklistItem(title: 'Luzes externas (faróis/lanternas)', isChecked: true),
+      ChecklistItem(
+        title: 'Luzes externas (faróis/lanternas)',
+        isChecked: true,
+      ),
       ChecklistItem(title: 'Nível de óleo e fluídos', isChecked: true),
       ChecklistItem(title: 'Estado dos pneus e estepe', isChecked: true),
       ChecklistItem(title: 'Higiene e conservação interna', isChecked: true),
@@ -35,11 +54,22 @@ List<Inspection> mockInspections = [
     kmAtInspection: 12550,
     fuelLevel: 0.25,
     photos: [
-      InspectionPhoto(url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=800', title: 'Frente do veículo'),
-      InspectionPhoto(url: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=800', title: 'Painel ligado (KM visível)'),
+      InspectionPhoto(
+        url:
+            'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=800',
+        title: 'Frente do veículo',
+      ),
+      InspectionPhoto(
+        url:
+            'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=800',
+        title: 'Painel ligado (KM visível)',
+      ),
     ],
     checklist: [
-      ChecklistItem(title: 'Luzes externas (faróis/lanternas)', isChecked: true),
+      ChecklistItem(
+        title: 'Luzes externas (faróis/lanternas)',
+        isChecked: true,
+      ),
       ChecklistItem(title: 'Nível de óleo e fluídos', isChecked: true),
       ChecklistItem(title: 'Estado dos pneus e estepe', isChecked: true),
       ChecklistItem(title: 'Higiene e conservação interna', isChecked: true),
@@ -57,15 +87,24 @@ List<Inspection> mockInspections = [
     kmAtInspection: 12650,
     fuelLevel: 1.0,
     photos: [
-      InspectionPhoto(url: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=800', title: 'Frente do veículo'),
+      InspectionPhoto(
+        url:
+            'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=800',
+        title: 'Frente do veículo',
+      ),
     ],
     checklist: [
-      ChecklistItem(title: 'Luzes externas (faróis/lanternas)', isChecked: false),
+      ChecklistItem(
+        title: 'Luzes externas (faróis/lanternas)',
+        isChecked: false,
+      ),
       ChecklistItem(title: 'Higiene e conservação interna', isChecked: false),
     ],
-    notes: 'O veículo apresenta sujeira interna excessiva e o farol esquerdo está queimado.',
+    notes:
+        'O veículo apresenta sujeira interna excessiva e o farol esquerdo está queimado.',
     hasNewDamage: true,
-    reviewReason: 'Reprovado devido a problemas de conservação e segurança detectados.',
+    reviewReason:
+        'Reprovado devido a problemas de conservação e segurança detectados.',
   ),
   // Adicionando mais para cobrir a lista do histórico
   Inspection(
@@ -83,4 +122,3 @@ List<Inspection> mockInspections = [
     hasNewDamage: false,
   ),
 ];
-

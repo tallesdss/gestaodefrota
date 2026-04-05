@@ -37,7 +37,8 @@ class _DriverTimelineScreenState extends State<DriverTimelineScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoading && _hasMore) {
         _loadMore();
       }
@@ -106,7 +107,7 @@ class _DriverTimelineScreenState extends State<DriverTimelineScreen> {
 
   Widget _buildTimelineItem(TimelineItem item) {
     final date = DateFormat('dd/MM/yyyy').format(item.date);
-    
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -139,12 +140,27 @@ class _DriverTimelineScreenState extends State<DriverTimelineScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(item.title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                      Text(date, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                      Text(
+                        item.title,
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        date,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(item.description, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant)),
+                  Text(
+                    item.description,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                   if (item.type != null) ...[
                     const SizedBox(height: AppSpacing.sm),
                     _buildTypeTag(item.type!),

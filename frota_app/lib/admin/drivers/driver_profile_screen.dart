@@ -17,7 +17,6 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/routes/app_routes.dart';
 
-
 class DriverProfileScreen extends StatefulWidget {
   final String driverId;
 
@@ -44,15 +43,21 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   Future<void> _loadData() async {
     final drivers = await _repository.getDrivers();
     final driver = drivers.firstWhere((d) => d.id == widget.driverId);
-    
+
     Vehicle? vehicle;
     if (driver.currentVehicleId != null) {
       final vehicles = await _repository.getVehicles();
       vehicle = vehicles.firstWhere((v) => v.id == driver.currentVehicleId);
     }
 
-    final timeline = await _repository.getDriverTimeline(driverId: widget.driverId, page: 1, pageSize: 3);
-    final financials = await _repository.getFinancialEntriesByDriver(widget.driverId);
+    final timeline = await _repository.getDriverTimeline(
+      driverId: widget.driverId,
+      page: 1,
+      pageSize: 3,
+    );
+    final financials = await _repository.getFinancialEntriesByDriver(
+      widget.driverId,
+    );
 
     setState(() {
       _driver = driver;
@@ -66,9 +71,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_driver == null) {
@@ -92,19 +95,22 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
             const SizedBox(height: AppSpacing.xl),
-            
+
             _buildFinanceStats(),
             const SizedBox(height: AppSpacing.xl),
-            
+
             _buildVehicleUsage(),
             const SizedBox(height: AppSpacing.xl),
-            
+
             _buildDocumentsAndContracts(),
             const SizedBox(height: AppSpacing.xl),
 
@@ -156,7 +162,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   children: [
                     StatusBadge(
                       label: _driver!.isApproved ? 'APROVADO' : 'PENDENTE',
-                      type: _driver!.isApproved ? BadgeType.active : BadgeType.warning,
+                      type: _driver!.isApproved
+                          ? BadgeType.active
+                          : BadgeType.warning,
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     StatusBadge(
@@ -206,7 +214,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   onTap: () => _showPaymentHistoryModal(),
                   child: StatCard(
                     title: 'TOTAL RENDIDO',
-                    value: 'R\$ ${NumberFormat('#,##0.00', 'pt_BR').format(totalReceived)}',
+                    value:
+                        'R\$ ${NumberFormat('#,##0.00', 'pt_BR').format(totalReceived)}',
                     icon: Icons.payments_outlined,
                     iconColor: AppColors.success,
                   ),
@@ -252,7 +261,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   void _showPaymentModal() {
     final amountController = TextEditingController();
     bool isLate = false;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -281,10 +290,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
-                'Informar Pagamento',
-                style: AppTextStyles.headlineSmall,
-              ),
+              Text('Informar Pagamento', style: AppTextStyles.headlineSmall),
               const SizedBox(height: 8),
               Text(
                 'Informe o valor pago por ${_driver!.name}',
@@ -294,13 +300,18 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               AppTextField(
                 label: 'Valor (R\$)',
                 controller: amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 prefixIcon: Icons.attach_money,
                 hintText: '0,00',
               ),
               const SizedBox(height: 16),
               SwitchListTile(
-                title: Text('Pago com atraso?', style: AppTextStyles.bodyMedium),
+                title: Text(
+                  'Pago com atraso?',
+                  style: AppTextStyles.bodyMedium,
+                ),
                 value: isLate,
                 onChanged: (val) {
                   setModalState(() {
@@ -323,29 +334,36 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     child: AppButton(
                       label: 'Salvar',
                       onPressed: () async {
-                        final amountText = amountController.text.replaceAll(',', '.');
+                        final amountText = amountController.text.replaceAll(
+                          ',',
+                          '.',
+                        );
                         final amount = double.tryParse(amountText) ?? 0.0;
                         if (amount > 0) {
                           final entry = FinancialEntry(
-                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            id: DateTime.now().millisecondsSinceEpoch
+                                .toString(),
                             type: FinancialType.income,
                             category: 'aluguel',
                             driverId: _driver!.id,
                             vehicleId: _driver!.currentVehicleId,
                             amount: amount,
                             date: DateTime.now(),
-                            description: 'Pagamento de ${isLate ? "aluguel com atraso" : "aluguel"}',
+                            description:
+                                'Pagamento de ${isLate ? "aluguel com atraso" : "aluguel"}',
                             isPaid: true,
                             isLate: isLate,
                           );
-                          
+
                           await _repository.addFinancialEntry(entry);
-                          
+
                           if (context.mounted) {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Pagamento de R\$ ${amount.toStringAsFixed(2)} salvo com sucesso!'),
+                                content: Text(
+                                  'Pagamento de R\$ ${amount.toStringAsFixed(2)} salvo com sucesso!',
+                                ),
                                 backgroundColor: Colors.green,
                               ),
                             );
@@ -367,7 +385,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   void _showDebtModal() {
     final amountController = TextEditingController();
     final descriptionController = TextEditingController(text: 'Aluguel');
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -413,7 +431,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               AppTextField(
                 label: 'Valor (R\$)',
                 controller: amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 prefixIcon: Icons.attach_money,
                 hintText: '0,00',
               ),
@@ -439,28 +459,35 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     child: AppButton(
                       label: 'Salvar',
                       onPressed: () async {
-                        final amountText = amountController.text.replaceAll(',', '.');
+                        final amountText = amountController.text.replaceAll(
+                          ',',
+                          '.',
+                        );
                         final amount = double.tryParse(amountText) ?? 0.0;
                         if (amount > 0) {
                           final entry = FinancialEntry(
-                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            id: DateTime.now().millisecondsSinceEpoch
+                                .toString(),
                             type: FinancialType.expense,
                             category: descriptionController.text.toLowerCase(),
                             driverId: _driver!.id,
                             vehicleId: _driver!.currentVehicleId,
                             amount: amount,
                             date: DateTime.now(),
-                            description: 'Valor a pagar informado: ${descriptionController.text}',
+                            description:
+                                'Valor a pagar informado: ${descriptionController.text}',
                             isPaid: false,
                           );
-                          
+
                           await _repository.addFinancialEntry(entry);
-                          
+
                           if (context.mounted) {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Débito de R\$ ${amount.toStringAsFixed(2)} registrado com sucesso!'),
+                                content: Text(
+                                  'Débito de R\$ ${amount.toStringAsFixed(2)} registrado com sucesso!',
+                                ),
                                 backgroundColor: AppColors.error,
                               ),
                             );
@@ -480,10 +507,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   void _showPaymentHistoryModal() {
-    final paidEntries = _financialEntries
-        .where((e) => e.type == FinancialType.income && e.isPaid)
-        .toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    final paidEntries =
+        _financialEntries
+            .where((e) => e.type == FinancialType.income && e.isPaid)
+            .toList()
+          ..sort((a, b) => b.date.compareTo(a.date));
 
     AppDialogs.showBottomSheet(
       context: context,
@@ -514,14 +542,18 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: entry.isLate 
-                                ? AppColors.error.withValues(alpha: 0.1) 
+                            color: entry.isLate
+                                ? AppColors.error.withValues(alpha: 0.1)
                                 : AppColors.success.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            entry.isLate ? Icons.history : Icons.check_circle_outline,
-                            color: entry.isLate ? AppColors.error : AppColors.success,
+                            entry.isLate
+                                ? Icons.history
+                                : Icons.check_circle_outline,
+                            color: entry.isLate
+                                ? AppColors.error
+                                : AppColors.success,
                             size: 20,
                           ),
                         ),
@@ -532,25 +564,23 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                             children: [
                               Text(
                                 'R\$ ${NumberFormat('#,##0.00', 'pt_BR').format(entry.amount)}',
-                                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                                style: AppTextStyles.titleMedium.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               Text(
-                                DateFormat('dd/MM/yyyy HH:mm').format(entry.date),
+                                DateFormat(
+                                  'dd/MM/yyyy HH:mm',
+                                ).format(entry.date),
                                 style: AppTextStyles.bodySmall,
                               ),
                             ],
                           ),
                         ),
-                         if (entry.isLate)
-                          StatusBadge(
-                            label: 'ATRASO',
-                            type: BadgeType.error,
-                          )
+                        if (entry.isLate)
+                          StatusBadge(label: 'ATRASO', type: BadgeType.error)
                         else
-                          StatusBadge(
-                            label: 'OK',
-                            type: BadgeType.success,
-                          ),
+                          StatusBadge(label: 'OK', type: BadgeType.success),
                       ],
                     ),
                   );
@@ -570,7 +600,12 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
-              onTap: () => context.push(AppRoutes.adminVehicleDetail.replaceFirst(':id', _currentVehicle!.id)),
+              onTap: () => context.push(
+                AppRoutes.adminVehicleDetail.replaceFirst(
+                  ':id',
+                  _currentVehicle!.id,
+                ),
+              ),
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
@@ -586,15 +621,27 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         color: AppColors.primaryContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.directions_car, color: AppColors.onPrimaryContainer, size: 30),
+                      child: const Icon(
+                        Icons.directions_car,
+                        color: AppColors.onPrimaryContainer,
+                        size: 30,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_currentVehicle!.model, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
-                          Text('Placa: ${_currentVehicle!.plate}', style: AppTextStyles.bodyMedium),
+                          Text(
+                            _currentVehicle!.model,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Placa: ${_currentVehicle!.plate}',
+                            style: AppTextStyles.bodyMedium,
+                          ),
                         ],
                       ),
                     ),
@@ -602,8 +649,19 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('DESDE', style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant)),
-                        Text('12/03/2026', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                        const Text(
+                          'DESDE',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          '12/03/2026',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -621,7 +679,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             ),
             child: Text(
               'Nenhum veículo vinculado atualmente',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -640,7 +700,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           runSpacing: AppSpacing.md,
           children: [
             _buildDocItem(
-              'CNH Digital', 
+              'CNH Digital',
               Icons.badge_outlined,
               onTap: () => _showDocumentDialog(
                 'CNH Digital',
@@ -649,7 +709,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               ),
             ),
             _buildDocItem(
-              'Comprovante Residência', 
+              'Comprovante Residência',
               Icons.home_outlined,
               onTap: () => _showDocumentDialog(
                 'Comprovante Residência',
@@ -658,12 +718,12 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               ),
             ),
             _buildDocItem(
-              'Contrato Assinado', 
+              'Contrato Assinado',
               Icons.description_outlined,
               onTap: null, // Futuro
             ),
             _buildDocItem(
-              'Termos de Uso', 
+              'Termos de Uso',
               Icons.gavel_outlined,
               onTap: () => _showTermsOfUseDialog(),
             ),
@@ -678,7 +738,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: (MediaQuery.of(context).size.width - (AppSpacing.xl * 2) - AppSpacing.md) / 2,
+        width:
+            (MediaQuery.of(context).size.width -
+                (AppSpacing.xl * 2) -
+                AppSpacing.md) /
+            2,
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLowest,
@@ -687,8 +751,10 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         child: Row(
           children: [
             Icon(
-              icon, 
-              color: onTap != null ? AppColors.primary : AppColors.outlineVariant, 
+              icon,
+              color: onTap != null
+                  ? AppColors.primary
+                  : AppColors.outlineVariant,
               size: 20,
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -697,20 +763,30 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 label,
                 style: AppTextStyles.labelSmall.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: onTap != null ? AppColors.onSurface : AppColors.outlineVariant,
+                  color: onTap != null
+                      ? AppColors.onSurface
+                      : AppColors.outlineVariant,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             if (onTap != null)
-              const Icon(Icons.open_in_new, size: 14, color: AppColors.outlineVariant),
+              const Icon(
+                Icons.open_in_new,
+                size: 14,
+                color: AppColors.outlineVariant,
+              ),
           ],
         ),
       ),
     );
   }
 
-  void _showDocumentDialog(String title, String imageUrl, {bool isEditable = false}) {
+  void _showDocumentDialog(
+    String title,
+    String imageUrl, {
+    bool isEditable = false,
+  }) {
     AppDialogs.showModal(
       context: context,
       title: title,
@@ -729,7 +805,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                 errorBuilder: (context, error, stackTrace) => const Center(
                   child: Padding(
                     padding: EdgeInsets.all(32),
-                    child: Icon(Icons.broken_image_outlined, size: 48, color: AppColors.outlineVariant),
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      size: 48,
+                      color: AppColors.outlineVariant,
+                    ),
                   ),
                 ),
               ),
@@ -738,7 +818,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           const SizedBox(height: AppSpacing.md),
           Text(
             'Arquivo visualizado em modo de conferência. Certifique-se da validade das informações.',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -749,7 +831,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Selecione um novo arquivo para substituir...')),
+                const SnackBar(
+                  content: Text('Selecione um novo arquivo para substituir...'),
+                ),
               );
             },
             icon: const Icon(Icons.upload_file_rounded),
@@ -773,7 +857,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     final phoneController = TextEditingController(text: _driver!.phone);
     final cityController = TextEditingController(text: _driver!.city);
     final cnhController = TextEditingController(text: _driver!.cnhNumber);
-    final categoryController = TextEditingController(text: _driver!.cnhCategory);
+    final categoryController = TextEditingController(
+      text: _driver!.cnhCategory,
+    );
 
     AppDialogs.showModal(
       context: context,
@@ -783,23 +869,51 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('Nome Completo', nameController, Icons.person_outline),
+            _buildTextField(
+              'Nome Completo',
+              nameController,
+              Icons.person_outline,
+            ),
             const SizedBox(height: AppSpacing.md),
             _buildTextField('E-mail', emailController, Icons.email_outlined),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                Expanded(child: _buildTextField('Telefone', phoneController, Icons.phone_outlined)),
+                Expanded(
+                  child: _buildTextField(
+                    'Telefone',
+                    phoneController,
+                    Icons.phone_outlined,
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.md),
-                Expanded(child: _buildTextField('Cidade', cityController, Icons.location_city_outlined)),
+                Expanded(
+                  child: _buildTextField(
+                    'Cidade',
+                    cityController,
+                    Icons.location_city_outlined,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                Expanded(child: _buildTextField('Nº CNH', cnhController, Icons.badge_outlined)),
+                Expanded(
+                  child: _buildTextField(
+                    'Nº CNH',
+                    cnhController,
+                    Icons.badge_outlined,
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.md),
-                Expanded(child: _buildTextField('Categoria', categoryController, Icons.fact_check_outlined)),
+                Expanded(
+                  child: _buildTextField(
+                    'Categoria',
+                    categoryController,
+                    Icons.fact_check_outlined,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -845,7 +959,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -868,7 +986,10 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
           ),
           style: AppTextStyles.bodyMedium,
         ),
@@ -911,20 +1032,31 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         SectionHeader(
           title: 'LINHA DO TEMPO',
           actionLabel: 'VER TUDO',
-          onActionTap: () => context.push(AppRoutes.adminDriverTimeline.replaceFirst(':id', widget.driverId)),
+          onActionTap: () => context.push(
+            AppRoutes.adminDriverTimeline.replaceFirst(':id', widget.driverId),
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         if (_timelineItems.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: Text('Nenhuma atividade recente', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant))),
+            child: Center(
+              child: Text(
+                'Nenhuma atividade recente',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ),
           )
         else
-          ..._timelineItems.map((a) => _buildTimelineItem(
-            DateFormat('dd/MM/yyyy').format(a.date), 
-            a.title, 
-            a.description,
-          )),
+          ..._timelineItems.map(
+            (a) => _buildTimelineItem(
+              DateFormat('dd/MM/yyyy').format(a.date),
+              a.title,
+              a.description,
+            ),
+          ),
       ],
     );
   }
@@ -958,11 +1090,26 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(title, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
-                  Text(date, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                  Text(
+                    title,
+                    style: AppTextStyles.labelMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    date,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
-              Text(desc, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              Text(
+                desc,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
               const SizedBox(height: AppSpacing.md),
             ],
           ),
@@ -973,8 +1120,18 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
 
   Widget _buildInspectionHistory() {
     final inspections = [
-      {'type': 'CHECK-IN', 'date': '12/03/2026', 'km': '15.420', 'status': 'APROVADO'},
-      {'type': 'CHECK-OUT', 'date': '12/03/2026', 'km': '12.100', 'status': 'APROVADO'},
+      {
+        'type': 'CHECK-IN',
+        'date': '12/03/2026',
+        'km': '15.420',
+        'status': 'APROVADO',
+      },
+      {
+        'type': 'CHECK-OUT',
+        'date': '12/03/2026',
+        'km': '12.100',
+        'status': 'APROVADO',
+      },
     ];
 
     return Column(
@@ -983,48 +1140,60 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         SectionHeader(
           title: 'HISTÓRICO DE VISTORIAS',
           actionLabel: 'VER TUDO',
-          onActionTap: () => context.push('/admin/drivers/${widget.driverId}/inspections'),
+          onActionTap: () =>
+              context.push('/admin/drivers/${widget.driverId}/inspections'),
         ),
         const SizedBox(height: AppSpacing.md),
-        ...inspections.map((i) => Container(
-          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                i['type'] == 'CHECK-IN' ? Icons.login_rounded : Icons.logout_rounded,
-                color: i['type'] == 'CHECK-IN' ? AppColors.success : AppColors.secondary,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        ...inspections.map(
+          (i) => Container(
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  i['type'] == 'CHECK-IN'
+                      ? Icons.login_rounded
+                      : Icons.logout_rounded,
+                  color: i['type'] == 'CHECK-IN'
+                      ? AppColors.success
+                      : AppColors.secondary,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        i['type']!,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text('KM: ${i['km']}', style: AppTextStyles.bodySmall),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(i['type']!, style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.bold)),
-                    Text('KM: ${i['km']}', style: AppTextStyles.bodySmall),
+                    Text(i['date']!, style: AppTextStyles.labelSmall),
+                    Text(
+                      i['status']!,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.success,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(i['date']!, style: AppTextStyles.labelSmall),
-                  Text(
-                    i['status']!,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.success,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-        )),
+        ),
       ],
     );
   }

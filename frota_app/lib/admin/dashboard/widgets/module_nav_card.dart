@@ -48,11 +48,7 @@ class ModuleNavCard extends StatelessWidget {
                   color: (color ?? AppColors.primary).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: color ?? AppColors.primary,
-                  size: 24,
-                ),
+                child: Icon(icon, color: color ?? AppColors.primary, size: 24),
               ),
               const SizedBox(height: AppSpacing.md),
               Text(

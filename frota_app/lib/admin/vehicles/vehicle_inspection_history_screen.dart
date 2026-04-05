@@ -16,10 +16,12 @@ class VehicleInspectionHistoryScreen extends StatefulWidget {
   const VehicleInspectionHistoryScreen({super.key, required this.vehicleId});
 
   @override
-  State<VehicleInspectionHistoryScreen> createState() => _VehicleInspectionHistoryScreenState();
+  State<VehicleInspectionHistoryScreen> createState() =>
+      _VehicleInspectionHistoryScreenState();
 }
 
-class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistoryScreen> {
+class _VehicleInspectionHistoryScreenState
+    extends State<VehicleInspectionHistoryScreen> {
   final MockRepository _repository = MockRepository();
   Vehicle? _vehicle;
   List<Inspection> _inspections = [];
@@ -43,8 +45,14 @@ class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistor
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_vehicle == null) return const Scaffold(body: Center(child: Text('Veículo não encontrado')));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_vehicle == null) {
+      return const Scaffold(
+        body: Center(child: Text('Veículo não encontrado')),
+      );
+    }
 
     final dateFormat = DateFormat('dd/MM/yyyy');
     final timeFormat = DateFormat('HH:mm');
@@ -63,18 +71,26 @@ class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistor
           ),
         ),
       ),
-      body: _inspections.isEmpty 
-          ? Center(child: Text('Nenhuma vistoria registrada', style: AppTextStyles.bodyMedium))
+      body: _inspections.isEmpty
+          ? Center(
+              child: Text(
+                'Nenhuma vistoria registrada',
+                style: AppTextStyles.bodyMedium,
+              ),
+            )
           : ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.xl),
               itemCount: _inspections.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: AppSpacing.md),
               itemBuilder: (context, index) {
                 final i = _inspections[index];
                 final isCheckin = i.type == InspectionType.checkin;
-                
+
                 return GestureDetector(
-                  onTap: () => context.push(AppRoutes.adminInspectionDetail.replaceAll(':id', i.id)),
+                  onTap: () => context.push(
+                    AppRoutes.adminInspectionDetail.replaceAll(':id', i.id),
+                  ),
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
@@ -94,10 +110,16 @@ class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistor
                           children: [
                             CircleAvatar(
                               radius: 20,
-                              backgroundColor: isCheckin ? AppColors.success.withValues(alpha: 0.1) : AppColors.secondary.withValues(alpha: 0.1),
+                              backgroundColor: isCheckin
+                                  ? AppColors.success.withValues(alpha: 0.1)
+                                  : AppColors.secondary.withValues(alpha: 0.1),
                               child: Icon(
-                                isCheckin ? Icons.login_rounded : Icons.logout_rounded,
-                                color: isCheckin ? AppColors.success : AppColors.secondary,
+                                isCheckin
+                                    ? Icons.login_rounded
+                                    : Icons.logout_rounded,
+                                color: isCheckin
+                                    ? AppColors.success
+                                    : AppColors.secondary,
                                 size: 20,
                               ),
                             ),
@@ -110,7 +132,10 @@ class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistor
                                     children: [
                                       Text(
                                         isCheckin ? 'CHECK-IN' : 'CHECK-OUT',
-                                        style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                        style: AppTextStyles.labelLarge
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                       const SizedBox(width: 8),
                                       _buildSmallStatusBadge(i.status),
@@ -118,27 +143,41 @@ class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistor
                                   ),
                                   Text(
                                     '${dateFormat.format(i.dateTime)} às ${timeFormat.format(i.dateTime)}',
-                                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                             StatusBadge(
-                              label: i.hasNewDamage ? 'COM AVARIA' : 'SEM AVARIA',
-                              type: i.hasNewDamage ? BadgeType.error : BadgeType.active,
+                              label: i.hasNewDamage
+                                  ? 'COM AVARIA'
+                                  : 'SEM AVARIA',
+                              type: i.hasNewDamage
+                                  ? BadgeType.error
+                                  : BadgeType.active,
                             ),
                           ],
                         ),
                         const Padding(
-                          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppSpacing.md,
+                          ),
                           child: Divider(height: 1),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildInfoColumn('KM', '${i.kmAtInspection} km'),
-                            _buildInfoColumn('COMBUSTÍVEL', '${(i.fuelLevel * 100).toInt()}%'),
-                            _buildInfoColumn('STATUS', i.status.name.toUpperCase()),
+                            _buildInfoColumn(
+                              'COMBUSTÍVEL',
+                              '${(i.fuelLevel * 100).toInt()}%',
+                            ),
+                            _buildInfoColumn(
+                              'STATUS',
+                              i.status.name.toUpperCase(),
+                            ),
                           ],
                         ),
                         if (i.photos.isNotEmpty) ...[
@@ -148,21 +187,30 @@ class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistor
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: i.photos.length,
-                              separatorBuilder: (_, __) => const SizedBox(width: 8),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 8),
                               itemBuilder: (context, photoIndex) {
                                 final photo = i.photos[photoIndex];
                                 return Column(
                                   children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(photo.url, width: 50, height: 50, fit: BoxFit.cover),
+                                      child: Image.network(
+                                        photo.url,
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                     const SizedBox(height: 2),
                                     SizedBox(
                                       width: 50,
                                       child: Text(
                                         photo.title,
-                                        style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(
+                                          fontSize: 7,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
@@ -219,8 +267,19 @@ class _VehicleInspectionHistoryScreenState extends State<VehicleInspectionHistor
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
-        Text(value, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.onSurfaceVariant,
+            fontSize: 10,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }

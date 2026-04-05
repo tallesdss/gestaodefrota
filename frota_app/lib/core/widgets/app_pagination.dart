@@ -40,12 +40,12 @@ class AppPagination extends StatelessWidget {
 
   List<Widget> _buildPageNumbers() {
     List<Widget> widgets = [];
-    
+
     // Simple logic for page numbers: 1 ... cur-1 cur cur+1 ... last
     for (int i = 1; i <= totalPages; i++) {
-      if (totalPages <= 5 || 
-          i == 1 || 
-          i == totalPages || 
+      if (totalPages <= 5 ||
+          i == 1 ||
+          i == totalPages ||
           (i >= currentPage - 1 && i <= currentPage + 1)) {
         widgets.add(
           _PageNumberItem(
@@ -58,7 +58,7 @@ class AppPagination extends StatelessWidget {
         widgets.add(const _PageEllipsis());
       }
     }
-    
+
     return widgets;
   }
 }
@@ -92,7 +92,9 @@ class _PageButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 18,
-            color: isDisabled ? AppColors.onSurfaceVariant.withValues(alpha: 0.3) : AppColors.primary,
+            color: isDisabled
+                ? AppColors.onSurfaceVariant.withValues(alpha: 0.3)
+                : AppColors.primary,
           ),
         ),
       ),
@@ -151,7 +153,9 @@ class _PageEllipsis extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
         '...',
-        style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTextStyles.labelMedium.copyWith(
+          color: AppColors.onSurfaceVariant,
+        ),
       ),
     );
   }

@@ -68,9 +68,6 @@ import '../../driver_portal/support/support_screen.dart';
 import '../../models/financial_entry.dart';
 import '../../driver_portal/widgets/driver_scaffold.dart';
 
-
-
-
 class AppRoutes {
   static const String root = '/selection';
   static const String login = '/';
@@ -102,19 +99,20 @@ class AppRoutes {
   static const String adminVehicleUsageHistory = '/admin/vehicles/:id/usage';
   static const String adminControlPanel = '/admin/control-panel';
   static const String adminManagerSalaries = '/admin/control-panel/salaries';
-  static const String adminManagerSalaryHistory = '/admin/control-panel/salaries/history';
-  static const String adminExpenseCategories = '/admin/control-panel/categories';
+  static const String adminManagerSalaryHistory =
+      '/admin/control-panel/salaries/history';
+  static const String adminExpenseCategories =
+      '/admin/control-panel/categories';
   static const String adminCashFlowForm = '/admin/control-panel/cash-flow-form';
   static const String adminManagerSearch = '/admin/managers/search';
   static const String adminFinancialReport = '/admin/control-panel/report';
   static const String adminWorkshops = '/admin/workshops';
   static const String adminWorkshopDetail = '/admin/workshops/detail/:id';
   static const String adminWorkshopForm = '/admin/workshops/form';
-  static const String adminVehicleMaintenanceHistory = '/admin/vehicles/:id/maintenance';
+  static const String adminVehicleMaintenanceHistory =
+      '/admin/vehicles/:id/maintenance';
   static const String adminMaintenanceDetail = '/admin/maintenance/detail/:id';
   static const String adminMaintenanceForm = '/admin/maintenance/form';
-
-
 
   static const String gestorDashboard = '/gestor/dashboard';
   static const String gestorFinancialList = '/gestor/financial';
@@ -124,8 +122,10 @@ class AppRoutes {
   static const String gestorAudit = '/gestor/audit';
   static const String gestorNotifications = '/gestor/notifications';
   static const String gestorProfile = '/gestor/profile';
-  static const String gestorVehicleMaintenanceHistory = '/gestor/vehicles/:id/maintenance';
-  static const String gestorMaintenanceDetail = '/gestor/maintenance/detail/:id';
+  static const String gestorVehicleMaintenanceHistory =
+      '/gestor/vehicles/:id/maintenance';
+  static const String gestorMaintenanceDetail =
+      '/gestor/maintenance/detail/:id';
   static const String gestorMaintenanceForm = '/gestor/maintenance/form';
   static const String gestorVehicleDetail = '/gestor/vehicles/detail/:id';
   static const String gestorDriverProfile = '/gestor/drivers/profile/:id';
@@ -152,10 +152,7 @@ class AppRoutes {
   static final router = GoRouter(
     initialLocation: login,
     routes: [
-      GoRoute(
-        path: login,
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: login, builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: register,
         builder: (context, state) => const RegisterScreen(),
@@ -168,7 +165,7 @@ class AppRoutes {
         path: root,
         builder: (context, state) => const SelectionProfileScreen(),
       ),
-      
+
       // Admin Shell
       ShellRoute(
         builder: (context, state, child) => AdminScaffold(child: child),
@@ -234,8 +231,8 @@ class AppRoutes {
           GoRoute(
             path: adminRegistrationAudit,
             builder: (context, state) {
-               final id = state.uri.queryParameters['id'];
-               return RegistrationAuditScreen(initialSelectedId: id);
+              final id = state.uri.queryParameters['id'];
+              return RegistrationAuditScreen(initialSelectedId: id);
             },
           ),
           GoRoute(
@@ -376,7 +373,8 @@ class AppRoutes {
           GoRoute(
             path: adminMaintenanceForm,
             builder: (context, state) {
-              final vehicleId = state.extra as String?;
+              final vehicleId = (state.extra as String?) ??
+                  state.uri.queryParameters['vehicleId'];
               return MaintenanceFormScreen(initialVehicleId: vehicleId);
             },
           ),
@@ -414,7 +412,8 @@ class AppRoutes {
             },
           ),
           GoRoute(
-            path: '/gestor/vehicles/:id/inspections', // Added missing history route
+            path:
+                '/gestor/vehicles/:id/inspections', // Added missing history route
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               return VehicleInspectionHistoryScreen(vehicleId: id);
@@ -439,14 +438,16 @@ class AppRoutes {
             },
           ),
           GoRoute(
-            path: '/gestor/drivers/:id/timeline', // Added missing timeline route
+            path:
+                '/gestor/drivers/:id/timeline', // Added missing timeline route
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               return DriverTimelineScreen(driverId: id);
             },
           ),
           GoRoute(
-            path: '/gestor/drivers/:id/inspections', // Added missing history route
+            path:
+                '/gestor/drivers/:id/inspections', // Added missing history route
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               return DriverInspectionHistoryScreen(driverId: id);
@@ -455,8 +456,8 @@ class AppRoutes {
           GoRoute(
             path: gestorAudit,
             builder: (context, state) {
-               final id = state.uri.queryParameters['id'];
-               return RegistrationAuditScreen(initialSelectedId: id);
+              final id = state.uri.queryParameters['id'];
+              return RegistrationAuditScreen(initialSelectedId: id);
             },
           ),
           GoRoute(
@@ -490,7 +491,7 @@ class AppRoutes {
             builder: (context, state) => const DelinquencyListScreen(),
           ),
           GoRoute(
-            path: '/gestor/notifications', 
+            path: '/gestor/notifications',
             builder: (context, state) => const NotificationsScreen(),
           ),
           GoRoute(
@@ -518,7 +519,8 @@ class AppRoutes {
           GoRoute(
             path: gestorMaintenanceForm,
             builder: (context, state) {
-              final vehicleId = state.extra as String?;
+              final vehicleId = (state.extra as String?) ??
+                  state.uri.queryParameters['vehicleId'];
               return MaintenanceFormScreen(initialVehicleId: vehicleId);
             },
           ),
@@ -540,7 +542,8 @@ class AppRoutes {
 
       // Driver Shell
       ShellRoute(
-        builder: (context, state, child) => DriverScaffold(state: state, child: child),
+        builder: (context, state, child) =>
+            DriverScaffold(state: state, child: child),
         routes: [
           GoRoute(
             path: driverHome,

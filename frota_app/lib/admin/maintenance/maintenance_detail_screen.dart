@@ -12,7 +12,8 @@ class MaintenanceDetailScreen extends StatefulWidget {
   const MaintenanceDetailScreen({super.key, required this.maintenanceId});
 
   @override
-  State<MaintenanceDetailScreen> createState() => _MaintenanceDetailScreenState();
+  State<MaintenanceDetailScreen> createState() =>
+      _MaintenanceDetailScreenState();
 }
 
 class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
@@ -36,16 +37,28 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_entry == null) return const Scaffold(body: Center(child: Text('Manutenção não encontrada')));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_entry == null) {
+      return const Scaffold(
+        body: Center(child: Text('Manutenção não encontrada')),
+      );
+    }
 
     final dateFormat = DateFormat('dd/MM/yyyy');
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
+    final currencyFormat = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: r'R$',
+    );
 
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: Text('Detalhes da Manutenção', style: AppTextStyles.headlineSmall),
+        title: Text(
+          'Detalhes da Manutenção',
+          style: AppTextStyles.headlineSmall,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: AppColors.onSurface),
@@ -67,7 +80,7 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
           children: [
             _buildHeader(currencyFormat, dateFormat),
             const SizedBox(height: AppSpacing.xxl),
-            
+
             _buildInfoGrid(dateFormat),
             const SizedBox(height: AppSpacing.xxl),
 
@@ -100,18 +113,27 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_entry!.description, style: AppTextStyles.headlineSmall),
+                    Text(
+                      _entry!.description,
+                      style: AppTextStyles.headlineSmall,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Realizada em ${dateFormat.format(_entry!.date)}',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               StatusBadge(
-                label: _entry!.status == MaintenanceStatus.paid ? 'PAGO' : 'PENDENTE',
-                type: _entry!.status == MaintenanceStatus.paid ? BadgeType.active : BadgeType.error,
+                label: _entry!.status == MaintenanceStatus.paid
+                    ? 'PAGO'
+                    : 'PENDENTE',
+                type: _entry!.status == MaintenanceStatus.paid
+                    ? BadgeType.active
+                    : BadgeType.error,
               ),
             ],
           ),
@@ -119,8 +141,14 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildHeaderStat('Valor Total', currencyFormat.format(_entry!.cost)),
-              _buildHeaderStat('KM do Veículo', '${_entry!.kmAtMaintenance} KM'),
+              _buildHeaderStat(
+                'Valor Total',
+                currencyFormat.format(_entry!.cost),
+              ),
+              _buildHeaderStat(
+                'KM do Veículo',
+                '${_entry!.kmAtMaintenance} KM',
+              ),
             ],
           ),
         ],
@@ -132,8 +160,19 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
-        Text(value, style: AppTextStyles.headlineSmall.copyWith(fontSize: 20, color: AppColors.primary)),
+        Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.headlineSmall.copyWith(
+            fontSize: 20,
+            color: AppColors.primary,
+          ),
+        ),
       ],
     );
   }
@@ -145,9 +184,21 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
         Text('Informações Gerais', style: AppTextStyles.titleMedium),
         const SizedBox(height: AppSpacing.md),
         _buildInfoCard([
-          _buildInfoRow(Icons.person_outline, 'Motorista', _entry!.driverName ?? 'Não informado'),
-          _buildInfoRow(Icons.location_on_outlined, 'Oficina', _entry!.workshop),
-          _buildInfoRow(Icons.category_outlined, 'Tipo', _getTypeLabel(_entry!.type)),
+          _buildInfoRow(
+            Icons.person_outline,
+            'Motorista',
+            _entry!.driverName ?? 'Não informado',
+          ),
+          _buildInfoRow(
+            Icons.location_on_outlined,
+            'Oficina',
+            _entry!.workshop,
+          ),
+          _buildInfoRow(
+            Icons.category_outlined,
+            'Tipo',
+            _getTypeLabel(_entry!.type),
+          ),
         ]),
       ],
     );
@@ -171,7 +222,12 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
         children: [
           Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
-          Text('$label:', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            '$label:',
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(width: 8),
           Text(value, style: AppTextStyles.bodyMedium),
         ],
@@ -209,10 +265,14 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                 final p = _entry!.parts[index];
                 return ListTile(
                   title: Text(p.name, style: AppTextStyles.labelLarge),
-                  subtitle: Text('${p.quantity}x ${currencyFormat.format(p.unitPrice)}'),
+                  subtitle: Text(
+                    '${p.quantity}x ${currencyFormat.format(p.unitPrice)}',
+                  ),
                   trailing: Text(
                     currencyFormat.format(p.total),
-                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                    style: AppTextStyles.labelLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 );
               },
@@ -242,15 +302,18 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Nota Fiscal / Recibo', style: AppTextStyles.labelLarge),
-                    Text('Nº ${_entry!.invoiceNumber}', style: AppTextStyles.bodySmall),
+                    Text(
+                      'Nota Fiscal / Recibo',
+                      style: AppTextStyles.labelLarge,
+                    ),
+                    Text(
+                      'Nº ${_entry!.invoiceNumber}',
+                      style: AppTextStyles.bodySmall,
+                    ),
                   ],
                 ),
               ),
-              TextButton(
-                onPressed: () {},
-                child: const Text('VER ANEXO'),
-              ),
+              TextButton(onPressed: () {}, child: const Text('VER ANEXO')),
             ],
           ),
         ),
@@ -260,16 +323,26 @@ class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
 
   String _getTypeLabel(MaintenanceType type) {
     switch (type) {
-      case MaintenanceType.oilChange: return 'Troca de Óleo';
-      case MaintenanceType.tires: return 'Pneus';
-      case MaintenanceType.brakes: return 'Freios';
-      case MaintenanceType.suspension: return 'Suspensão';
-      case MaintenanceType.generalRevision: return 'Revisão Geral';
-      case MaintenanceType.motor: return 'Motor';
-      case MaintenanceType.transmission: return 'Câmbio/Transmissão';
-      case MaintenanceType.electrical: return 'Elétrica';
-      case MaintenanceType.bodywork: return 'Funilaria';
-      default: return 'Outros';
+      case MaintenanceType.oilChange:
+        return 'Troca de Óleo';
+      case MaintenanceType.tires:
+        return 'Pneus';
+      case MaintenanceType.brakes:
+        return 'Freios';
+      case MaintenanceType.suspension:
+        return 'Suspensão';
+      case MaintenanceType.generalRevision:
+        return 'Revisão Geral';
+      case MaintenanceType.motor:
+        return 'Motor';
+      case MaintenanceType.transmission:
+        return 'Câmbio/Transmissão';
+      case MaintenanceType.electrical:
+        return 'Elétrica';
+      case MaintenanceType.bodywork:
+        return 'Funilaria';
+      default:
+        return 'Outros';
     }
   }
 }

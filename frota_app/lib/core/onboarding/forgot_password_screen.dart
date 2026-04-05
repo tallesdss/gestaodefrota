@@ -27,10 +27,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       duration: const Duration(milliseconds: 800),
     );
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-    _slideUp = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+    _slideUp = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _animController.forward();
   }
 
@@ -51,7 +51,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
           ),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -90,7 +92,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               color: AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.arrow_back_rounded, color: AppColors.onSurface, size: 20),
+            child: const Icon(
+              Icons.arrow_back_rounded,
+              color: AppColors.onSurface,
+              size: 20,
+            ),
           ),
         ),
         const SizedBox(height: 28),
@@ -103,7 +109,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             color: AppColors.primary.withAlpha(20),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.lock_reset_rounded, color: AppColors.primary, size: 32),
+          child: const Icon(
+            Icons.lock_reset_rounded,
+            color: AppColors.primary,
+            size: 32,
+          ),
         ),
         const SizedBox(height: 24),
 
@@ -194,7 +204,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             color: AppColors.success.withAlpha(20),
             borderRadius: BorderRadius.circular(24),
           ),
-          child: const Icon(Icons.mark_email_read_rounded, color: AppColors.success, size: 40),
+          child: const Icon(
+            Icons.mark_email_read_rounded,
+            color: AppColors.success,
+            size: 40,
+          ),
         ),
         const SizedBox(height: 28),
 

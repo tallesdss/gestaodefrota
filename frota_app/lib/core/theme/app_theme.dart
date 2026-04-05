@@ -18,15 +18,17 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.surfaceContainerLowest,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.primary,
         iconTheme: IconThemeData(color: Colors.white),
         centerTitle: false,
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       textTheme: TextTheme(
         displayLarge: AppTextStyles.displayLarge,
@@ -40,20 +42,18 @@ class AppTheme {
         labelMedium: AppTextStyles.labelMedium,
       ),
       useMaterial3: true,
-      
+
       // Default Button Themes
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
-      
+
       // Input Themes for Fleet
       inputDecorationTheme: InputDecorationTheme(
         fillColor: AppColors.surfaceContainerLow,

@@ -45,11 +45,7 @@ class AppButton extends StatelessWidget {
         else if (icon != null)
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
-            child: Icon(
-              icon,
-              size: 20,
-              color: _getTextColor(isDisabled),
-            ),
+            child: Icon(icon, size: 20, color: _getTextColor(isDisabled)),
           ),
         Text(
           label,
@@ -71,7 +67,9 @@ class AppButton extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: isDisabled ? null : onPressed,
-            borderRadius: BorderRadius.circular(6), // md radius per design system
+            borderRadius: BorderRadius.circular(
+              6,
+            ), // md radius per design system
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: buttonContent,
@@ -110,9 +108,7 @@ class AppButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
         );
       case AppButtonVariant.ghost:
-        return const BoxDecoration(
-          color: Colors.transparent,
-        );
+        return const BoxDecoration(color: Colors.transparent);
     }
   }
 

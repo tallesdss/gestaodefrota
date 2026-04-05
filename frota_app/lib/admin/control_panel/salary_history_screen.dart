@@ -66,7 +66,9 @@ class SalaryHistoryScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: AppColors.outlineVariant.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               children: [
@@ -76,7 +78,11 @@ class SalaryHistoryScreen extends StatelessWidget {
                     color: AppColors.success.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 24),
+                  child: const Icon(
+                    Icons.check_circle_outline,
+                    color: AppColors.success,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -85,11 +91,15 @@ class SalaryHistoryScreen extends StatelessWidget {
                     children: [
                       Text(
                         payment['manager'] as String,
-                        style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         '${payment['type']} • $formattedDate',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),

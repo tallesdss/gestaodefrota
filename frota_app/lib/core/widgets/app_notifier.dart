@@ -14,7 +14,7 @@ class AppNotifier {
     VoidCallback? onAction,
   }) {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
+
     // Calcula a cor base
     Color backgroundColor = AppColors.surfaceContainerHigh;
     Color iconColor = AppColors.primary;

@@ -1,12 +1,6 @@
-enum DriverType { 
-  uber, 
-  prefecture 
-}
+enum DriverType { uber, prefecture }
 
-enum DriverStatus { 
-  active, 
-  inactive 
-}
+enum DriverStatus { active, inactive }
 
 class Driver {
   final String id;

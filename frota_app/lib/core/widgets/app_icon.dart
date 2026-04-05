@@ -31,10 +31,7 @@ class AppIcon extends StatelessWidget {
       return InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(size),
-        child: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: iconWidget,
-        ),
+        child: Padding(padding: const EdgeInsets.all(4.0), child: iconWidget),
       );
     }
 

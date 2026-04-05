@@ -59,7 +59,10 @@ class _ContractListScreenState extends State<ContractListScreen> {
                 itemBuilder: (context, index) {
                   final contract = _contracts[index];
                   return GestureDetector(
-                    onTap: () => context.push(AppRoutes.adminContractForm, extra: contract),
+                    onTap: () => context.push(
+                      AppRoutes.adminContractForm,
+                      extra: contract,
+                    ),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: AppSpacing.md),
                       padding: const EdgeInsets.all(AppSpacing.md),
@@ -77,15 +80,29 @@ class _ContractListScreenState extends State<ContractListScreen> {
                                   color: AppColors.surfaceContainerLow,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.article_outlined, color: AppColors.primary),
+                                child: const Icon(
+                                  Icons.article_outlined,
+                                  color: AppColors.primary,
+                                ),
                               ),
                               const SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Vínculo: ${contract.vehicleId} - ${contract.driverId}', style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                                    Text(contract.type, style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                                    Text(
+                                      'Vínculo: ${contract.vehicleId} - ${contract.driverId}',
+                                      style: AppTextStyles.labelLarge.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      contract.type,
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -101,9 +118,15 @@ class _ContractListScreenState extends State<ContractListScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildInfo('INÍCIO', _formatDate(contract.startDate)),
+                              _buildInfo(
+                                'INÍCIO',
+                                _formatDate(contract.startDate),
+                              ),
                               _buildInfo('FIM', _formatDate(contract.endDate)),
-                              _buildInfo('VALOR/MES', 'R\$ ${contract.monthlyValue.toStringAsFixed(2)}'),
+                              _buildInfo(
+                                'VALOR/MES',
+                                'R\$ ${contract.monthlyValue.toStringAsFixed(2)}',
+                              ),
                             ],
                           ),
                         ],
@@ -125,8 +148,17 @@ class _ContractListScreenState extends State<ContractListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.bodySmall.copyWith(fontSize: 10, color: AppColors.onSurfaceVariant)),
-        Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
+            fontSize: 10,
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
@@ -137,17 +169,23 @@ class _ContractListScreenState extends State<ContractListScreen> {
 
   String _getStatusLabel(ContractStatus status) {
     switch (status) {
-      case ContractStatus.active: return 'VIGENTE';
-      case ContractStatus.expired: return 'EXPIRADO';
-      case ContractStatus.cancelled: return 'CANCELADO';
+      case ContractStatus.active:
+        return 'VIGENTE';
+      case ContractStatus.expired:
+        return 'EXPIRADO';
+      case ContractStatus.cancelled:
+        return 'CANCELADO';
     }
   }
 
   BadgeType _getBadgeType(ContractStatus status) {
     switch (status) {
-      case ContractStatus.active: return BadgeType.active;
-      case ContractStatus.expired: return BadgeType.warning;
-      case ContractStatus.cancelled: return BadgeType.error;
+      case ContractStatus.active:
+        return BadgeType.active;
+      case ContractStatus.expired:
+        return BadgeType.warning;
+      case ContractStatus.cancelled:
+        return BadgeType.error;
     }
   }
 }

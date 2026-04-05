@@ -58,7 +58,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
 
   void _showPaymentModal(Driver driver) {
     final amountController = TextEditingController();
-    
+
     AppDialogs.showBottomSheet(
       context: context,
       title: 'Informar Pagamento',
@@ -82,7 +82,9 @@ class _DriverListScreenState extends State<DriverListScreen> {
         AppButton(
           label: 'Salvar Pagamento',
           onPressed: () async {
-            final amount = double.tryParse(amountController.text.replaceAll(',', '.')) ?? 0;
+            final amount =
+                double.tryParse(amountController.text.replaceAll(',', '.')) ??
+                0;
             if (amount > 0) {
               final entry = FinancialEntry(
                 id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -95,14 +97,16 @@ class _DriverListScreenState extends State<DriverListScreen> {
                 description: 'Pagamento informado de ${driver.name}',
                 isPaid: true,
               );
-              
+
               await _repository.addFinancialEntry(entry);
-              
+
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Pagamento de R\$ ${amount.toStringAsFixed(2)} salvo com sucesso!'),
+                    content: Text(
+                      'Pagamento de R\$ ${amount.toStringAsFixed(2)} salvo com sucesso!',
+                    ),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -117,7 +121,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
   void _showDebtModal(Driver driver) {
     final amountController = TextEditingController();
     final descriptionController = TextEditingController(text: 'Aluguel');
-    
+
     AppDialogs.showBottomSheet(
       context: context,
       title: 'Informar Valor a Pagar',
@@ -148,7 +152,9 @@ class _DriverListScreenState extends State<DriverListScreen> {
         AppButton(
           label: 'Salvar Débito',
           onPressed: () async {
-            final amount = double.tryParse(amountController.text.replaceAll(',', '.')) ?? 0;
+            final amount =
+                double.tryParse(amountController.text.replaceAll(',', '.')) ??
+                0;
             if (amount > 0) {
               final entry = FinancialEntry(
                 id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -158,17 +164,20 @@ class _DriverListScreenState extends State<DriverListScreen> {
                 vehicleId: driver.currentVehicleId,
                 amount: amount,
                 date: DateTime.now(),
-                description: 'Valor a pagar informado: ${descriptionController.text}',
+                description:
+                    'Valor a pagar informado: ${descriptionController.text}',
                 isPaid: false,
               );
-              
+
               await _repository.addFinancialEntry(entry);
-              
+
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Débito de R\$ ${amount.toStringAsFixed(2)} registrado com sucesso!'),
+                    content: Text(
+                      'Débito de R\$ ${amount.toStringAsFixed(2)} registrado com sucesso!',
+                    ),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -211,13 +220,19 @@ class _DriverListScreenState extends State<DriverListScreen> {
                   padding: const EdgeInsets.all(AppSpacing.xl),
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 18, color: AppColors.onSurfaceVariant),
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 18,
+                        color: AppColors.onSurfaceVariant,
+                      ),
                       const SizedBox(width: AppSpacing.sm),
                       Text('Cidade:', style: AppTextStyles.labelMedium),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceContainerLow,
                             borderRadius: BorderRadius.circular(12),
@@ -226,11 +241,16 @@ class _DriverListScreenState extends State<DriverListScreen> {
                             child: DropdownButton<String>(
                               value: _selectedCity,
                               isExpanded: true,
-                              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                              ),
                               items: _cities.map((city) {
                                 return DropdownMenuItem(
                                   value: city,
-                                  child: Text(city, style: AppTextStyles.bodyMedium),
+                                  child: Text(
+                                    city,
+                                    style: AppTextStyles.bodyMedium,
+                                  ),
                                 );
                               }).toList(),
                               onChanged: (value) {
@@ -246,18 +266,27 @@ class _DriverListScreenState extends State<DriverListScreen> {
                 // Drivers List
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
                     itemCount: _filteredDrivers.length,
                     itemBuilder: (context, index) {
                       final driver = _filteredDrivers[index];
                       final hasCar = driver.currentVehicleId != null;
-                      
+
                       return GestureDetector(
                         onTap: () {
                           if (driver.isApproved) {
-                            context.push(AppRoutes.adminDriverProfile.replaceFirst(':id', driver.id));
+                            context.push(
+                              AppRoutes.adminDriverProfile.replaceFirst(
+                                ':id',
+                                driver.id,
+                              ),
+                            );
                           } else {
-                            context.push('${AppRoutes.adminRegistrationAudit}?id=${driver.id}');
+                            context.push(
+                              '${AppRoutes.adminRegistrationAudit}?id=${driver.id}',
+                            );
                           }
                         },
                         child: Container(
@@ -268,7 +297,9 @@ class _DriverListScreenState extends State<DriverListScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.onSurface.withValues(alpha: 0.04),
+                                color: AppColors.onSurface.withValues(
+                                  alpha: 0.04,
+                                ),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -281,7 +312,11 @@ class _DriverListScreenState extends State<DriverListScreen> {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: hasCar ? AppColors.success.withValues(alpha: 0.3) : AppColors.outlineVariant,
+                                    color: hasCar
+                                        ? AppColors.success.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : AppColors.outlineVariant,
                                     width: 2,
                                   ),
                                 ),
@@ -297,7 +332,10 @@ class _DriverListScreenState extends State<DriverListScreen> {
                                       width: 60,
                                       height: 60,
                                       color: AppColors.surfaceContainerLow,
-                                      child: const Icon(Icons.person, color: AppColors.primary),
+                                      child: const Icon(
+                                        Icons.person,
+                                        color: AppColors.primary,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -311,17 +349,33 @@ class _DriverListScreenState extends State<DriverListScreen> {
                                       children: [
                                         Text(
                                           driver.name,
-                                          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                          style: AppTextStyles.labelLarge
+                                              .copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                         if (hasCar) ...[
                                           const SizedBox(width: 8),
                                           Tooltip(
                                             message: 'Ver Veículo',
                                             child: GestureDetector(
-                                              onTap: () => context.push(AppRoutes.adminVehicleDetail.replaceFirst(':id', driver.currentVehicleId!)),
+                                              onTap: () => context.push(
+                                                AppRoutes.adminVehicleDetail
+                                                    .replaceFirst(
+                                                      ':id',
+                                                      driver.currentVehicleId!,
+                                                    ),
+                                              ),
                                               child: Container(
-                                                padding: const EdgeInsets.all(4),
-                                                child: const Icon(Icons.directions_car_filled_rounded, size: 18, color: AppColors.success),
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
+                                                child: const Icon(
+                                                  Icons
+                                                      .directions_car_filled_rounded,
+                                                  size: 18,
+                                                  color: AppColors.success,
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -330,38 +384,57 @@ class _DriverListScreenState extends State<DriverListScreen> {
                                     ),
                                     Text(
                                       '${driver.city ?? 'Não info.'} • ${driver.email}',
-                                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
                                     ),
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
                                         StatusBadge(
-                                          label: driver.isApproved ? 'APROVADO' : 'PENDENTE',
-                                          type: driver.isApproved ? BadgeType.active : BadgeType.warning,
+                                          label: driver.isApproved
+                                              ? 'APROVADO'
+                                              : 'PENDENTE',
+                                          type: driver.isApproved
+                                              ? BadgeType.active
+                                              : BadgeType.warning,
                                         ),
                                         const SizedBox(width: 8),
                                         StatusBadge(
-                                          label: hasCar ? 'COM VEÍCULO' : 'SEM VEÍCULO',
-                                          type: hasCar ? BadgeType.active : BadgeType.error,
+                                          label: hasCar
+                                              ? 'COM VEÍCULO'
+                                              : 'SEM VEÍCULO',
+                                          type: hasCar
+                                              ? BadgeType.active
+                                              : BadgeType.error,
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
-                               const SizedBox(width: AppSpacing.md),
-                                IconButton(
-                                 icon: const Icon(Icons.money_off_csred_outlined, color: Colors.orange),
-                                 onPressed: () => _showDebtModal(driver),
-                                 tooltip: 'Informar Valor a Pagar',
-                               ),
-                               IconButton(
-                                 icon: const Icon(Icons.payments_outlined, color: Colors.green),
-                                 onPressed: () => _showPaymentModal(driver),
-                                 tooltip: 'Informar Pagamento',
-                               ),
-                               const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
-                             ],
+                              const SizedBox(width: AppSpacing.md),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.money_off_csred_outlined,
+                                  color: Colors.orange,
+                                ),
+                                onPressed: () => _showDebtModal(driver),
+                                tooltip: 'Informar Valor a Pagar',
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.payments_outlined,
+                                  color: Colors.green,
+                                ),
+                                onPressed: () => _showPaymentModal(driver),
+                                tooltip: 'Informar Pagamento',
+                              ),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: AppColors.outlineVariant,
+                              ),
+                            ],
                           ),
                         ),
                       );

@@ -12,7 +12,8 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProviderStateMixin {
+class _RegisterScreenState extends State<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -32,10 +33,10 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       duration: const Duration(milliseconds: 800),
     );
     _fadeIn = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-    _slideUp = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+    _slideUp = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _animController.forward();
   }
 
@@ -69,7 +70,11 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                     color: AppColors.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.arrow_back_rounded, color: AppColors.onSurface, size: 20),
+                  child: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: AppColors.onSurface,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(height: 28),
@@ -122,11 +127,14 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 obscureText: _obscurePassword,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                     color: AppColors.onSurfaceVariant,
                     size: 20,
                   ),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
                 ),
               ),
               const SizedBox(height: 20),
@@ -139,11 +147,14 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                 obscureText: _obscureConfirm,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    _obscureConfirm
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                     color: AppColors.onSurfaceVariant,
                     size: 20,
                   ),
-                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  onPressed: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
                 ),
               ),
               const SizedBox(height: 20),
@@ -157,9 +168,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                     height: 22,
                     child: Checkbox(
                       value: _acceptTerms,
-                      onChanged: (v) => setState(() => _acceptTerms = v ?? false),
+                      onChanged: (v) =>
+                          setState(() => _acceptTerms = v ?? false),
                       activeColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                       side: BorderSide(color: AppColors.outlineVariant),
                     ),
                   ),

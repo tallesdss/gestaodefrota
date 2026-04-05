@@ -1,0 +1,43 @@
+import '../models/workshop.dart';
+
+final List<Workshop> mockWorkshops = [
+  Workshop(
+    id: '1',
+    name: 'Oficina Master Car',
+    cnpj: '12.345.678/0001-90',
+    phone: '(11) 98765-4321',
+    email: 'contato@mastercar.com',
+    address: 'Rua das Oficinas, 123 - São Paulo',
+    isAccredited: true,
+    rating: 4.8,
+    totalSpent: 45000.00,
+    pendingPayment: 12500.00,
+    specializedServices: ['Motor', 'Suspensão', 'Freios'],
+  ),
+  Workshop(
+    id: '2',
+    name: 'Centro Automotivo Speed',
+    cnpj: '98.765.432/0001-11',
+    phone: '(11) 91234-5678',
+    email: 'speed@centro.com',
+    address: 'Av. Brasil, 5000 - São Paulo',
+    isAccredited: true,
+    rating: 4.5,
+    totalSpent: 32000.00,
+    pendingPayment: 0.00,
+    specializedServices: ['Pneus', 'Alinhamento'],
+  ),
+  Workshop(
+    id: '3',
+    name: 'Mecânica do Juca',
+    cnpj: '45.678.901/0001-22',
+    phone: '(11) 99887-7665',
+    email: 'juca@mecanica.com',
+    address: 'Rua do Comercio, 45 - São Bernardo',
+    isAccredited: false,
+    rating: 3.9,
+    totalSpent: 8500.00,
+    pendingPayment: 4200.00,
+    specializedServices: ['Motor', 'Câmbio'],
+  ),
+];

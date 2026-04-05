@@ -33,20 +33,29 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
     final List<Map<String, dynamic>> result = [];
 
     for (var driver in drivers) {
-      final unpaidEntries = financials.where((f) => f.driverId == driver.id && !f.isPaid).toList();
+      final unpaidEntries = financials
+          .where((f) => f.driverId == driver.id && !f.isPaid)
+          .toList();
       if (unpaidEntries.isNotEmpty) {
-        final totalDebt = unpaidEntries.fold(0.0, (sum, item) => sum + item.amount);
+        final totalDebt = unpaidEntries.fold(
+          0.0,
+          (sum, item) => sum + item.amount,
+        );
         result.add({
           'driver': driver,
           'totalDebt': totalDebt,
           'unpaidCount': unpaidEntries.length,
-          'lastUnpaidDate': unpaidEntries.map((e) => e.date).reduce((a, b) => a.isAfter(b) ? a : b),
+          'lastUnpaidDate': unpaidEntries
+              .map((e) => e.date)
+              .reduce((a, b) => a.isAfter(b) ? a : b),
         });
       }
     }
 
     // Sort by largest debt
-    result.sort((a, b) => (b['totalDebt'] as double).compareTo(a['totalDebt'] as double));
+    result.sort(
+      (a, b) => (b['totalDebt'] as double).compareTo(a['totalDebt'] as double),
+    );
 
     setState(() {
       _delinquentDrivers = result;
@@ -74,44 +83,62 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _delinquentDrivers.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  itemCount: _delinquentDrivers.length,
-                  itemBuilder: (context, index) {
-                    final data = _delinquentDrivers[index];
-                    final Driver driver = data['driver'];
-                    final double totalDebt = data['totalDebt'];
-                    final int unpaidCount = data['unpaidCount'];
-                    final DateTime lastDate = data['lastUnpaidDate'];
+          ? _buildEmptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              itemCount: _delinquentDrivers.length,
+              itemBuilder: (context, index) {
+                final data = _delinquentDrivers[index];
+                final Driver driver = data['driver'];
+                final double totalDebt = data['totalDebt'];
+                final int unpaidCount = data['unpaidCount'];
+                final DateTime lastDate = data['lastUnpaidDate'];
 
-                    return _buildDelinquentCard(driver, totalDebt, unpaidCount, lastDate);
-                  },
-                ),
+                return _buildDelinquentCard(
+                  driver,
+                  totalDebt,
+                  unpaidCount,
+                  lastDate,
+                );
+              },
+            ),
     );
   }
 
   Widget _buildEmptyState() {
-     return Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.check_circle_outline, size: 64, color: AppColors.success),
+          const Icon(
+            Icons.check_circle_outline,
+            size: 64,
+            color: AppColors.success,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'Tudo em dia!',
-            style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primary),
+            style: AppTextStyles.headlineSmall.copyWith(
+              color: AppColors.primary,
+            ),
           ),
           Text(
             'Nenhum motorista com pendência financeira.',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDelinquentCard(Driver driver, double totalDebt, int unpaidCount, DateTime lastDate) {
+  Widget _buildDelinquentCard(
+    Driver driver,
+    double totalDebt,
+    int unpaidCount,
+    DateTime lastDate,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
@@ -130,12 +157,14 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => context.push(AppRoutes.adminDriverProfile.replaceFirst(':id', driver.id)),
+            onTap: () => context.push(
+              AppRoutes.adminDriverProfile.replaceFirst(':id', driver.id),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Row(
                 children: [
-                   Container(
+                  Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
@@ -155,7 +184,10 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
                           width: 60,
                           height: 60,
                           color: AppColors.surfaceContainerLow,
-                          child: const Icon(Icons.person, color: AppColors.primary),
+                          child: const Icon(
+                            Icons.person,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ),
@@ -167,16 +199,24 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
                       children: [
                         Text(
                           driver.name,
-                          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                          style: AppTextStyles.labelLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           '$unpaidCount pendência(s) • Última em ${_formatDate(lastDate)}',
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
-                         StatusBadge(
-                          label: driver.currentVehicleId != null ? 'COM VEÍCULO' : 'SEM VEÍCULO',
-                          type: driver.currentVehicleId != null ? BadgeType.active : BadgeType.error,
+                        StatusBadge(
+                          label: driver.currentVehicleId != null
+                              ? 'COM VEÍCULO'
+                              : 'SEM VEÍCULO',
+                          type: driver.currentVehicleId != null
+                              ? BadgeType.active
+                              : BadgeType.error,
                         ),
                       ],
                     ),
@@ -186,7 +226,9 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
                     children: [
                       Text(
                         'Dívida Total',
-                        style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
                       ),
                       Text(
                         'R\$ ${totalDebt.toStringAsFixed(2).replaceAll('.', ',')}',
@@ -198,7 +240,10 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
                     ],
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  const Icon(Icons.chevron_right, color: AppColors.outlineVariant),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.outlineVariant,
+                  ),
                 ],
               ),
             ),

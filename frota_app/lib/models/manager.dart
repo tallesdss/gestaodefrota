@@ -1,7 +1,4 @@
-enum ManagerStatus { 
-  active, 
-  inactive 
-}
+enum ManagerStatus { active, inactive }
 
 class Manager {
   final String id;

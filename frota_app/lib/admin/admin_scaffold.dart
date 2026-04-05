@@ -7,17 +7,14 @@ import 'widgets/admin_header.dart';
 class AdminScaffold extends StatelessWidget {
   final Widget child;
 
-  const AdminScaffold({
-    super.key,
-    required this.child,
-  });
+  const AdminScaffold({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
     // Determine active route for sidebar
     final String location = GoRouterState.of(context).uri.path;
     final bool isDesktop = MediaQuery.of(context).size.width >= 1024;
-    
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: Row(
@@ -33,7 +30,7 @@ class AdminScaffold extends StatelessWidget {
           ),
         ],
       ),
-      // On mobile, we might want to use a Drawer but currently AdminHeader has a Menu button? 
+      // On mobile, we might want to use a Drawer but currently AdminHeader has a Menu button?
       // Let's check AdminHeader.
     );
   }

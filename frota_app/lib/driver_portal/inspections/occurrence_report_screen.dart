@@ -32,7 +32,13 @@ class _OccurrenceReportScreenState extends State<OccurrenceReportScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        title: Text('RELATAR OCORRÊNCIA', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, letterSpacing: 2)),
+        title: Text(
+          'RELATAR OCORRÊNCIA',
+          style: AppTextStyles.labelMedium.copyWith(
+            color: AppColors.primary,
+            letterSpacing: 2,
+          ),
+        ),
         centerTitle: true,
         leading: IconButton(
           onPressed: () => context.pop(),
@@ -51,24 +57,26 @@ class _OccurrenceReportScreenState extends State<OccurrenceReportScreen> {
             const SizedBox(height: AppSpacing.md),
             Text(
               'Seu relato será enviado diretamente para a central de gestão para análise imediata.',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            
+
             _buildSectionLabel('CATEGORIA DA OCORRÊNCIA'),
             const SizedBox(height: AppSpacing.md),
             _buildCategorySelector(),
-            
+
             const SizedBox(height: AppSpacing.xl),
             _buildSectionLabel('ASPECTOS VISUAIS'),
             const SizedBox(height: AppSpacing.md),
             _buildPhotoUploader(),
-            
+
             const SizedBox(height: AppSpacing.xl),
             _buildSectionLabel('DETALHAMENTO'),
             const SizedBox(height: AppSpacing.md),
             _buildDescriptionField(),
-            
+
             const SizedBox(height: AppSpacing.xxl),
             AppButton(
               label: 'ENVIAR RELATÓRIO',
@@ -114,7 +122,12 @@ class _OccurrenceReportScreenState extends State<OccurrenceReportScreen> {
             color: isSelected ? AppColors.primary : AppColors.onSurface,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: isSelected ? AppColors.primary : Colors.transparent)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: isSelected ? AppColors.primary : Colors.transparent,
+            ),
+          ),
         );
       }).toList(),
     );
@@ -137,14 +150,22 @@ class _OccurrenceReportScreenState extends State<OccurrenceReportScreen> {
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLow,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.onSurface.withValues(alpha: 0.05), style: BorderStyle.none),
+          border: Border.all(
+            color: AppColors.onSurface.withValues(alpha: 0.05),
+            style: BorderStyle.none,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AppIcon(icon: icon, color: AppColors.primary, size: 32),
             const SizedBox(height: AppSpacing.sm),
-            Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
+            Text(
+              label,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
           ],
         ),
       ),
@@ -155,8 +176,11 @@ class _OccurrenceReportScreenState extends State<OccurrenceReportScreen> {
     return TextField(
       maxLines: 5,
       decoration: InputDecoration(
-        hintText: 'Descreva detalhadamente o ocorrido, KM aproximado e local se relevante...',
-        hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
+        hintText:
+            'Descreva detalhadamente o ocorrido, KM aproximado e local se relevante...',
+        hintStyle: AppTextStyles.bodySmall.copyWith(
+          color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+        ),
         filled: true,
         fillColor: AppColors.surfaceContainerLow,
         border: OutlineInputBorder(
@@ -171,7 +195,9 @@ class _OccurrenceReportScreenState extends State<OccurrenceReportScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
       builder: (context) => Container(
         padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
@@ -185,7 +211,9 @@ class _OccurrenceReportScreenState extends State<OccurrenceReportScreen> {
               'Sua ocorrência foi registrada sob o protocolo #ORD-${DateTime.now().millisecond}. '
               'Nossos analistas entrarão em contato em breve.',
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.xxl),
             AppButton(

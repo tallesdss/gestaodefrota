@@ -12,10 +12,7 @@ class BreadcrumbItem {
 class AppBreadcrumbs extends StatelessWidget {
   final List<BreadcrumbItem> items;
 
-  const AppBreadcrumbs({
-    super.key,
-    required this.items,
-  });
+  const AppBreadcrumbs({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +33,9 @@ class AppBreadcrumbs extends StatelessWidget {
                 child: Text(
                   item.label,
                   style: AppTextStyles.labelMedium.copyWith(
-                    color: isLast ? AppColors.onSurface : AppColors.onSurfaceVariant.withValues(alpha: 0.6),
+                    color: isLast
+                        ? AppColors.onSurface
+                        : AppColors.onSurfaceVariant.withValues(alpha: 0.6),
                     fontWeight: isLast ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),

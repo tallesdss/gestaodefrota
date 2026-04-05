@@ -62,7 +62,7 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
   Widget build(BuildContext context) {
     final filteredWorkshops = _workshops.where((w) {
       return w.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             w.cnpj.contains(_searchQuery);
+          w.cnpj.contains(_searchQuery);
     }).toList();
 
     return Scaffold(
@@ -78,9 +78,7 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
             const SizedBox(height: AppSpacing.xl),
             _buildSearchBar(),
             const SizedBox(height: AppSpacing.lg),
-            Expanded(
-              child: _buildWorkshopList(filteredWorkshops),
-            ),
+            Expanded(child: _buildWorkshopList(filteredWorkshops)),
           ],
         ),
       ),
@@ -88,7 +86,10 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
         onPressed: () => context.push(AppRoutes.adminWorkshopForm),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Nova Oficina', style: TextStyle(color: Colors.white)),
+        label: const Text(
+          'Nova Oficina',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
@@ -117,20 +118,42 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
   Widget _buildStats() {
     final totalWorkshops = _workshops.length;
     final accredited = _workshops.where((w) => w.isAccredited).length;
-    final pendingTotal = _workshops.fold(0.0, (sum, w) => sum + w.pendingPayment);
+    final pendingTotal = _workshops.fold(
+      0.0,
+      (sum, w) => sum + w.pendingPayment,
+    );
 
     return Row(
       children: [
-        _buildStatCard('Total de Oficinas', totalWorkshops.toString(), Icons.build_circle),
+        _buildStatCard(
+          'Total de Oficinas',
+          totalWorkshops.toString(),
+          Icons.build_circle,
+        ),
         const SizedBox(width: AppSpacing.md),
-        _buildStatCard('Credenciadas', accredited.toString(), Icons.verified_user, color: Colors.blue),
+        _buildStatCard(
+          'Credenciadas',
+          accredited.toString(),
+          Icons.verified_user,
+          color: Colors.blue,
+        ),
         const SizedBox(width: AppSpacing.md),
-        _buildStatCard('A Pagar Total', 'R\$ ${pendingTotal.toStringAsFixed(2)}', Icons.payment, color: Colors.orange),
+        _buildStatCard(
+          'A Pagar Total',
+          'R\$ ${pendingTotal.toStringAsFixed(2)}',
+          Icons.payment,
+          color: Colors.orange,
+        ),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, {Color? color}) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon, {
+    Color? color,
+  }) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -161,11 +184,15 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
               children: [
                 Text(
                   value,
-                  style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   label,
-                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurfaceVariant),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -200,7 +227,11 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: AppSpacing.md),
             Text('Nenhuma oficina encontrada', style: AppTextStyles.bodyLarge),
           ],
@@ -243,11 +274,17 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
                         children: [
                           Text(
                             workshop.name,
-                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           if (workshop.isAccredited) ...[
                             const SizedBox(width: AppSpacing.xs),
-                            const Icon(Icons.verified, color: Colors.blue, size: 16),
+                            const Icon(
+                              Icons.verified,
+                              color: Colors.blue,
+                              size: 16,
+                            ),
                           ],
                         ],
                       ),
@@ -257,12 +294,23 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 16),
                           const SizedBox(width: 4),
-                          Text(workshop.rating.toString(), style: AppTextStyles.labelSmall),
+                          Text(
+                            workshop.rating.toString(),
+                            style: AppTextStyles.labelSmall,
+                          ),
                           const SizedBox(width: AppSpacing.md),
-                          const Icon(Icons.payment, color: Colors.orange, size: 16),
+                          const Icon(
+                            Icons.payment,
+                            color: Colors.orange,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
-                          Text('Pendentes: R\$ ${workshop.pendingPayment.toStringAsFixed(2)}', 
-                               style: AppTextStyles.labelSmall.copyWith(color: Colors.orange)),
+                          Text(
+                            'Pendentes: R\$ ${workshop.pendingPayment.toStringAsFixed(2)}',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: Colors.orange,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -275,14 +323,19 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
                       icon: Icons.analytics_outlined,
                       color: Colors.indigo,
                       tooltip: 'Ver Detalhes',
-                      onTap: () => context.push('${AppRoutes.adminWorkshops}/detail/${workshop.id}'),
+                      onTap: () => context.push(
+                        '${AppRoutes.adminWorkshops}/detail/${workshop.id}',
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     _buildActionButton(
                       icon: Icons.edit_outlined,
                       color: Colors.blue,
                       tooltip: 'Editar',
-                      onTap: () => context.push(AppRoutes.adminWorkshopForm, extra: workshop),
+                      onTap: () => context.push(
+                        AppRoutes.adminWorkshopForm,
+                        extra: workshop,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     _buildActionButton(
@@ -331,7 +384,10 @@ class _WorkshopListScreenState extends State<WorkshopListScreen> {
         title: const Text('Remover Oficina'),
         content: Text('Deseja realmente remover a oficina "${workshop.name}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
           TextButton(
             onPressed: () {
               setState(() {

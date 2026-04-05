@@ -13,10 +13,12 @@ class DriverInspectionHistoryScreen extends StatefulWidget {
   const DriverInspectionHistoryScreen({super.key, required this.driverId});
 
   @override
-  State<DriverInspectionHistoryScreen> createState() => _DriverInspectionHistoryScreenState();
+  State<DriverInspectionHistoryScreen> createState() =>
+      _DriverInspectionHistoryScreenState();
 }
 
-class _DriverInspectionHistoryScreenState extends State<DriverInspectionHistoryScreen> {
+class _DriverInspectionHistoryScreenState
+    extends State<DriverInspectionHistoryScreen> {
   final MockRepository _repository = MockRepository();
   List<Inspection> _inspections = [];
   bool _isLoading = true;
@@ -37,7 +39,9 @@ class _DriverInspectionHistoryScreenState extends State<DriverInspectionHistoryS
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     final dateFormat = DateFormat('dd/MM/yyyy');
     final timeFormat = DateFormat('HH:mm');
@@ -56,16 +60,22 @@ class _DriverInspectionHistoryScreenState extends State<DriverInspectionHistoryS
           ),
         ),
       ),
-      body: _inspections.isEmpty 
-          ? Center(child: Text('Nenhuma vistoria registrada', style: AppTextStyles.bodyMedium))
+      body: _inspections.isEmpty
+          ? Center(
+              child: Text(
+                'Nenhuma vistoria registrada',
+                style: AppTextStyles.bodyMedium,
+              ),
+            )
           : ListView.separated(
               padding: const EdgeInsets.all(AppSpacing.xl),
               itemCount: _inspections.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: AppSpacing.md),
               itemBuilder: (context, index) {
                 final i = _inspections[index];
                 final isCheckin = i.type == InspectionType.checkin;
-                
+
                 return Container(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
@@ -85,10 +95,16 @@ class _DriverInspectionHistoryScreenState extends State<DriverInspectionHistoryS
                         children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor: isCheckin ? AppColors.success.withValues(alpha: 0.1) : AppColors.secondary.withValues(alpha: 0.1),
+                            backgroundColor: isCheckin
+                                ? AppColors.success.withValues(alpha: 0.1)
+                                : AppColors.secondary.withValues(alpha: 0.1),
                             child: Icon(
-                              isCheckin ? Icons.login_rounded : Icons.logout_rounded,
-                              color: isCheckin ? AppColors.success : AppColors.secondary,
+                              isCheckin
+                                  ? Icons.login_rounded
+                                  : Icons.logout_rounded,
+                              color: isCheckin
+                                  ? AppColors.success
+                                  : AppColors.secondary,
                               size: 20,
                             ),
                           ),
@@ -99,18 +115,24 @@ class _DriverInspectionHistoryScreenState extends State<DriverInspectionHistoryS
                               children: [
                                 Text(
                                   isCheckin ? 'CHECK-IN' : 'CHECK-OUT',
-                                  style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                  style: AppTextStyles.labelLarge.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 Text(
                                   '${dateFormat.format(i.dateTime)} às ${timeFormat.format(i.dateTime)}',
-                                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                           StatusBadge(
                             label: i.hasNewDamage ? 'COM AVARIA' : 'SEM AVARIA',
-                            type: i.hasNewDamage ? BadgeType.error : BadgeType.active,
+                            type: i.hasNewDamage
+                                ? BadgeType.error
+                                : BadgeType.active,
                           ),
                         ],
                       ),
@@ -122,7 +144,10 @@ class _DriverInspectionHistoryScreenState extends State<DriverInspectionHistoryS
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildInfoColumn('KM', '${i.kmAtInspection} km'),
-                          _buildInfoColumn('COMBUSTÍVEL', '${(i.fuelLevel * 100).toInt()}%'),
+                          _buildInfoColumn(
+                            'COMBUSTÍVEL',
+                            '${(i.fuelLevel * 100).toInt()}%',
+                          ),
                           _buildInfoColumn('VEÍCULO ID', i.vehicleId),
                         ],
                       ),
@@ -138,8 +163,19 @@ class _DriverInspectionHistoryScreenState extends State<DriverInspectionHistoryS
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
-        Text(value, style: AppTextStyles.labelMedium.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.onSurfaceVariant,
+            fontSize: 10,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTextStyles.labelMedium.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }

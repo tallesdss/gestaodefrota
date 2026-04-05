@@ -49,8 +49,12 @@ class AppFilterBar extends StatelessWidget {
                       label: Text(
                         filter.label,
                         style: AppTextStyles.labelMedium.copyWith(
-                          color: filter.isSelected ? AppColors.onPrimary : AppColors.onSurface,
-                          fontWeight: filter.isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: filter.isSelected
+                              ? AppColors.onPrimary
+                              : AppColors.onSurface,
+                          fontWeight: filter.isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                         ),
                       ),
                       selected: filter.isSelected,
@@ -61,13 +65,18 @@ class AppFilterBar extends StatelessWidget {
                       checkmarkColor: AppColors.onPrimary,
                       backgroundColor: Colors.transparent,
                       side: BorderSide(
-                        color: filter.isSelected 
-                            ? AppColors.primary 
+                        color: filter.isSelected
+                            ? AppColors.primary
                             : AppColors.onSurfaceVariant.withValues(alpha: 0.2),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999), // full pill radius
+                        borderRadius: BorderRadius.circular(
+                          999,
+                        ), // full pill radius
                       ),
                     ),
                   );

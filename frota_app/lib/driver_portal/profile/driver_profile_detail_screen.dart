@@ -10,13 +10,14 @@ class DriverProfileDetailScreen extends StatefulWidget {
   const DriverProfileDetailScreen({super.key});
 
   @override
-  State<DriverProfileDetailScreen> createState() => _DriverProfileDetailScreenState();
+  State<DriverProfileDetailScreen> createState() =>
+      _DriverProfileDetailScreenState();
 }
 
 class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
   bool _isEditing = false;
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
@@ -58,7 +59,7 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
                   _buildEditForm(),
                 ],
                 const SizedBox(height: AppSpacing.xxxl),
-                if (!_isEditing) 
+                if (!_isEditing)
                   _buildLogoutButton(context)
                 else
                   _buildSaveCancelButtons(),
@@ -98,7 +99,11 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
           ],
@@ -162,16 +167,18 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
   Widget _buildStatsGrid() {
     return Row(
       children: [
-        Expanded(
-          child: _buildStatCard('KM RODADOS', '12.450', Icons.speed),
-        ),
+        Expanded(child: _buildStatCard('KM RODADOS', '12.450', Icons.speed)),
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _buildStatCard('CONTRATOS', '02', Icons.description_outlined),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
-          child: _buildStatCard('DIAS ATIVO', '342', Icons.calendar_today_outlined),
+          child: _buildStatCard(
+            'DIAS ATIVO',
+            '342',
+            Icons.calendar_today_outlined,
+          ),
         ),
       ],
     );
@@ -286,7 +293,11 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.onSurfaceVariant),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: AppColors.onSurfaceVariant,
+            ),
           ],
         ),
       ),
@@ -348,7 +359,9 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
               borderSide: BorderSide.none,
             ),
             helperText: helperText,
-            helperStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+            helperStyle: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
         ),
       ],
@@ -366,17 +379,24 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
               if (_formKey.currentState!.validate()) {
                 setState(() => _isEditing = false);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Perfil atualizado com sucesso!')),
+                  const SnackBar(
+                    content: Text('Perfil atualizado com sucesso!'),
+                  ),
                 );
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: 0,
             ),
-            child: const Text('SALVAR ALTERAÇÕES', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'SALVAR ALTERAÇÕES',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -430,10 +450,7 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
                   color: AppColors.primary,
                 ),
               ),
-              Text(
-                'Configurações do App',
-                style: AppTextStyles.headlineSmall,
-              ),
+              Text('Configurações do App', style: AppTextStyles.headlineSmall),
               const SizedBox(height: AppSpacing.xxl),
               Expanded(
                 child: ListView(
@@ -459,7 +476,9 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
                     const SizedBox(height: AppSpacing.xxl),
                     Text(
                       'IDIOMA',
-                      style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Container(
@@ -471,8 +490,14 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Português (Brasil)', style: AppTextStyles.bodyLarge),
-                          const Icon(Icons.check_circle, color: AppColors.primary),
+                          Text(
+                            'Português (Brasil)',
+                            style: AppTextStyles.bodyLarge,
+                          ),
+                          const Icon(
+                            Icons.check_circle,
+                            color: AppColors.primary,
+                          ),
                         ],
                       ),
                     ),
@@ -494,16 +519,29 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
-              Text(subtitle, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+              Text(
+                title,
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
         ),
         Switch.adaptive(
           value: value,
           onChanged: (v) {},
-          thumbColor: WidgetStateProperty.resolveWith((states) =>
-              states.contains(WidgetState.selected) ? AppColors.primary : null),
+          thumbColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : null,
+          ),
         ),
       ],
     );

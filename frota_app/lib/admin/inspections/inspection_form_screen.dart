@@ -78,7 +78,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         elevation: 0,
         title: Text(
           'Nova Vistoria',
-          style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+          style: AppTextStyles.headlineSmall.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: const BackButton(color: AppColors.primary),
       ),
@@ -88,7 +91,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // STEP 1: VEHICLE
-            _buildSectionHeader('1. Seleção do Veículo', Icons.directions_car_outlined),
+            _buildSectionHeader(
+              '1. Seleção do Veículo',
+              Icons.directions_car_outlined,
+            ),
             const SizedBox(height: AppSpacing.md),
             _buildVehicleSelector(),
             const SizedBox(height: AppSpacing.lg),
@@ -106,12 +112,18 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
             const SizedBox(height: AppSpacing.xxl),
 
             // STEP 4: SPECIFIC PHOTOS
-            _buildSectionHeader('4. Itens Específicos', Icons.grid_view_outlined),
+            _buildSectionHeader(
+              '4. Itens Específicos',
+              Icons.grid_view_outlined,
+            ),
             _buildPhotoGrid(specificPhotos),
             const SizedBox(height: AppSpacing.xxl),
 
             // STEP 5: VERIFICATIONS
-            _buildSectionHeader('5. Checklist de Verificações', Icons.fact_check_outlined),
+            _buildSectionHeader(
+              '5. Checklist de Verificações',
+              Icons.fact_check_outlined,
+            ),
             const SizedBox(height: AppSpacing.md),
             _buildChecklistGrid(),
             const SizedBox(height: AppSpacing.xxl),
@@ -122,12 +134,15 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
             TextField(
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: 'Descreva avarias, detalhes técnicos ou observações gerais...',
+                hintText:
+                    'Descreva avarias, detalhes técnicos ou observações gerais...',
                 fillColor: AppColors.surfaceContainerLowest,
                 filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
+                  borderSide: BorderSide(
+                    color: AppColors.outlineVariant.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
             ),
@@ -155,17 +170,26 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                    content: Text('Vistoria enviada com sucesso!'),
-                    backgroundColor: AppColors.success),
+                  content: Text('Vistoria enviada com sucesso!'),
+                  backgroundColor: AppColors.success,
+                ),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
-            child: const Text('FINALIZAR VISTORIA',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+            child: const Text(
+              'FINALIZAR VISTORIA',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.1,
+              ),
+            ),
           ),
         ),
       ),
@@ -179,7 +203,10 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         const SizedBox(width: AppSpacing.sm),
         Text(
           title,
-          style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
+          style: AppTextStyles.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
         ),
       ],
     );
@@ -191,7 +218,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -213,7 +242,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       children: [
         Text(
           'Kilometragem Atual',
-          style: AppTextStyles.labelLarge.copyWith(color: AppColors.onSurfaceVariant),
+          style: AppTextStyles.labelLarge.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         TextField(
@@ -226,7 +257,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
             filled: true,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
+              borderSide: BorderSide(
+                color: AppColors.outlineVariant.withValues(alpha: 0.3),
+              ),
             ),
           ),
         ),
@@ -252,10 +285,14 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
           onTap: () => setState(() => photos[key] = !hasPhoto),
           child: Container(
             decoration: BoxDecoration(
-              color: hasPhoto ? AppColors.success.withValues(alpha: 0.05) : AppColors.surfaceContainerLow,
+              color: hasPhoto
+                  ? AppColors.success.withValues(alpha: 0.05)
+                  : AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: hasPhoto ? AppColors.success : AppColors.outlineVariant.withValues(alpha: 0.2),
+                color: hasPhoto
+                    ? AppColors.success
+                    : AppColors.outlineVariant.withValues(alpha: 0.2),
               ),
             ),
             child: Column(
@@ -263,7 +300,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
               children: [
                 Icon(
                   hasPhoto ? Icons.check_circle : Icons.add_a_photo_outlined,
-                  color: hasPhoto ? AppColors.success : AppColors.onSurfaceVariant,
+                  color: hasPhoto
+                      ? AppColors.success
+                      : AppColors.onSurfaceVariant,
                   size: 24,
                 ),
                 const SizedBox(height: 8),
@@ -271,7 +310,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                   key,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: hasPhoto ? AppColors.success : AppColors.onSurfaceVariant,
+                    color: hasPhoto
+                        ? AppColors.success
+                        : AppColors.onSurfaceVariant,
                     fontSize: 10,
                   ),
                 ),
@@ -289,7 +330,9 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         children: verifications.keys.map((key) {

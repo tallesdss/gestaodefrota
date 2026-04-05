@@ -44,11 +44,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
                 const SizedBox(height: 16),
                 AppFilterBar(
-                  filters: _filters.map((f) => AppFilterItem(
-                    label: f.label,
-                    value: f.value,
-                    isSelected: f.value == _selectedFilter,
-                  )).toList(),
+                  filters: _filters
+                      .map(
+                        (f) => AppFilterItem(
+                          label: f.label,
+                          value: f.value,
+                          isSelected: f.value == _selectedFilter,
+                        ),
+                      )
+                      .toList(),
                   onFilterSelected: (value) {
                     setState(() {
                       _selectedFilter = value;
@@ -74,20 +78,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _buildNotificationItem(int index) {
     final bool isUrgente = index % 3 == 0;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: isUrgente ? Border.all(color: AppColors.error.withValues(alpha: 0.1), width: 1) : null,
+        border: isUrgente
+            ? Border.all(
+                color: AppColors.error.withValues(alpha: 0.1),
+                width: 1,
+              )
+            : null,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppIcon(
-            icon: isUrgente ? Icons.priority_high_rounded : Icons.notifications_active_outlined,
+            icon: isUrgente
+                ? Icons.priority_high_rounded
+                : Icons.notifications_active_outlined,
             layer: isUrgente ? AppIconLayer.error : AppIconLayer.onSurface,
             size: 20,
           ),
@@ -110,14 +121,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     Text(
                       'Há 10 min',
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                        color: AppColors.onSurfaceVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isUrgente 
+                  isUrgente
                       ? 'O veículo ABC-1234 (Toyota Corolla) reportou falha crítica no sistema de freios.'
                       : 'Lembrete: O veículo XYZ-5678 deve passar pela revisão periódica amanhã.',
                   style: AppTextStyles.bodyMedium.copyWith(
@@ -137,7 +150,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildActionButton() {
     return IconButton(
       onPressed: () {},
-      icon: const Icon(Icons.more_horiz_rounded, color: AppColors.onSurfaceVariant),
+      icon: const Icon(
+        Icons.more_horiz_rounded,
+        color: AppColors.onSurfaceVariant,
+      ),
     );
   }
 }

@@ -1,19 +1,8 @@
-enum VehicleStatus {
-  available, 
-  rented, 
-  maintenance,
-  sold
-}
+enum VehicleStatus { available, rented, maintenance, sold }
 
-enum ContractType { 
-  uber, 
-  prefecture 
-}
+enum ContractType { uber, prefecture }
 
-enum RentalType { 
-  weekly, 
-  monthly 
-}
+enum RentalType { weekly, monthly }
 
 class VehicleUsage {
   final String driverId;
@@ -63,10 +52,7 @@ class RentalValueHistory {
   final double value;
   final DateTime date;
 
-  RentalValueHistory({
-    required this.value,
-    required this.date,
-  });
+  RentalValueHistory({required this.value, required this.date});
 
   factory RentalValueHistory.fromMap(Map<String, dynamic> map) {
     return RentalValueHistory(
@@ -76,10 +62,7 @@ class RentalValueHistory {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'value': value,
-      'date': date.toIso8601String(),
-    };
+    return {'value': value, 'date': date.toIso8601String()};
   }
 }
 
@@ -98,7 +81,17 @@ class Vehicle {
   final DateTime ipvaExpiry;
   final DateTime insuranceExpiry;
   final DateTime licensingExpiry;
-  
+
+  // Document Values
+  final double? ipvaValue;
+  final double? insuranceValue;
+  final double? licensingValue;
+
+  // Financing fields
+  final int? financingInstallmentsPaid;
+  final double? financingInstallmentValue;
+  final int? financingDueDay;
+
   // New fields
   final String? currentDriverId;
   final String? currentDriverName;
@@ -129,6 +122,12 @@ class Vehicle {
     required this.ipvaExpiry,
     required this.insuranceExpiry,
     required this.licensingExpiry,
+    this.ipvaValue,
+    this.insuranceValue,
+    this.licensingValue,
+    this.financingInstallmentsPaid,
+    this.financingInstallmentValue,
+    this.financingDueDay,
     this.rentalValue,
     this.currentDriverId,
     this.currentDriverName,
@@ -155,19 +154,35 @@ class Vehicle {
       status: VehicleStatus.values.firstWhere((e) => e.name == map['status']),
       currentKm: map['currentKm'],
       fuelLevel: map['fuelLevel'].toDouble(),
-      contractType: ContractType.values.firstWhere((e) => e.name == map['contractType']),
+      contractType: ContractType.values.firstWhere(
+        (e) => e.name == map['contractType'],
+      ),
       imageUrl: map['imageUrl'],
       ipvaExpiry: DateTime.parse(map['ipvaExpiry']),
       insuranceExpiry: DateTime.parse(map['insuranceExpiry']),
       licensingExpiry: DateTime.parse(map['licensingExpiry']),
+      ipvaValue: map['ipvaValue']?.toDouble(),
+      insuranceValue: map['insuranceValue']?.toDouble(),
+      licensingValue: map['licensingValue']?.toDouble(),
+      financingInstallmentsPaid: map['financingInstallmentsPaid'],
+      financingInstallmentValue: map['financingInstallmentValue']?.toDouble(),
+      financingDueDay: map['financingDueDay'],
       rentalValue: map['rentalValue']?.toDouble(),
       currentDriverId: map['currentDriverId'],
       currentDriverName: map['currentDriverName'],
-      lastKmUpdateDate: map['lastKmUpdateDate'] != null ? DateTime.parse(map['lastKmUpdateDate']) : null,
+      lastKmUpdateDate: map['lastKmUpdateDate'] != null
+          ? DateTime.parse(map['lastKmUpdateDate'])
+          : null,
       lastKmValue: map['lastKmValue'],
-      usageHistory: (map['usageHistory'] as List? ?? []).map((e) => VehicleUsage.fromMap(e)).toList(),
-      rentalHistory: (map['rentalHistory'] as List? ?? []).map((e) => RentalValueHistory.fromMap(e)).toList(),
-      rentalType: map['rentalType'] != null ? RentalType.values.firstWhere((e) => e.name == map['rentalType']) : null,
+      usageHistory: (map['usageHistory'] as List? ?? [])
+          .map((e) => VehicleUsage.fromMap(e))
+          .toList(),
+      rentalHistory: (map['rentalHistory'] as List? ?? [])
+          .map((e) => RentalValueHistory.fromMap(e))
+          .toList(),
+      rentalType: map['rentalType'] != null
+          ? RentalType.values.firstWhere((e) => e.name == map['rentalType'])
+          : null,
       rentalDueDay: map['rentalDueDay'],
       purchaseValue: map['purchaseValue']?.toDouble(),
       fipeValue: map['fipeValue']?.toDouble(),
@@ -192,6 +207,12 @@ class Vehicle {
       'ipvaExpiry': ipvaExpiry.toIso8601String(),
       'insuranceExpiry': insuranceExpiry.toIso8601String(),
       'licensingExpiry': licensingExpiry.toIso8601String(),
+      'ipvaValue': ipvaValue,
+      'insuranceValue': insuranceValue,
+      'licensingValue': licensingValue,
+      'financingInstallmentsPaid': financingInstallmentsPaid,
+      'financingInstallmentValue': financingInstallmentValue,
+      'financingDueDay': financingDueDay,
       'rentalValue': rentalValue,
       'currentDriverId': currentDriverId,
       'currentDriverName': currentDriverName,
@@ -207,6 +228,7 @@ class Vehicle {
       'encumberedBank': encumberedBank,
     };
   }
+
   Vehicle copyWith({
     String? id,
     String? plate,
@@ -222,6 +244,12 @@ class Vehicle {
     DateTime? ipvaExpiry,
     DateTime? insuranceExpiry,
     DateTime? licensingExpiry,
+    double? ipvaValue,
+    double? insuranceValue,
+    double? licensingValue,
+    int? financingInstallmentsPaid,
+    double? financingInstallmentValue,
+    int? financingDueDay,
     String? currentDriverId,
     String? currentDriverName,
     DateTime? lastKmUpdateDate,
@@ -251,6 +279,14 @@ class Vehicle {
       ipvaExpiry: ipvaExpiry ?? this.ipvaExpiry,
       insuranceExpiry: insuranceExpiry ?? this.insuranceExpiry,
       licensingExpiry: licensingExpiry ?? this.licensingExpiry,
+      ipvaValue: ipvaValue ?? this.ipvaValue,
+      insuranceValue: insuranceValue ?? this.insuranceValue,
+      licensingValue: licensingValue ?? this.licensingValue,
+      financingInstallmentsPaid:
+          financingInstallmentsPaid ?? this.financingInstallmentsPaid,
+      financingInstallmentValue:
+          financingInstallmentValue ?? this.financingInstallmentValue,
+      financingDueDay: financingDueDay ?? this.financingDueDay,
       currentDriverId: currentDriverId ?? this.currentDriverId,
       currentDriverName: currentDriverName ?? this.currentDriverName,
       lastKmUpdateDate: lastKmUpdateDate ?? this.lastKmUpdateDate,
@@ -267,4 +303,3 @@ class Vehicle {
     );
   }
 }
-

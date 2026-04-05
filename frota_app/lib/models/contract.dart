@@ -1,8 +1,4 @@
-enum ContractStatus { 
-  active, 
-  expired, 
-  cancelled 
-}
+enum ContractStatus { active, expired, cancelled }
 
 class Contract {
   final String id;

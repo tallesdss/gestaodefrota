@@ -99,7 +99,9 @@ class ControlPanelScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.outlineVariant.withValues(alpha: 0.2),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -156,7 +158,10 @@ class ControlPanelScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  _buildFutureIcon(Icons.notifications_none_outlined, 'Alertas'),
+                  _buildFutureIcon(
+                    Icons.notifications_none_outlined,
+                    'Alertas',
+                  ),
                   const SizedBox(width: AppSpacing.xxl),
                   _buildFutureIcon(Icons.history_outlined, 'Logs'),
                   const SizedBox(width: AppSpacing.xxl),
@@ -181,7 +186,10 @@ class ControlPanelScreen extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

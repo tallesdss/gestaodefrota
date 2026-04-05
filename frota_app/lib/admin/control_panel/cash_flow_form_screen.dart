@@ -11,8 +11,13 @@ class CashFlowFormScreen extends StatefulWidget {
 }
 
 class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
-  String type = 'Saída'; 
-  final List<String> categories = ['Manutenção', 'Combustível', 'Limpeza', 'Outros'];
+  String type = 'Saída';
+  final List<String> categories = [
+    'Manutenção',
+    'Combustível',
+    'Limpeza',
+    'Outros',
+  ];
   String selectedCategory = 'Manutenção';
 
   @override
@@ -35,10 +40,12 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
           children: [
             Text(
               'Registrar Movimentação Manual',
-              style: AppTextStyles.titleMedium.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.titleMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            
+
             // Type Selector (Entrada / Saída)
             Row(
               children: [
@@ -47,9 +54,9 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
                 _buildTypeButton('Entrada', AppColors.success),
               ],
             ),
-            
+
             const SizedBox(height: AppSpacing.xxl),
-            
+
             // Form Fields
             _buildFieldLabel(r'Valor (R$)'),
             TextField(
@@ -64,9 +71,9 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
               ),
               keyboardType: TextInputType.number,
             ),
-            
+
             const SizedBox(height: AppSpacing.xl),
-            
+
             _buildFieldLabel('Categoria'),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -92,9 +99,9 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.xl),
-            
+
             _buildFieldLabel('Descrição / Observação'),
             TextField(
               maxLines: 3,
@@ -108,9 +115,9 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: AppSpacing.xxl * 2),
-            
+
             // Submit Button
             SizedBox(
               width: double.infinity,
@@ -125,11 +132,15 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: Text(
                     'Confirmar Registro',
-                    style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -145,7 +156,9 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Text(
         label,
-        style: AppTextStyles.labelLarge.copyWith(color: AppColors.onSurfaceVariant),
+        style: AppTextStyles.labelLarge.copyWith(
+          color: AppColors.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -160,7 +173,9 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
           decoration: BoxDecoration(
             color: isSelected ? color : AppColors.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(12),
-            border: isSelected ? null : Border.all(color: AppColors.surfaceContainerLow),
+            border: isSelected
+                ? null
+                : Border.all(color: AppColors.surfaceContainerLow),
           ),
           alignment: Alignment.center,
           child: Text(

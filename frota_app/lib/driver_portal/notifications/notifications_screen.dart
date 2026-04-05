@@ -30,28 +30,32 @@ class DriverNotificationsScreen extends StatelessWidget {
     final notifications = [
       NotificationItem(
         title: 'VENCIMENTO DE MENSALIDADE',
-        description: 'Sua parcela da semana 12/03 vence em 2 dias. Evite multas e juros realizando o pagamento via PIX.',
+        description:
+            'Sua parcela da semana 12/03 vence em 2 dias. Evite multas e juros realizando o pagamento via PIX.',
         date: DateTime.now(),
         type: NotificationType.danger,
         isRead: false,
       ),
       NotificationItem(
         title: 'VISTORIA APROVADA',
-        description: 'A vistoria do veículo ABC-1234 realizada em 25/03 foi aprovada sem ressalvas pela auditoria.',
+        description:
+            'A vistoria do veículo ABC-1234 realizada em 25/03 foi aprovada sem ressalvas pela auditoria.',
         date: DateTime.now().subtract(const Duration(days: 1)),
         type: NotificationType.info,
         isRead: true,
       ),
       NotificationItem(
         title: 'ALERTA DE MANUTENÇÃO',
-        description: 'Faltam 500km para a próxima troca de óleo. Agende pelo suporte técnico.',
+        description:
+            'Faltam 500km para a próxima troca de óleo. Agende pelo suporte técnico.',
         date: DateTime.now().subtract(const Duration(days: 2)),
         type: NotificationType.warning,
         isRead: true,
       ),
       NotificationItem(
         title: 'MENSAGEM DA GESTÃO',
-        description: 'Lembramos que o uso de rastreador é obrigatório. Mantenha o equipamento sempre ligado.',
+        description:
+            'Lembramos que o uso de rastreador é obrigatório. Mantenha o equipamento sempre ligado.',
         date: DateTime.now().subtract(const Duration(days: 4)),
         type: NotificationType.info,
         isRead: true,
@@ -69,8 +73,10 @@ class DriverNotificationsScreen extends StatelessWidget {
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 itemCount: notifications.length,
-                separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
-                itemBuilder: (context, index) => _buildNotificationCard(notifications[index]),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.md),
+                itemBuilder: (context, index) =>
+                    _buildNotificationCard(notifications[index]),
               ),
             ),
           ],
@@ -87,7 +93,11 @@ class DriverNotificationsScreen extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios, color: AppColors.onSurface, size: 20),
+            icon: const Icon(
+              Icons.arrow_back_ios,
+              color: AppColors.onSurface,
+              size: 20,
+            ),
             padding: EdgeInsets.zero,
             alignment: Alignment.centerLeft,
           ),
@@ -99,10 +109,7 @@ class DriverNotificationsScreen extends StatelessWidget {
               letterSpacing: 2,
             ),
           ),
-          Text(
-            'Central de Alertas',
-            style: AppTextStyles.headlineMedium,
-          ),
+          Text('Central de Alertas', style: AppTextStyles.headlineMedium),
         ],
       ),
     );
@@ -134,7 +141,9 @@ class DriverNotificationsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: item.isRead ? AppColors.surfaceContainerLowest : AppColors.surfaceContainerLow,
+        color: item.isRead
+            ? AppColors.surfaceContainerLowest
+            : AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -142,15 +151,8 @@ class DriverNotificationsScreen extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: bgColor,
-              shape: BoxShape.circle,
-            ),
-            child: AppIcon(
-              icon: iconData,
-              color: iconColor,
-              size: 24,
-            ),
+            decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
+            child: AppIcon(icon: iconData, color: iconColor, size: 24),
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
@@ -202,7 +204,9 @@ class DriverNotificationsScreen extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
-    if (date.day == now.day && date.month == now.month && date.year == now.year) {
+    if (date.day == now.day &&
+        date.month == now.month &&
+        date.year == now.year) {
       return 'Hoje';
     }
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';

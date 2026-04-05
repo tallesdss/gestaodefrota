@@ -11,13 +11,14 @@ class InspectionCheckInScreen extends StatefulWidget {
   const InspectionCheckInScreen({super.key});
 
   @override
-  State<InspectionCheckInScreen> createState() => _InspectionCheckInScreenState();
+  State<InspectionCheckInScreen> createState() =>
+      _InspectionCheckInScreenState();
 }
 
 class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
   int _currentStep = 0;
   final int _totalSteps = 4; // Intro, External, Internal, Verification
-  
+
   // Mocking photo states
   final Map<String, bool> _photosCaptured = {
     'Frente': false,
@@ -37,9 +38,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
           children: [
             _buildHeader(),
             _buildProgressBar(),
-            Expanded(
-              child: _buildStepContent(),
-            ),
+            Expanded(child: _buildStepContent()),
             _buildFooter(),
           ],
         ),
@@ -67,10 +66,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
                   letterSpacing: 2,
                 ),
               ),
-              Text(
-                _getStepTitle(),
-                style: AppTextStyles.titleMedium,
-              ),
+              Text(_getStepTitle(), style: AppTextStyles.titleMedium),
             ],
           ),
         ],
@@ -80,11 +76,16 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
 
   String _getStepTitle() {
     switch (_currentStep) {
-      case 0: return 'Início da Vistoria';
-      case 1: return 'Fotos Externas';
-      case 2: return 'Fotos Internas';
-      case 3: return 'Verificação Final';
-      default: return 'Vistoria';
+      case 0:
+        return 'Início da Vistoria';
+      case 1:
+        return 'Fotos Externas';
+      case 2:
+        return 'Fotos Internas';
+      case 3:
+        return 'Verificação Final';
+      default:
+        return 'Vistoria';
     }
   }
 
@@ -112,15 +113,26 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
 
   Widget _buildStepContent() {
     switch (_currentStep) {
-      case 0: return _buildIntroStep();
-      case 1: return _buildPhotoStep([
-        'Frente', 'Traseira', 'Lateral Direita', 'Lateral Esquerda'
-      ]);
-      case 2: return _buildPhotoStep([
-        'Painel', 'Hodômetro', 'Bancos Dianteiros', 'Placa'
-      ]);
-      case 3: return _buildVerificationStep();
-      default: return const SizedBox.shrink();
+      case 0:
+        return _buildIntroStep();
+      case 1:
+        return _buildPhotoStep([
+          'Frente',
+          'Traseira',
+          'Lateral Direita',
+          'Lateral Esquerda',
+        ]);
+      case 2:
+        return _buildPhotoStep([
+          'Painel',
+          'Hodômetro',
+          'Bancos Dianteiros',
+          'Placa',
+        ]);
+      case 3:
+        return _buildVerificationStep();
+      default:
+        return const SizedBox.shrink();
     }
   }
 
@@ -152,8 +164,14 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
           ),
           const SizedBox(height: AppSpacing.xxl),
           _buildInfoItem(Icons.light_mode_outlined, 'Boa iluminação'),
-          _buildInfoItem(Icons.qr_code_scanner_outlined, 'Foco nítido na placa'),
-          _buildInfoItem(Icons.verified_user_outlined, 'Veracidade das informações'),
+          _buildInfoItem(
+            Icons.qr_code_scanner_outlined,
+            'Foco nítido na placa',
+          ),
+          _buildInfoItem(
+            Icons.verified_user_outlined,
+            'Veracidade das informações',
+          ),
         ],
       ),
     );
@@ -191,7 +209,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
       itemBuilder: (context, index) {
         final item = items[index];
         final isCaptured = _photosCaptured[item] ?? false;
-        
+
         return GestureDetector(
           onTap: () {
             setState(() {
@@ -200,7 +218,9 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: isCaptured ? AppColors.successContainer.withValues(alpha: 0.1) : AppColors.surfaceContainerLow,
+              color: isCaptured
+                  ? AppColors.successContainer.withValues(alpha: 0.1)
+                  : AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isCaptured ? AppColors.success : Colors.transparent,
@@ -211,9 +231,16 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (isCaptured)
-                  const Icon(Icons.check_circle, color: AppColors.success, size: 40)
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.success,
+                    size: 40,
+                  )
                 else
-                   AppIcon(icon: Icons.add_a_photo_outlined, color: AppColors.onSurfaceVariant),
+                  AppIcon(
+                    icon: Icons.add_a_photo_outlined,
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   item.toUpperCase(),
@@ -299,7 +326,9 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
           Expanded(
             flex: 2,
             child: AppButton(
-              label: _currentStep == _totalSteps - 1 ? 'CONCLUIR VISTORIA' : 'PRÓXIMO',
+              label: _currentStep == _totalSteps - 1
+                  ? 'CONCLUIR VISTORIA'
+                  : 'PRÓXIMO',
               onPressed: () {
                 if (_currentStep < _totalSteps - 1) {
                   setState(() => _currentStep++);

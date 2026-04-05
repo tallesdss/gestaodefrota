@@ -61,9 +61,7 @@ class DelayListItem extends StatelessWidget {
                       child: SizedBox(
                         width: 15,
                         height: 15,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     ),
                   );

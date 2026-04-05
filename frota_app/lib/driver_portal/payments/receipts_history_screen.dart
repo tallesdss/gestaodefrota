@@ -15,9 +15,7 @@ class ReceiptsHistoryScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildAppBar(context),
-            Expanded(
-              child: _buildList(),
-            ),
+            Expanded(child: _buildList()),
           ],
         ),
       ),
@@ -49,17 +47,46 @@ class ReceiptsHistoryScreen extends StatelessWidget {
 
   Widget _buildList() {
     final receipts = [
-      {'title': 'Recibo de Aluguel', 'date': '01 Mar 2024', 'id': '#123456', 'amount': 'R\$ 550,00'},
-      {'title': 'Caução Inicial', 'date': '15 Fev 2024', 'id': '#123440', 'amount': 'R\$ 2.000,00'},
-      {'title': 'Taxa de Cadastro', 'date': '14 Fev 2024', 'id': '#123432', 'amount': 'R\$ 150,00'},
-      {'title': 'Recibo de Aluguel', 'date': '08 Mar 2024', 'id': '#123470', 'amount': 'R\$ 550,00'},
-      {'title': 'Recibo de Aluguel', 'date': '15 Mar 2024', 'id': '#123485', 'amount': 'R\$ 550,00'},
+      {
+        'title': 'Recibo de Aluguel',
+        'date': '01 Mar 2024',
+        'id': '#123456',
+        'amount': 'R\$ 550,00',
+      },
+      {
+        'title': 'Caução Inicial',
+        'date': '15 Fev 2024',
+        'id': '#123440',
+        'amount': 'R\$ 2.000,00',
+      },
+      {
+        'title': 'Taxa de Cadastro',
+        'date': '14 Fev 2024',
+        'id': '#123432',
+        'amount': 'R\$ 150,00',
+      },
+      {
+        'title': 'Recibo de Aluguel',
+        'date': '08 Mar 2024',
+        'id': '#123470',
+        'amount': 'R\$ 550,00',
+      },
+      {
+        'title': 'Recibo de Aluguel',
+        'date': '15 Mar 2024',
+        'id': '#123485',
+        'amount': 'R\$ 550,00',
+      },
     ];
 
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.md,
+      ),
       itemCount: receipts.length,
-      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         final receipt = receipts[index];
         return Container(
@@ -96,11 +123,15 @@ class ReceiptsHistoryScreen extends StatelessWidget {
                   children: [
                     Text(
                       receipt['title']!,
-                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       '${receipt['date']} • ${receipt['id']}',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -110,7 +141,10 @@ class ReceiptsHistoryScreen extends StatelessWidget {
                 children: [
                   Text(
                     receipt['amount']!,
-                    style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w800, color: AppColors.primary),
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
                   ),
                   IconButton(
                     onPressed: () {
@@ -118,7 +152,11 @@ class ReceiptsHistoryScreen extends StatelessWidget {
                         const SnackBar(content: Text('Baixando PDF...')),
                       );
                     },
-                    icon: const Icon(Icons.file_download_outlined, size: 20, color: AppColors.onSurfaceVariant),
+                    icon: const Icon(
+                      Icons.file_download_outlined,
+                      size: 20,
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

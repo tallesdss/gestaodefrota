@@ -34,7 +34,11 @@ final List<MaintenanceEntry> mockMaintenances = [
     workshopId: 'w2',
     status: MaintenanceStatus.paid,
     parts: [
-      MaintenancePart(name: 'Pneu Michelin 175/70 R14', quantity: 2, unitPrice: 550.00),
+      MaintenancePart(
+        name: 'Pneu Michelin 175/70 R14',
+        quantity: 2,
+        unitPrice: 550.00,
+      ),
     ],
     invoiceNumber: 'NF-8821',
   ),
@@ -52,7 +56,11 @@ final List<MaintenanceEntry> mockMaintenances = [
     workshopId: 'w1',
     status: MaintenanceStatus.paid,
     parts: [
-      MaintenancePart(name: 'Pastilha de Freio Cobreq', quantity: 1, unitPrice: 280.00),
+      MaintenancePart(
+        name: 'Pastilha de Freio Cobreq',
+        quantity: 1,
+        unitPrice: 280.00,
+      ),
       MaintenancePart(name: 'Mão de obra', quantity: 1, unitPrice: 100.00),
     ],
     invoiceNumber: 'NF-9920',
@@ -71,7 +79,11 @@ final List<MaintenanceEntry> mockMaintenances = [
     workshopId: 'w3',
     status: MaintenanceStatus.pending,
     parts: [
-      MaintenancePart(name: 'Amortecedor Cofap Dianteiro', quantity: 2, unitPrice: 500.00),
+      MaintenancePart(
+        name: 'Amortecedor Cofap Dianteiro',
+        quantity: 2,
+        unitPrice: 500.00,
+      ),
       MaintenancePart(name: 'Kit Batente', quantity: 2, unitPrice: 125.00),
     ],
   ),

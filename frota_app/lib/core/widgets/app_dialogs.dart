@@ -82,10 +82,14 @@ class AppDialogs {
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
-                      children: actions.map((a) => Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: a,
-                      )).toList(),
+                      children: actions
+                          .map(
+                            (a) => Padding(
+                              padding: const EdgeInsets.only(left: 12),
+                              child: a,
+                            ),
+                          )
+                          .toList(),
                     ),
                   ),
               ],
@@ -159,10 +163,14 @@ class AppDialogs {
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: actions.map((a) => Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: a,
-                        )).toList(),
+                        children: actions
+                            .map(
+                              (a) => Padding(
+                                padding: const EdgeInsets.only(left: 12),
+                                child: a,
+                              ),
+                            )
+                            .toList(),
                       ),
                     ),
                 ],

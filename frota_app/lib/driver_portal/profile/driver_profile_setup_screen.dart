@@ -11,12 +11,17 @@ class DriverProfileSetupScreen extends StatefulWidget {
   const DriverProfileSetupScreen({super.key});
 
   @override
-  State<DriverProfileSetupScreen> createState() => _DriverProfileSetupScreenState();
+  State<DriverProfileSetupScreen> createState() =>
+      _DriverProfileSetupScreenState();
 }
 
 class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
-  final TextEditingController _nameController = TextEditingController(text: 'João da Silva');
-  final TextEditingController _phoneController = TextEditingController(text: '(11) 99999-9999');
+  final TextEditingController _nameController = TextEditingController(
+    text: 'João da Silva',
+  );
+  final TextEditingController _phoneController = TextEditingController(
+    text: '(11) 99999-9999',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -53,10 +58,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
             letterSpacing: 2,
           ),
         ),
-        Text(
-          'Perfil do Condutor',
-          style: AppTextStyles.headlineSmall,
-        ),
+        Text('Perfil do Condutor', style: AppTextStyles.headlineSmall),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Confirme seus dados para finalizar seu cadastro.',
@@ -74,10 +76,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            AppColors.primary,
-            AppColors.primary.withValues(alpha: 0.8),
-          ],
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -134,9 +133,10 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const AppIcon(
-                    icon: Icons.shield_outlined,
-                    color: Colors.white,
-                    size: 32),
+                  icon: Icons.shield_outlined,
+                  color: Colors.white,
+                  size: 32,
+                ),
               ),
             ],
           ),
@@ -151,9 +151,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
               widthFactor: 1.0, // Initial score is max
-              child: Container(
-                color: Colors.white,
-              ),
+              child: Container(color: Colors.white),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -194,9 +192,10 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
           child: Row(
             children: [
               const AppIcon(
-                  icon: Icons.verified_outlined,
-                  color: Colors.green,
-                  size: 24),
+                icon: Icons.verified_outlined,
+                color: Colors.green,
+                size: 24,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
@@ -233,9 +232,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
           controller: controller,
           enabled: enabled,
           keyboardType: keyboardType,
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             filled: true,
             fillColor: enabled
@@ -284,7 +281,9 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppColors.surfaceContainerLowest,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -295,14 +294,14 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
                   color: Colors.green.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle_outline,
-                    color: Colors.green, size: 64),
+                child: const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green,
+                  size: 64,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Tudo pronto!',
-                style: AppTextStyles.headlineSmall,
-              ),
+              Text('Tudo pronto!', style: AppTextStyles.headlineSmall),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Seu perfil foi configurado com sucesso. Agora é só aguardar a vinculação do seu veículo!',

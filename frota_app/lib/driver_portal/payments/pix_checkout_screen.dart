@@ -131,7 +131,11 @@ class PixCheckoutScreen extends StatelessWidget {
               ),
             ),
             child: const Center(
-              child: Icon(Icons.qr_code_2, size: 160, color: AppColors.onSurface),
+              child: Icon(
+                Icons.qr_code_2,
+                size: 160,
+                color: AppColors.onSurface,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -145,17 +149,27 @@ class PixCheckoutScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           InkWell(
             onTap: () {
-              Clipboard.setData(const ClipboardData(text: '00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865802BR5913GESTAO_FROTA6009SAO_PAULO62070503***6304E2CA'));
+              Clipboard.setData(
+                const ClipboardData(
+                  text:
+                      '00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865802BR5913GESTAO_FROTA6009SAO_PAULO62070503***6304E2CA',
+                ),
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Código Pix copiado!')),
               );
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.md,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -190,11 +204,20 @@ class PixCheckoutScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        _buildInstructionRow('1', 'Abra o app do seu banco e escolha a opção PIX.'),
+        _buildInstructionRow(
+          '1',
+          'Abra o app do seu banco e escolha a opção PIX.',
+        ),
         const SizedBox(height: AppSpacing.sm),
-        _buildInstructionRow('2', 'Escaneie o QR Code ou selecione "Pix Copia e Cola".'),
+        _buildInstructionRow(
+          '2',
+          'Escaneie o QR Code ou selecione "Pix Copia e Cola".',
+        ),
         const SizedBox(height: AppSpacing.sm),
-        _buildInstructionRow('3', 'Após o pagamento, anexe o comprovante abaixo.'),
+        _buildInstructionRow(
+          '3',
+          'Após o pagamento, anexe o comprovante abaixo.',
+        ),
       ],
     );
   }
@@ -213,7 +236,10 @@ class PixCheckoutScreen extends StatelessWidget {
           child: Center(
             child: Text(
               number,
-              style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -237,12 +263,17 @@ class PixCheckoutScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: AppColors.onSurface.withValues(alpha: 0.05),
-          style: BorderStyle.none, // We use color shifts instead of borders as per DS
+          style: BorderStyle
+              .none, // We use color shifts instead of borders as per DS
         ),
       ),
       child: Column(
         children: [
-          const AppIcon(icon: Icons.cloud_upload_outlined, color: AppColors.primary, size: 32),
+          const AppIcon(
+            icon: Icons.cloud_upload_outlined,
+            color: AppColors.primary,
+            size: 32,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             'ANEXAR COMPROVANTE',
@@ -276,17 +307,30 @@ class PixCheckoutScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('CANCELAR', style: AppTextStyles.labelMedium.copyWith(color: AppColors.onSurfaceVariant)),
+            child: Text(
+              'CANCELAR',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Return to summary
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Comprovante enviado com sucesso!')),
+                const SnackBar(
+                  content: Text('Comprovante enviado com sucesso!'),
+                ),
               );
             },
-            child: Text('CONFIRMAR', style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+            child: Text(
+              'CONFIRMAR',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),

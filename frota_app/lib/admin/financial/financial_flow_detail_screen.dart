@@ -11,7 +11,8 @@ class FinancialFlowDetailScreen extends StatefulWidget {
   const FinancialFlowDetailScreen({super.key, this.vehicleId});
 
   @override
-  State<FinancialFlowDetailScreen> createState() => _FinancialFlowDetailScreenState();
+  State<FinancialFlowDetailScreen> createState() =>
+      _FinancialFlowDetailScreenState();
 }
 
 enum FinancialFilter { all, income, expense }
@@ -31,7 +32,7 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
   }
 
   Future<void> _fetchFinancials() async {
-    final list = widget.vehicleId != null 
+    final list = widget.vehicleId != null
         ? await _repository.getFinancialEntriesByVehicle(widget.vehicleId!)
         : await _repository.getFinancialEntries();
     setState(() {
@@ -44,14 +45,18 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
   void _applyFilters() {
     setState(() {
       _filteredEntries = _entries.where((e) {
-        final matchesQuery = _searchQuery.isEmpty || 
-            e.description.toLowerCase().contains(_searchQuery.toLowerCase()) || 
+        final matchesQuery =
+            _searchQuery.isEmpty ||
+            e.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
             e.category.toLowerCase().contains(_searchQuery.toLowerCase());
-            
-        final matchesType = _selectedType == FinancialFilter.all ||
-            (_selectedType == FinancialFilter.income && e.type == FinancialType.income) ||
-            (_selectedType == FinancialFilter.expense && e.type == FinancialType.expense);
-            
+
+        final matchesType =
+            _selectedType == FinancialFilter.all ||
+            (_selectedType == FinancialFilter.income &&
+                e.type == FinancialType.income) ||
+            (_selectedType == FinancialFilter.expense &&
+                e.type == FinancialType.expense);
+
         return matchesQuery && matchesType;
       }).toList();
     });
@@ -72,7 +77,9 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Status de pagamento atualizado para: ${!entry.isPaid ? "PAGO" : "PENDENTE"}'),
+        content: Text(
+          'Status de pagamento atualizado para: ${!entry.isPaid ? "PAGO" : "PENDENTE"}',
+        ),
         behavior: SnackBarBehavior.floating,
         backgroundColor: !entry.isPaid ? AppColors.success : AppColors.error,
       ),
@@ -83,9 +90,14 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
     AppDialogs.showModal(
       context: context,
       title: 'Excluir Lançamento',
-      content: Text('Tem certeza que deseja excluir o lançamento "${entry.description}"? Esta ação não pode ser desfeita.'),
+      content: Text(
+        'Tem certeza que deseja excluir o lançamento "${entry.description}"? Esta ação não pode ser desfeita.',
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
         ElevatedButton(
           onPressed: () {
             setState(() {
@@ -94,10 +106,16 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
             });
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Lançamento excluído com sucesso.'), behavior: SnackBarBehavior.floating),
+              const SnackBar(
+                content: Text('Lançamento excluído com sucesso.'),
+                behavior: SnackBarBehavior.floating,
+              ),
             );
           },
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.error,
+            foregroundColor: Colors.white,
+          ),
           child: const Text('Excluir'),
         ),
       ],
@@ -118,18 +136,35 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 8),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.outlineVariant, borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const SizedBox(height: 16),
             ListTile(
-              leading: Icon(entry.isPaid ? Icons.pending_actions_outlined : Icons.check_circle_outline, color: AppColors.primary),
-              title: Text(entry.isPaid ? 'Marcar como Pendente' : 'Marcar como Pago'),
+              leading: Icon(
+                entry.isPaid
+                    ? Icons.pending_actions_outlined
+                    : Icons.check_circle_outline,
+                color: AppColors.primary,
+              ),
+              title: Text(
+                entry.isPaid ? 'Marcar como Pendente' : 'Marcar como Pago',
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _togglePaymentStatus(entry);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.edit_outlined, color: AppColors.onSurfaceVariant),
+              leading: const Icon(
+                Icons.edit_outlined,
+                color: AppColors.onSurfaceVariant,
+              ),
               title: const Text('Editar Lançamento'),
               onTap: () {
                 Navigator.pop(context);
@@ -138,7 +173,10 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: AppColors.error),
-              title: const Text('Excluir Lançamento', style: TextStyle(color: AppColors.error)),
+              title: const Text(
+                'Excluir Lançamento',
+                style: TextStyle(color: AppColors.error),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _confirmDelete(entry);
@@ -158,7 +196,10 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
       appBar: AppBar(
         title: Text(
           'DETALHAMENTO DE FLUXO',
-          style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.bold),
+          style: AppTextStyles.labelLarge.copyWith(
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -170,7 +211,10 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
               children: [
                 // Search & Filter Section
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.md,
+                  ),
                   child: Column(
                     children: [
                       TextField(
@@ -180,7 +224,10 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
                           prefixIcon: const Icon(Icons.search),
                           filled: true,
                           fillColor: AppColors.surfaceContainerLow,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -198,9 +245,13 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
                 ),
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                      vertical: AppSpacing.md,
+                    ),
                     itemCount: _filteredEntries.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: AppSpacing.md),
                     itemBuilder: (context, index) {
                       final entry = _filteredEntries[index];
                       return _buildTransactionCard(entry);
@@ -242,7 +293,11 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  entry.category.toLowerCase().contains('manutenção') ? Icons.build_outlined : entry.category.toLowerCase().contains('multa') ? Icons.report_problem_outlined : Icons.payments_outlined,
+                  entry.category.toLowerCase().contains('manutenção')
+                      ? Icons.build_outlined
+                      : entry.category.toLowerCase().contains('multa')
+                      ? Icons.report_problem_outlined
+                      : Icons.payments_outlined,
                   color: amountColor,
                 ),
               ),
@@ -251,12 +306,26 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(entry.description, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                    Text(entry.category.toUpperCase(), style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, fontSize: 10)),
+                    Text(
+                      entry.description,
+                      style: AppTextStyles.labelLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      entry.category.toUpperCase(),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              IconButton(onPressed: () => _showEntryActions(entry), icon: const Icon(Icons.more_vert)),
+              IconButton(
+                onPressed: () => _showEntryActions(entry),
+                icon: const Icon(Icons.more_vert),
+              ),
             ],
           ),
           const Padding(
@@ -269,24 +338,47 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('VALOR', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
-                  Text('$sign${entry.amount.toStringAsFixed(2).replaceAll('.', ',')}', style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w900, color: amountColor)),
+                  Text(
+                    'VALOR',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    '$sign${entry.amount.toStringAsFixed(2).replaceAll('.', ',')}',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: amountColor,
+                    ),
+                  ),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('STATUS', style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant)),
+                  Text(
+                    'STATUS',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: entry.isPaid ? AppColors.successContainer : AppColors.errorContainer,
+                      color: entry.isPaid
+                          ? AppColors.successContainer
+                          : AppColors.errorContainer,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       entry.isPaid ? 'PAGO' : 'PENDENTE',
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: entry.isPaid ? AppColors.success : AppColors.error,
+                        color: entry.isPaid
+                            ? AppColors.success
+                            : AppColors.error,
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
                       ),
@@ -299,13 +391,26 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.onSurfaceVariant),
+              const Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: AppColors.onSurfaceVariant,
+              ),
               const SizedBox(width: 4),
               Text(_formatDate(entry.date), style: AppTextStyles.bodySmall),
               const Spacer(),
-              const Icon(Icons.directions_car_outlined, size: 14, color: AppColors.onSurfaceVariant),
+              const Icon(
+                Icons.directions_car_outlined,
+                size: 14,
+                color: AppColors.onSurfaceVariant,
+              ),
               const SizedBox(width: 4),
-              Text('Corolla ABC-1234', style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                'Corolla ABC-1234',
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ],
@@ -334,7 +439,10 @@ class _FinancialFlowDetailScreenState extends State<FinancialFlowDetailScreen> {
       ),
       backgroundColor: AppColors.surfaceContainerLow,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide.none),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide.none,
+      ),
       showCheckmark: false,
     );
   }

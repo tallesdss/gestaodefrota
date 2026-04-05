@@ -67,7 +67,9 @@ class _ManagerSalariesScreenState extends State<ManagerSalariesScreen> {
           children: [
             Text(
               'Gestão de Remuneração',
-              style: AppTextStyles.titleMedium.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.titleMedium.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.xl),
 
@@ -115,7 +117,11 @@ class _ManagerSalariesScreenState extends State<ManagerSalariesScreen> {
                       color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.payment, color: Colors.white, size: 32),
+                    child: const Icon(
+                      Icons.payment,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                 ],
               ),
@@ -128,10 +134,13 @@ class _ManagerSalariesScreenState extends State<ManagerSalariesScreen> {
               children: [
                 Text(
                   'Colaboradores',
-                  style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 TextButton.icon(
-                  onPressed: () => context.push(AppRoutes.adminManagerSalaryHistory),
+                  onPressed: () =>
+                      context.push(AppRoutes.adminManagerSalaryHistory),
                   icon: const Icon(Icons.open_in_new, size: 16),
                   label: const Text('Histórico Completo'),
                 ),
@@ -144,7 +153,8 @@ class _ManagerSalariesScreenState extends State<ManagerSalariesScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: managers.length,
-              separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
+              separatorBuilder: (context, index) =>
+                  const SizedBox(height: AppSpacing.md),
               itemBuilder: (context, index) {
                 final manager = managers[index];
                 return Container(
@@ -152,13 +162,17 @@ class _ManagerSalariesScreenState extends State<ManagerSalariesScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: AppColors.outlineVariant.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.1,
+                        ),
                         child: Text(
                           manager['name']![0],
                           style: TextStyle(
@@ -175,11 +189,15 @@ class _ManagerSalariesScreenState extends State<ManagerSalariesScreen> {
                           children: [
                             Text(
                               manager['name']!,
-                              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                              style: AppTextStyles.titleMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               manager['role']!,
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
@@ -196,9 +214,15 @@ class _ManagerSalariesScreenState extends State<ManagerSalariesScreen> {
                           ),
                           const SizedBox(height: 4),
                           InkWell(
-                            onTap: () => _showPaymentForm(context, managerName: manager['name']),
+                            onTap: () => _showPaymentForm(
+                              context,
+                              managerName: manager['name'],
+                            ),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
@@ -231,7 +255,8 @@ class _ManagerSalariesScreenState extends State<ManagerSalariesScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _SalaryPaymentBottomSheet(initialManager: managerName),
+      builder: (context) =>
+          _SalaryPaymentBottomSheet(initialManager: managerName),
     );
   }
 }
@@ -242,7 +267,8 @@ class _SalaryPaymentBottomSheet extends StatefulWidget {
   const _SalaryPaymentBottomSheet({this.initialManager});
 
   @override
-  State<_SalaryPaymentBottomSheet> createState() => _SalaryPaymentBottomSheetState();
+  State<_SalaryPaymentBottomSheet> createState() =>
+      _SalaryPaymentBottomSheetState();
 }
 
 class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
@@ -250,8 +276,17 @@ class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
   String? _selectedType = 'Adiantamento';
   late String _selectedManager;
 
-  final List<String> _types = ['Adiantamento', 'Saldo Salarial', 'Bônus', 'Outros'];
-  final List<String> _managers = ['Carlos Oliveira', 'Ana Paula', 'Roberto Silva'];
+  final List<String> _types = [
+    'Adiantamento',
+    'Saldo Salarial',
+    'Bônus',
+    'Outros',
+  ];
+  final List<String> _managers = [
+    'Carlos Oliveira',
+    'Ana Paula',
+    'Roberto Silva',
+  ];
 
   @override
   void initState() {
@@ -314,7 +349,9 @@ class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
             const SizedBox(height: AppSpacing.xl),
             Text(
               'Registrar Pagamento',
-              style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.bold),
+              style: AppTextStyles.headlineSmall.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppSpacing.xxl),
 
@@ -337,10 +374,7 @@ class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
             Text('Valor do Pagamento', style: AppTextStyles.labelMedium),
             const TextField(
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                prefixText: r'R$ ',
-                hintText: '0,00',
-              ),
+              decoration: InputDecoration(prefixText: r'R$ ', hintText: '0,00'),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -351,7 +385,9 @@ class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: AppColors.outlineVariant)),
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.outlineVariant),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -360,7 +396,11 @@ class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
                       DateFormat('dd / MM / yyyy').format(_selectedDate),
                       style: AppTextStyles.bodyMedium,
                     ),
-                    const Icon(Icons.calendar_today_outlined, color: AppColors.primary, size: 20),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                   ],
                 ),
               ),
@@ -382,8 +422,12 @@ class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
                   },
                   selectedColor: AppColors.primary.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
-                    color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.onSurfaceVariant,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 );
               }).toList(),
@@ -398,15 +442,22 @@ class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
                 onPressed: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Pagamento registrado com sucesso!')),
+                    const SnackBar(
+                      content: Text('Pagamento registrado com sucesso!'),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                child: const Text('Confirmar Pagamento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Confirmar Pagamento',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -415,4 +466,3 @@ class _SalaryPaymentBottomSheetState extends State<_SalaryPaymentBottomSheet> {
     );
   }
 }
-

@@ -91,6 +91,7 @@ class WorkshopDocument {
   final DateTime date;
   final double value;
   final String status; // 'Paid', 'Pending'
+  final String? imageUrl;
 
   WorkshopDocument({
     required this.id,
@@ -100,5 +101,6 @@ class WorkshopDocument {
     required this.date,
     required this.value,
     this.status = 'Paid',
+    this.imageUrl,
   });
 }

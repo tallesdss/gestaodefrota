@@ -9,7 +9,7 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     color: AppColors.onSurface,
   );
-  
+
   static TextStyle displayMedium = GoogleFonts.manrope(
     fontSize: 45,
     fontWeight: FontWeight.w700,
@@ -39,7 +39,7 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: AppColors.onSurface,
   );
-  
+
   // Body - Inter
   static TextStyle bodyLarge = GoogleFonts.inter(
     fontSize: 16,

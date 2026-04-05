@@ -40,10 +40,16 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
     _fetchLists();
     _selectedVehicleId = widget.contract?.vehicleId;
     _selectedDriverId = widget.contract?.driverId;
-    _weeklyValueController = TextEditingController(text: widget.contract?.weeklyValue.toString() ?? '');
-    _monthlyValueController = TextEditingController(text: widget.contract?.monthlyValue.toString() ?? '');
+    _weeklyValueController = TextEditingController(
+      text: widget.contract?.weeklyValue.toString() ?? '',
+    );
+    _monthlyValueController = TextEditingController(
+      text: widget.contract?.monthlyValue.toString() ?? '',
+    );
     _startDate = widget.contract?.startDate ?? DateTime.now();
-    _endDate = widget.contract?.endDate ?? DateTime.now().add(const Duration(days: 365));
+    _endDate =
+        widget.contract?.endDate ??
+        DateTime.now().add(const Duration(days: 365));
     _selectedStatus = widget.contract?.status ?? ContractStatus.active;
     _depositPaid = widget.contract?.depositPaid ?? false;
     _selectedType = widget.contract?.type ?? 'UBER';
@@ -75,7 +81,10 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
       appBar: AppBar(
         title: Text(
           isEditing ? 'EDITAR CONTRATO' : 'NOVO CONTRATO',
-          style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.bold),
+          style: AppTextStyles.labelLarge.copyWith(
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -101,9 +110,23 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                       const SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
-                          Expanded(child: _buildTextField(_weeklyValueController, 'Valor Semanal', Icons.payments_outlined, keyboardType: TextInputType.number)),
+                          Expanded(
+                            child: _buildTextField(
+                              _weeklyValueController,
+                              'Valor Semanal',
+                              Icons.payments_outlined,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
                           const SizedBox(width: AppSpacing.md),
-                          Expanded(child: _buildTextField(_monthlyValueController, 'Valor Mensal', Icons.account_balance_wallet_outlined, keyboardType: TextInputType.number)),
+                          Expanded(
+                            child: _buildTextField(
+                              _monthlyValueController,
+                              'Valor Mensal',
+                              Icons.account_balance_wallet_outlined,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -111,16 +134,29 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                         label: 'Tipo de Contrato',
                         initialValue: _selectedType,
                         items: ['UBER', 'PREFEITURA'],
-                        onChanged: (val) => setState(() => _selectedType = val!),
+                        onChanged: (val) =>
+                            setState(() => _selectedType = val!),
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       _buildSectionTitle('DATAS E VIGÊNCIA'),
                       const SizedBox(height: AppSpacing.md),
                       Row(
                         children: [
-                          Expanded(child: _buildDatePicker('Data Início', _startDate, (d) => setState(() => _startDate = d))),
+                          Expanded(
+                            child: _buildDatePicker(
+                              'Data Início',
+                              _startDate,
+                              (d) => setState(() => _startDate = d),
+                            ),
+                          ),
                           const SizedBox(width: AppSpacing.md),
-                          Expanded(child: _buildDatePicker('Data Fim', _endDate, (d) => setState(() => _endDate = d))),
+                          Expanded(
+                            child: _buildDatePicker(
+                              'Data Fim',
+                              _endDate,
+                              (d) => setState(() => _endDate = d),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.xl),
@@ -130,15 +166,21 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                         label: 'Status do Contrato',
                         initialValue: _selectedStatus,
                         items: ContractStatus.values,
-                        onChanged: (val) => setState(() => _selectedStatus = val!),
+                        onChanged: (val) =>
+                            setState(() => _selectedStatus = val!),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       SwitchListTile(
-                        title: Text('Caução Pago?', style: AppTextStyles.labelLarge),
+                        title: Text(
+                          'Caução Pago?',
+                          style: AppTextStyles.labelLarge,
+                        ),
                         value: _depositPaid,
                         onChanged: (val) => setState(() => _depositPaid = val),
                         activeThumbColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         contentPadding: EdgeInsets.zero,
                       ),
                       const SizedBox(height: AppSpacing.xxl),
@@ -147,21 +189,32 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                         height: 56,
                         child: ElevatedButton(
                           onPressed: () {
-                            if (_formKey.currentState!.validate() && _selectedVehicleId != null && _selectedDriverId != null) {
+                            if (_formKey.currentState!.validate() &&
+                                _selectedVehicleId != null &&
+                                _selectedDriverId != null) {
                               Navigator.pop(context);
-                            } else if (_selectedVehicleId == null || _selectedDriverId == null) {
+                            } else if (_selectedVehicleId == null ||
+                                _selectedDriverId == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Selecione um veículo e um motorista')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Selecione um veículo e um motorista',
+                                  ),
+                                ),
                               );
                             }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
                           child: Text(
                             isEditing ? 'SALVAR CONTRATO' : 'CRIAR CONTRATO',
-                            style: AppTextStyles.labelLarge.copyWith(color: AppColors.onPrimary),
+                            style: AppTextStyles.labelLarge.copyWith(
+                              color: AppColors.onPrimary,
+                            ),
                           ),
                         ),
                       ),
@@ -204,17 +257,19 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
       initialValue: _selectedDriverId,
       hint: const Text('Selecione um Motorista'),
       items: _drivers.map((d) {
-        return DropdownMenuItem<String>(
-          value: d.id,
-          child: Text(d.name),
-        );
+        return DropdownMenuItem<String>(value: d.id, child: Text(d.name));
       }).toList(),
       onChanged: (val) => setState(() => _selectedDriverId = val),
       decoration: _inputDecoration('Motorista', Icons.person_outline),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {TextInputType? keyboardType}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType? keyboardType,
+  }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -223,7 +278,11 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
     );
   }
 
-  Widget _buildDatePicker(String label, DateTime date, Function(DateTime) onSelected) {
+  Widget _buildDatePicker(
+    String label,
+    DateTime date,
+    Function(DateTime) onSelected,
+  ) {
     return InkWell(
       onTap: () async {
         final d = await showDatePicker(
@@ -236,7 +295,10 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
       },
       child: InputDecorator(
         decoration: _inputDecoration(label, Icons.calendar_today_outlined),
-        child: Text(DateFormat('dd/MM/yyyy').format(date), style: AppTextStyles.labelLarge),
+        child: Text(
+          DateFormat('dd/MM/yyyy').format(date),
+          style: AppTextStyles.labelLarge,
+        ),
       ),
     );
   }

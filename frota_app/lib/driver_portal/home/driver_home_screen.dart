@@ -48,10 +48,7 @@ class DriverHomeScreen extends StatelessWidget {
                 letterSpacing: 2,
               ),
             ),
-            Text(
-              'João da Silva',
-              style: AppTextStyles.headlineMedium,
-            ),
+            Text('João da Silva', style: AppTextStyles.headlineMedium),
           ],
         ),
         GestureDetector(
@@ -103,10 +100,7 @@ class DriverHomeScreen extends StatelessWidget {
                       letterSpacing: 1,
                     ),
                   ),
-                  Text(
-                    'Volkswagen Gol',
-                    style: AppTextStyles.headlineSmall,
-                  ),
+                  Text('Volkswagen Gol', style: AppTextStyles.headlineSmall),
                   Text(
                     'PLACA: ABC-1234',
                     style: AppTextStyles.labelMedium.copyWith(
@@ -173,9 +167,7 @@ class DriverHomeScreen extends StatelessWidget {
         ),
         Text(
           value,
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -303,7 +295,7 @@ class DriverHomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-             const Spacer(flex: 2), // Keeps the same button size
+            const Spacer(flex: 2), // Keeps the same button size
           ],
         ),
       ],
@@ -398,7 +390,10 @@ class DriverHomeScreen extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
               child: Icon(icon, color: AppColors.primary),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -406,8 +401,18 @@ class DriverHomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant)),
+                  Text(
+                    title,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),

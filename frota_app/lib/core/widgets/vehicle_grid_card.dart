@@ -46,18 +46,24 @@ class VehicleGridCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
                       color: AppColors.surfaceContainerLow,
-                      child: const Icon(Icons.directions_car, color: AppColors.primary, size: 40),
+                      child: const Icon(
+                        Icons.directions_car,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
                     ),
                   ),
                   Positioned(
                     top: 8,
                     right: 8,
                     child: StatusBadge(
-                      label: vehicle.status == VehicleStatus.rented 
-                          ? 'ALUGADO' 
-                          : (vehicle.status == VehicleStatus.available 
-                              ? 'LIVRE' 
-                              : (vehicle.status == VehicleStatus.sold ? 'VENDIDO' : 'MANUTENÇÃO')),
+                      label: vehicle.status == VehicleStatus.rented
+                          ? 'ALUGADO'
+                          : (vehicle.status == VehicleStatus.available
+                                ? 'LIVRE'
+                                : (vehicle.status == VehicleStatus.sold
+                                      ? 'VENDIDO'
+                                      : 'MANUTENÇÃO')),
                       type: _getTypeByStatus(vehicle.status),
                     ),
                   ),

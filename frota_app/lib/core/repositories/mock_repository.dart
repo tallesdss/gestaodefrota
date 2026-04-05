@@ -6,6 +6,8 @@ import '../../models/maintenance_entry.dart';
 import '../../models/inspection.dart';
 import '../../models/financial_entry.dart';
 import '../../models/timeline_item.dart';
+import '../../models/workshop.dart';
+import '../../models/expense_category.dart';
 import '../../mock/mock_vehicles.dart';
 import '../../mock/mock_drivers.dart';
 import '../../mock/mock_managers.dart';
@@ -14,6 +16,8 @@ import '../../mock/mock_maintenances.dart';
 import '../../mock/mock_inspections.dart';
 import '../../mock/mock_financials.dart';
 import '../../mock/mock_timeline.dart';
+import '../../mock/mock_workshops.dart';
+import '../../mock/mock_expense_categories.dart';
 
 class MockRepository {
   static final MockRepository _instance = MockRepository._internal();
@@ -49,12 +53,26 @@ class MockRepository {
     return mockContracts;
   }
 
+  // Workshops
+  Future<List<Workshop>> getWorkshops() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return mockWorkshops;
+  }
+
+  // Expense Categories
+  Future<List<ExpenseCategory>> getExpenseCategories() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return mockExpenseCategories;
+  }
+
   Future<List<MaintenanceEntry>> getMaintenances() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return mockMaintenances;
   }
 
-  Future<List<MaintenanceEntry>> getMaintenancesByVehicle(String vehicleId) async {
+  Future<List<MaintenanceEntry>> getMaintenancesByVehicle(
+    String vehicleId,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 300));
     return mockMaintenances.where((m) => m.vehicleId == vehicleId).toList();
   }
@@ -71,6 +89,19 @@ class MockRepository {
   Future<void> addMaintenance(MaintenanceEntry entry) async {
     await Future.delayed(const Duration(milliseconds: 300));
     mockMaintenances.add(entry);
+  }
+
+  Future<void> updateMaintenance(MaintenanceEntry updated) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final index = mockMaintenances.indexWhere((m) => m.id == updated.id);
+    if (index != -1) {
+      mockMaintenances[index] = updated;
+    }
+  }
+
+  Future<void> deleteMaintenance(String id) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    mockMaintenances.removeWhere((m) => m.id == id);
   }
 
   // Inspections
@@ -112,22 +143,32 @@ class MockRepository {
     return mockFinancialEntries;
   }
 
-  Future<List<FinancialEntry>> getFinancialEntriesByVehicle(String vehicleId) async {
+  Future<List<FinancialEntry>> getFinancialEntriesByVehicle(
+    String vehicleId,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 300));
     return mockFinancialEntries.where((f) => f.vehicleId == vehicleId).toList();
   }
 
-  Future<List<FinancialEntry>> getFinancialEntriesByDriver(String driverId) async {
+  Future<List<FinancialEntry>> getFinancialEntriesByDriver(
+    String driverId,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 300));
     return mockFinancialEntries.where((f) => f.driverId == driverId).toList();
   }
 
   // Timeline
-  Future<List<TimelineItem>> getDriverTimeline({required String driverId, int page = 1, int pageSize = 5}) async {
+  Future<List<TimelineItem>> getDriverTimeline({
+    required String driverId,
+    int page = 1,
+    int pageSize = 5,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 400));
     final start = (page - 1) * pageSize;
     if (start >= mockTimeline.length) return [];
-    final end = (start + pageSize) > mockTimeline.length ? mockTimeline.length : (start + pageSize);
+    final end = (start + pageSize) > mockTimeline.length
+        ? mockTimeline.length
+        : (start + pageSize);
     return mockTimeline.sublist(start, end);
   }
 

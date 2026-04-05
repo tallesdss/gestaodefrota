@@ -88,7 +88,11 @@ class DriverActivityTimelineScreen extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios, color: AppColors.onSurface, size: 20),
+            icon: const Icon(
+              Icons.arrow_back_ios,
+              color: AppColors.onSurface,
+              size: 20,
+            ),
             padding: EdgeInsets.zero,
             alignment: Alignment.centerLeft,
           ),
@@ -100,10 +104,7 @@ class DriverActivityTimelineScreen extends StatelessWidget {
               letterSpacing: 2,
             ),
           ),
-          Text(
-            'Linha do Tempo',
-            style: AppTextStyles.headlineMedium,
-          ),
+          Text('Linha do Tempo', style: AppTextStyles.headlineMedium),
         ],
       ),
     );
@@ -165,7 +166,9 @@ class DriverActivityTimelineScreen extends StatelessWidget {
                     Text(
                       time,
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
+                        color: AppColors.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                   ],

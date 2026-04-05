@@ -37,14 +37,17 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
     final inspections = await _repository.getInspections();
     final drivers = await _repository.getDrivers();
     final vehicles = await _repository.getVehicles();
-    
+
     setState(() {
       _inspections = inspections;
       _filteredInspections = inspections;
       _driverMap = {for (var d in drivers) d.id: d};
       _vehicleMap = {for (var v in vehicles) v.id: v};
-      
-      _cities = ['Todas', ...drivers.map((d) => d.city).whereType<String>().toSet()];
+
+      _cities = [
+        'Todas',
+        ...drivers.map((d) => d.city).whereType<String>().toSet(),
+      ];
       _isLoading = false;
     });
   }
@@ -70,7 +73,10 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
       appBar: AppBar(
         title: Text(
           'AUDITORIA DE VISTORIAS',
-          style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, fontWeight: FontWeight.bold),
+          style: AppTextStyles.labelLarge.copyWith(
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -88,7 +94,9 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                       Expanded(
                         child: Text(
                           'FILTRAR POR CIDADE:',
-                          style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
                         ),
                       ),
                       Container(
@@ -103,11 +111,17 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                             items: _cities.map((city) {
                               return DropdownMenuItem(
                                 value: city,
-                                child: Text(city, style: AppTextStyles.bodySmall),
+                                child: Text(
+                                  city,
+                                  style: AppTextStyles.bodySmall,
+                                ),
                               );
                             }).toList(),
                             onChanged: (val) => _applyFilter(val!),
-                            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ),
@@ -116,7 +130,9 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
                     child: ListView.builder(
                       itemCount: _filteredInspections.length,
                       itemBuilder: (context, index) {
@@ -124,132 +140,187 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
                         final driver = _driverMap[inspection.driverId];
                         final vehicle = _vehicleMap[inspection.vehicleId];
 
-                  return InkWell(
-                    onTap: () => context.push(AppRoutes.adminInspectionDetail.replaceAll(':id', inspection.id)),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerLowest,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.ambientShadow,
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundImage: driver != null ? NetworkImage(driver.avatarUrl) : null,
-                                backgroundColor: AppColors.surfaceContainerLow,
-                                child: driver == null ? const Icon(Icons.person) : null,
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      driver?.name ?? 'Motorista não identificado',
-                                      style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
-                                    ),
-                                    Text(
-                                      vehicle != null 
-                                        ? '${vehicle.model} (${vehicle.year})' 
-                                        : 'Veículo não identificado',
-                                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: inspection.type == InspectionType.checkin ? AppColors.successContainer : AppColors.tertiaryContainer,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  inspection.type == InspectionType.checkin ? 'CHECK-IN' : 'CHECK-OUT',
-                                  style: AppTextStyles.labelSmall.copyWith(
-                                    color: inspection.type == InspectionType.checkin ? AppColors.success : AppColors.tertiary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              _buildStatusIndicator(inspection.status),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Text(
-                            'REGISTRO FOTOGRÁFICO',
-                            style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant, letterSpacing: 1.0),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          SizedBox(
-                            height: 80,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: inspection.photos.length,
-                              separatorBuilder: (_, __) => const SizedBox(width: 8),
-                              itemBuilder: (context, i) {
-                                final photo = inspection.photos[i];
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    photo.url,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                      width: 80,
-                                      height: 80,
-                                      color: AppColors.surfaceContainerLow,
-                                      child: const Icon(Icons.image_not_supported_outlined),
-                                    ),
-                                  ),
-                                );
-                              },
+                        return InkWell(
+                          onTap: () => context.push(
+                            AppRoutes.adminInspectionDetail.replaceAll(
+                              ':id',
+                              inspection.id,
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.md),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.onSurfaceVariant),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _formatDate(inspection.dateTime),
-                                    style: AppTextStyles.bodySmall,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            margin: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceContainerLowest,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.ambientShadow,
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundImage: driver != null
+                                          ? NetworkImage(driver.avatarUrl)
+                                          : null,
+                                      backgroundColor:
+                                          AppColors.surfaceContainerLow,
+                                      child: driver == null
+                                          ? const Icon(Icons.person)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: AppSpacing.md),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            driver?.name ??
+                                                'Motorista não identificado',
+                                            style: AppTextStyles.labelLarge
+                                                .copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          ),
+                                          Text(
+                                            vehicle != null
+                                                ? '${vehicle.model} (${vehicle.year})'
+                                                : 'Veículo não identificado',
+                                            style: AppTextStyles.bodySmall
+                                                .copyWith(
+                                                  color: AppColors
+                                                      .onSurfaceVariant,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            inspection.type ==
+                                                InspectionType.checkin
+                                            ? AppColors.successContainer
+                                            : AppColors.tertiaryContainer,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        inspection.type ==
+                                                InspectionType.checkin
+                                            ? 'CHECK-IN'
+                                            : 'CHECK-OUT',
+                                        style: AppTextStyles.labelSmall
+                                            .copyWith(
+                                              color:
+                                                  inspection.type ==
+                                                      InspectionType.checkin
+                                                  ? AppColors.success
+                                                  : AppColors.tertiary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildStatusIndicator(inspection.status),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                Text(
+                                  'REGISTRO FOTOGRÁFICO',
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                    letterSpacing: 1.0,
                                   ),
-                                ],
-                              ),
-                              if (inspection.hasNewDamage)
-                                const StatusBadge(label: 'REGISTRO DE AVARIA', type: BadgeType.error)
-                              else
-                                const StatusBadge(label: 'VISTORIA OK', type: BadgeType.active),
-                            ],
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                SizedBox(
+                                  height: 80,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: inspection.photos.length,
+                                    separatorBuilder: (_, __) =>
+                                        const SizedBox(width: 8),
+                                    itemBuilder: (context, i) {
+                                      final photo = inspection.photos[i];
+                                      return ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          photo.url,
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Container(
+                                            width: 80,
+                                            height: 80,
+                                            color:
+                                                AppColors.surfaceContainerLow,
+                                            child: const Icon(
+                                              Icons
+                                                  .image_not_supported_outlined,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.calendar_today_outlined,
+                                          size: 14,
+                                          color: AppColors.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _formatDate(inspection.dateTime),
+                                          style: AppTextStyles.bodySmall,
+                                        ),
+                                      ],
+                                    ),
+                                    if (inspection.hasNewDamage)
+                                      const StatusBadge(
+                                        label: 'REGISTRO DE AVARIA',
+                                        type: BadgeType.error,
+                                      )
+                                    else
+                                      const StatusBadge(
+                                        label: 'VISTORIA OK',
+                                        type: BadgeType.active,
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 

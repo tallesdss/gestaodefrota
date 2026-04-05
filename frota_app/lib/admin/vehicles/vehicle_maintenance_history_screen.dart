@@ -13,7 +13,8 @@ class MaintenanceHistoryScreen extends StatefulWidget {
   const MaintenanceHistoryScreen({super.key, required this.vehicleId});
 
   @override
-  State<MaintenanceHistoryScreen> createState() => _MaintenanceHistoryScreenState();
+  State<MaintenanceHistoryScreen> createState() =>
+      _MaintenanceHistoryScreenState();
 }
 
 class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
@@ -40,11 +41,20 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_vehicle == null) return const Scaffold(body: Center(child: Text('Veículo não encontrado')));
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_vehicle == null) {
+      return const Scaffold(
+        body: Center(child: Text('Veículo não encontrado')),
+      );
+    }
 
     final dateFormat = DateFormat('dd/MM/yyyy');
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
+    final currencyFormat = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: r'R$',
+    );
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -52,10 +62,15 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Histórico de Manutenções', style: AppTextStyles.headlineSmall),
+            Text(
+              'Histórico de Manutenções',
+              style: AppTextStyles.headlineSmall,
+            ),
             Text(
               '${_vehicle!.plate} - ${_vehicle!.brand} ${_vehicle!.model}',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -65,7 +80,10 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
       ),
       body: _maintenances.isEmpty
           ? Center(
-              child: Text('Nenhuma manutenção registrada para este veículo', style: AppTextStyles.bodyMedium),
+              child: Text(
+                'Nenhuma manutenção registrada para este veículo',
+                style: AppTextStyles.bodyMedium,
+              ),
             )
           : ListView.builder(
               padding: const EdgeInsets.all(AppSpacing.xl),
@@ -88,10 +106,17 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
                     ],
                   ),
                   child: ListTile(
-                    onTap: () => context.push('/admin/maintenance/detail/${m.id}'),
+                    onTap: () =>
+                        context.push('/admin/maintenance/detail/${m.id}'),
                     leading: CircleAvatar(
-                      backgroundColor: AppColors.primaryContainer.withValues(alpha: 0.2),
-                      child: Icon(_getMaintenanceIcon(m.type), color: AppColors.primary, size: 20),
+                      backgroundColor: AppColors.primaryContainer.withValues(
+                        alpha: 0.2,
+                      ),
+                      child: Icon(
+                        _getMaintenanceIcon(m.type),
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                     ),
                     title: Text(m.description, style: AppTextStyles.labelLarge),
                     subtitle: Text(
@@ -104,7 +129,9 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
                       children: [
                         Text(
                           currencyFormat.format(m.cost),
-                          style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                          style: AppTextStyles.labelLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           isPaid ? 'PAGO' : 'PENDENTE',
@@ -120,7 +147,9 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/admin/maintenance/form?vehicleId=${widget.vehicleId}'),
+        onPressed: () => context.push(
+          '/admin/maintenance/form?vehicleId=${widget.vehicleId}',
+        ),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -129,16 +158,26 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
 
   IconData _getMaintenanceIcon(MaintenanceType type) {
     switch (type) {
-      case MaintenanceType.oilChange: return Icons.oil_barrel_outlined;
-      case MaintenanceType.tires: return Icons.tire_repair_outlined;
-      case MaintenanceType.brakes: return Icons.e_mobiledata_outlined;
-      case MaintenanceType.suspension: return Icons.agriculture_outlined;
-      case MaintenanceType.generalRevision: return Icons.build_circle_outlined;
-      case MaintenanceType.motor: return Icons.engineering_outlined;
-      case MaintenanceType.transmission: return Icons.settings_input_component_outlined;
-      case MaintenanceType.electrical: return Icons.electrical_services_outlined;
-      case MaintenanceType.bodywork: return Icons.format_paint_outlined;
-      default: return Icons.build_outlined;
+      case MaintenanceType.oilChange:
+        return Icons.oil_barrel_outlined;
+      case MaintenanceType.tires:
+        return Icons.tire_repair_outlined;
+      case MaintenanceType.brakes:
+        return Icons.e_mobiledata_outlined;
+      case MaintenanceType.suspension:
+        return Icons.agriculture_outlined;
+      case MaintenanceType.generalRevision:
+        return Icons.build_circle_outlined;
+      case MaintenanceType.motor:
+        return Icons.engineering_outlined;
+      case MaintenanceType.transmission:
+        return Icons.settings_input_component_outlined;
+      case MaintenanceType.electrical:
+        return Icons.electrical_services_outlined;
+      case MaintenanceType.bodywork:
+        return Icons.format_paint_outlined;
+      default:
+        return Icons.build_outlined;
     }
   }
 }

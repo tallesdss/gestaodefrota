@@ -14,9 +14,7 @@ class AdminHeader extends StatelessWidget {
     return Container(
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-      ),
+      decoration: const BoxDecoration(color: AppColors.surfaceContainerLowest),
       child: Row(
         children: [
           // Global Search Trigger
@@ -34,12 +32,17 @@ class AdminHeader extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      const Icon(Icons.search, color: AppColors.onSurfaceVariant),
+                      const Icon(
+                        Icons.search,
+                        color: AppColors.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 12),
                       Text(
                         'Buscar veículo, placa ou motorista...',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                          color: AppColors.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ],

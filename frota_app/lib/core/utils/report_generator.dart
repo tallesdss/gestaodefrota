@@ -4,7 +4,9 @@ import 'package:printing/printing.dart';
 import '../../models/financial_entry.dart';
 
 class ReportGenerator {
-  static Future<void> generateFinancialReport(List<FinancialEntry> entries) async {
+  static Future<void> generateFinancialReport(
+    List<FinancialEntry> entries,
+  ) async {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -13,18 +15,25 @@ class ReportGenerator {
         build: (context) => [
           pw.Header(
             level: 0,
-            child: pw.Text('RELATÓRIO FINANCEIRO - GESTÃO DE FROTA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18)),
+            child: pw.Text(
+              'RELATÓRIO FINANCEIRO - GESTÃO DE FROTA',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18),
+            ),
           ),
           pw.SizedBox(height: 20),
           pw.TableHelper.fromTextArray(
             headers: ['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor'],
-            data: entries.map((e) => [
-              '${e.date.day}/${e.date.month}/${e.date.year}',
-              e.type == FinancialType.income ? 'RECEITA' : 'DESPESA',
-              e.category,
-              e.description,
-              'R\$ ${e.amount.toStringAsFixed(2)}'
-            ]).toList(),
+            data: entries
+                .map(
+                  (e) => [
+                    '${e.date.day}/${e.date.month}/${e.date.year}',
+                    e.type == FinancialType.income ? 'RECEITA' : 'DESPESA',
+                    e.category,
+                    e.description,
+                    'R\$ ${e.amount.toStringAsFixed(2)}',
+                  ],
+                )
+                .toList(),
             headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
             headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
             cellAlignment: pw.Alignment.centerLeft,
@@ -41,6 +50,8 @@ class ReportGenerator {
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
   }
 }

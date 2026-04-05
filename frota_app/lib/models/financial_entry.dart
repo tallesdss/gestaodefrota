@@ -1,7 +1,4 @@
-enum FinancialType { 
-  income, 
-  expense 
-}
+enum FinancialType { income, expense }
 
 class FinancialEntry {
   final String id;

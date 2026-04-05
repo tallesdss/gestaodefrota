@@ -10,10 +10,12 @@ class DriverOnboardingContractScreen extends StatefulWidget {
   const DriverOnboardingContractScreen({super.key});
 
   @override
-  State<DriverOnboardingContractScreen> createState() => _DriverOnboardingContractScreenState();
+  State<DriverOnboardingContractScreen> createState() =>
+      _DriverOnboardingContractScreenState();
 }
 
-class _DriverOnboardingContractScreenState extends State<DriverOnboardingContractScreen> {
+class _DriverOnboardingContractScreenState
+    extends State<DriverOnboardingContractScreen> {
   bool _accepted = false;
   bool _scrolledToEnd = false;
   final ScrollController _scrollController = ScrollController();
@@ -22,7 +24,9 @@ class _DriverOnboardingContractScreenState extends State<DriverOnboardingContrac
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      if (_scrollController.hasClients && _scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 10) {
+      if (_scrollController.hasClients &&
+          _scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 10) {
         if (!_scrolledToEnd) {
           setState(() {
             _scrolledToEnd = true;
@@ -46,9 +50,7 @@ class _DriverOnboardingContractScreenState extends State<DriverOnboardingContrac
         child: Column(
           children: [
             _buildHeader(),
-            Expanded(
-              child: _buildContractBody(),
-            ),
+            Expanded(child: _buildContractBody()),
             _buildActionArea(),
           ],
         ),
@@ -206,7 +208,9 @@ class _DriverOnboardingContractScreenState extends State<DriverOnboardingContrac
           AppButton(
             label: 'ASSINAR DIGITALMENTE',
             isFullWidth: true,
-            onPressed: _accepted ? () => context.push(AppRoutes.driverProfileSetup) : null,
+            onPressed: _accepted
+                ? () => context.push(AppRoutes.driverProfileSetup)
+                : null,
           ),
         ],
       ),
