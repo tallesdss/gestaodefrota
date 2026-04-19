@@ -71,7 +71,10 @@ import '../../super_admin/onboarding/super_admin_login_screen.dart';
 import '../../super_admin/dashboard/super_admin_dashboard_screen.dart';
 import '../../super_admin/widgets/super_admin_scaffold.dart';
 import '../../super_admin/companies/company_list_screen.dart';
-import '../../super_admin/plans/plans_screen.dart';
+import '../../super_admin/plans/plan_management_screen.dart';
+import '../../super_admin/billing/billing_management_screen.dart';
+import '../../super_admin/audit/audit_log_screen.dart';
+import '../../super_admin/companies/company_detail_screen.dart';
 
 class AppRoutes {
   static const String root = '/selection';
@@ -83,6 +86,9 @@ class AppRoutes {
   static const String superAdminDashboard = '/super-admin/dashboard';
   static const String superAdminCompanies = '/super-admin/companies';
   static const String superAdminPlans = '/super-admin/plans';
+  static const String superAdminBilling = '/super-admin/billing';
+  static const String superAdminAudit = '/super-admin/audit';
+  static const String superAdminCompanyDetail = '/super-admin/companies/:id';
   static const String adminVehicleList = '/admin/vehicles';
   static const String adminVehicleDetail = '/admin/vehicles/detail/:id';
   static const String adminDriverList = '/admin/drivers';
@@ -194,7 +200,22 @@ class AppRoutes {
           ),
           GoRoute(
             path: superAdminPlans,
-            builder: (context, state) => const PlansScreen(),
+            builder: (context, state) => const PlanManagementScreen(),
+          ),
+          GoRoute(
+            path: superAdminBilling,
+            builder: (context, state) => const BillingManagementScreen(),
+          ),
+          GoRoute(
+            path: superAdminAudit,
+            builder: (context, state) => const AuditLogScreen(),
+          ),
+          GoRoute(
+            path: superAdminCompanyDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CompanyDetailScreen(companyId: id);
+            },
           ),
           // Add other super admin routes here as they are implemented
         ],

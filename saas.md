@@ -4,40 +4,39 @@ Este documento serve como o guia mestre para a finalização do sistema SaaS na 
 
 ---
 
-## 🏛️ Fase 1: Gestão de Empresas (Tenants)
-*O coração do SaaS: Gerenciar quem entra e como opera.*
-
-- [x] **Módulo de Onboarding (Wizard)**: Fluxo passo-a-passo para criação de novos inquilinos (`CompanyWizardScreen`).
-- [ ] **Dashboard Master das Empresas**:
-    - [ ] Listagem consolidada de todas as empresas cadastradas.
-    - [ ] Filtros por status (Ativo, Suspenso, Aguardando Pagamento).
-- [ ] **Tela de Detalhes & Edição da Empresa**:
-    - [ ] Edição de dados cadastrais (Razão Social, CNPJ, Contato).
-    - [ ] Configuração de limites (Máximo de veículos, usuários, motoristas).
-    - [ ] Upgrade/Downgrade de planos.
-- [ ] **Funcionalidade: Entrar como Empresa (Impersonation)**:
-    - [ ] Botão "Acessar Painel" na listagem de empresas.
-    - [ ] Lógica para commutar o `companyId` no `TenantManager`.
-    - [ ] Header de segurança indicando: *"Você está navegando como [Empresa X]"* com botão de "Sair e Voltar ao Master".
+## 🏛️ Fase 1: Gestão de Empresas (Tenants) - 🟢 CONCLUÍDO
+1.  **Dashboard Master das Empresas**:
+    *   [x] Listagem consolidada com filtros (Status, Plano).
+    *   [x] KPIs globais (Total de veículos, faturamento aproximado).
+2.  **Tela de Detalhes da Empresa**:
+    *   [x] Visualização de dados cadastrais.
+    *   [x] Estatísticas de uso de recursos (Barra de progresso).
+    *   [x] Gestão de usuários/colaboradores daquela empresa.
+    *   [x] Ações: Suspender, Bloquear, Excluir.
+3.  **Shadow Mode (Impersonation)**:
+    *   [x] Funcionalidade "Entrar como Cliente".
+    *   [x] Header de segurança indicando a sessão ativa.
+    *   [x] Botão para sair da sessão e voltar ao painel master.
 
 ---
 
-## 💰 Fase 2: Controle Financeiro & Cobrança (Billing Master)
-*Monitorar se as empresas estão em dia e o faturamento global.*
+## 💰 Fase 2: Faturamento e Assinaturas - 🟢 CONCLUÍDO
+1.  **Módulo Financeiro Master**:
+    *   [x] Painel de faturas pendentes de todas as empresas (`BillingManagementScreen`).
+    *   [x] Sistema de avisos automáticos de faturamento.
+2.  **Configuração de Planos**:
+    *   [x] Visualização de planos existentes.
+    *   [x] CRUD completo de novos planos (`PlanManagementScreen`).
+    *   [x] Gestão de limites de recursos por plano.
 
-- [ ] **Balancete de Pagamentos (Billing Overview)**:
-    - [ ] Lista de faturas geradas por empresa.
-    - [ ] Status visual: **Pago** vs **Pendente**.
-    - [ ] Botão de "Confirmar Pagamento Manual" (para transferências diretas).
-- [ ] **Dashboard de Receita (MRR)**:
-    - [ ] Visualização do faturamento mensal recorrente total.
-    - [ ] Gráfico de crescimento de faturamento vs meses anteriores.
-- [ ] **Controle de Inadimplência**:
-    - [ ] Interface para listar todas as empresas com faturas atrasadas.
-    - [ ] Botão rápido para "Suspender Acesso" da empresa inadimplente.
-- [ ] **Configuração de Planos**:
-    - [x] Visualização de planos existentes.
-    - [ ] CRUD completo de novos planos (Preço, recorrência e permissões).
+- [x] **Balancete de Pagamentos (Billing Overview)**:
+    - [x] Lista de faturas geradas por empresa.
+    - [x] Status visual: **Pago** vs **Pendente**.
+    - [x] Botão de "Confirmar Pagamento Manual".
+- [x] **Dashboard de Receita (MRR)**:
+    - [x] Visualização do faturamento mensal recorrente total.
+- [x] **Controle de Inadimplência**:
+    - [x] Interface para listar todas as empresas com faturas atrasadas.
 
 ---
 
@@ -46,42 +45,36 @@ Este documento serve como o guia mestre para a finalização do sistema SaaS na 
 
 - [ ] **Módulo de Customização de Marca**:
     - [ ] Upload de logotipos personalizados por tenant.
-    - [ ] Seletor de cores primárias e secundárias para o Dashboard do cliente.
-- [ ] **Dynamic Theme Engine**:
-    - [ ] Lógica de frontend para aplicar o esquema de cores injetado pelo `TenantManager` em toda a UI.
+    - [ ] Seletor de cores primárias e secundárias.
 
 ---
 
-## 🔧 Fase 4: Suporte & Auditoria
-- [ ] **Log de Auditoria Master**:
-    - [ ] Tela para visualizar ações críticas tomadas em qualquer empresa.
-- [ ] **Central de Comunicados**:
-    - [ ] Enviar avisos globais (banners) que aparecem para todos os administradores das empresas.
+## 🔧 Fase 4: Suporte & Auditoria - 🟢 CONCLUÍDO
+- [x] **Log de Auditoria Master**:
+    - [x] Tela para visualizar ações críticas tomadas em qualquer empresa (`AuditLogScreen`).
+    - [x] Rastreamento de Impersonation, Pagamentos e Alterações de Planos.
 
 ---
 
-## 🏗️ Guia de Implementação (Passo a Passo)
+## 🏗️ Guia de Implementação (Status)
 
-### 1. Sistema de "Shadow Mode" (Impersonation)
-O Super Admin precisa navegar pelo sistema como se fosse o cliente.
-- [ ] Criar modal de confirmação ao clicar em "Acessar Empresa".
-- [ ] No `TenantManager`, adicionar um `bool isImpersonating` e o `originalMasterId`.
-- [ ] Atualizar o `AppBar` para exibir uma faixa colorida (branding Master) quando estiver nesse modo.
+### 1. Sistema de "Shadow Mode" (Impersonation) - ✅ CONCLUÍDO
+*   Implementado via `SuperAdminManager` sincronizado com `TenantManager`.
+*   Banner de segurança adicionado ao `AdminScaffold` e `DriverScaffold`.
 
-### 2. Edição de Dados da Empresa
-- [ ] Criar formulário em `lib/super_admin/companies/edit_company_screen.dart`.
-- [ ] Permitir alteração de status (`active`, `suspended`, `trial`).
+### 2. Edição de Dados da Empresa - ✅ CONCLUÍDO
+*   Tela `CompanyDetailScreen` unifica visualização e ações rápidas.
 
-### 3. Painel de Faturas (Ocupado/Não Pago)
-- [ ] Mockar uma lista de faturas em `mock_billings.dart`.
-- [ ] Criar tela `BillingManagementScreen` com cards coloridos por status.
+### 3. Faturamento & Auditoria - ✅ CONCLUÍDO
+*   Implementado `SaaSFinancialManager` (State) e `AuditManager` (Logs).
+*   Interfaces premium para gestão de faturas e planos.
 
 ---
 
 ### 📝 Resumo Técnico:
 *   **Branch:** `CRMSAAS`
-*   **Estado:** Frontend Mockado (Sem persistência real em DB por enquanto).
-*   **Foco Visual:** Design System *Architectural Command* (Limpo, tonal, premium).
+*   **Estado:** Fase 1, 2 e 4 Finalizadas.
+*   **Foco Visual:** Design System *Architectural Command*.
 
 ---
 

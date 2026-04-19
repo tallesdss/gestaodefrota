@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/routes/app_routes.dart';
 import 'driver_sidebar.dart';
+import '../../super_admin/widgets/impersonation_banner.dart';
 
 class DriverScaffold extends StatelessWidget {
   final Widget child;
@@ -17,11 +18,18 @@ class DriverScaffold extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      body: Row(
+      body: Column(
         children: [
-          if (isDesktop) DriverSidebar(activeRoute: location),
+          const ImpersonationBanner(),
           Expanded(
-            child: Column(children: [Expanded(child: child)]),
+            child: Row(
+              children: [
+                if (isDesktop) DriverSidebar(activeRoute: location),
+                Expanded(
+                  child: Column(children: [Expanded(child: child)]),
+                ),
+              ],
+            ),
           ),
         ],
       ),

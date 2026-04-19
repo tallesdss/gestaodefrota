@@ -109,10 +109,22 @@ class SuperAdminSidebar extends StatelessWidget {
             onTap: () => context.go(AppRoutes.superAdminCompanies),
           ),
           _SidebarItem(
+            icon: Icons.payments_outlined,
+            label: 'Financeiro Global',
+            isSelected: location == AppRoutes.superAdminBilling,
+            onTap: () => context.go(AppRoutes.superAdminBilling),
+          ),
+          _SidebarItem(
             icon: Icons.layers_outlined,
             label: 'Planos e Tarifas',
             isSelected: location == AppRoutes.superAdminPlans,
             onTap: () => context.go(AppRoutes.superAdminPlans),
+          ),
+          _SidebarItem(
+            icon: Icons.history_edu_outlined,
+            label: 'Log de Auditoria',
+            isSelected: location == AppRoutes.superAdminAudit,
+            onTap: () => context.go(AppRoutes.superAdminAudit),
           ),
           const Spacer(),
           _SidebarItem(

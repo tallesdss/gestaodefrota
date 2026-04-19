@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/routes/app_routes.dart';
 import '../../models/company.dart';
 import '../../mock/mock_companies.dart';
 import '../core/super_admin_manager.dart';
@@ -251,16 +253,7 @@ class _CompanyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        SuperAdminManager.impersonate(company.id, company.name);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Acessando como ${company.name}'),
-            backgroundColor: Colors.orange,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      },
+      onTap: () => context.push(AppRoutes.superAdminCompanyDetail.replaceFirst(':id', company.id)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Row(
@@ -315,6 +308,22 @@ class _CompanyRow extends StatelessWidget {
               child: Text(
                 '${company.currentVehicles} / ${company.vehicleLimit}',
                 style: GoogleFonts.inter(fontSize: 14, color: Colors.white70),
+              ),
+            ),
+            Tooltip(
+              message: 'Acessar como empresa',
+              child: IconButton(
+                icon: const Icon(Icons.login, color: AppColors.accent, size: 20),
+                onPressed: () {
+                  SuperAdminManager.impersonate(company.id, company.name);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Acessando como ${company.name}'),
+                      backgroundColor: Colors.orange,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
               ),
             ),
             IconButton(

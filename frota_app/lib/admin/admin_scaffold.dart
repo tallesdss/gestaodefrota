@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/app_colors.dart';
 import 'widgets/admin_sidebar.dart';
 import 'widgets/admin_header.dart';
+import '../super_admin/widgets/impersonation_banner.dart';
 
 class AdminScaffold extends StatelessWidget {
   final Widget child;
@@ -17,21 +18,26 @@ class AdminScaffold extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      body: Row(
+      body: Column(
         children: [
-          if (isDesktop) AdminSidebar(activeRoute: location),
+          const ImpersonationBanner(),
           Expanded(
-            child: Column(
+            child: Row(
               children: [
-                const AdminHeader(),
-                Expanded(child: child),
+                if (isDesktop) AdminSidebar(activeRoute: location),
+                Expanded(
+                  child: Column(
+                    children: [
+                      const AdminHeader(),
+                      Expanded(child: child),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
-      // On mobile, we might want to use a Drawer but currently AdminHeader has a Menu button?
-      // Let's check AdminHeader.
     );
   }
 }

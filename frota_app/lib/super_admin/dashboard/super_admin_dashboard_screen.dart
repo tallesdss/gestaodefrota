@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/routes/app_routes.dart';
 
 class SuperAdminDashboardScreen extends StatelessWidget {
   const SuperAdminDashboardScreen({super.key});
@@ -122,7 +124,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
                   _SectionHeader(
                     title: 'Empresas Recém Cadastradas',
                     actionLabel: 'Ver Todas',
-                    onAction: () {},
+                    onAction: () => context.push(AppRoutes.superAdminCompanies),
                   ),
                   const SizedBox(height: 16),
                   _CompanyListItem(
