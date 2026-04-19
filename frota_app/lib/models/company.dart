@@ -8,6 +8,7 @@ class Company {
   final String cnpj;
   final String ownerName;
   final String email;
+  final String phone;
   final CompanyStatus status;
   final CompanyPlan plan;
   final int vehicleLimit;
@@ -18,8 +19,9 @@ class Company {
     required this.id,
     required this.name,
     required this.cnpj,
-    required this.ownerName,
+    this.ownerName = 'N/A',
     required this.email,
+    this.phone = '',
     required this.status,
     required this.plan,
     required this.vehicleLimit,

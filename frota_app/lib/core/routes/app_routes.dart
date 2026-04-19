@@ -73,8 +73,12 @@ import '../../super_admin/widgets/super_admin_scaffold.dart';
 import '../../super_admin/companies/company_list_screen.dart';
 import '../../super_admin/plans/plan_management_screen.dart';
 import '../../super_admin/billing/billing_management_screen.dart';
-import '../../super_admin/audit/audit_log_screen.dart';
 import '../../super_admin/companies/company_detail_screen.dart';
+import '../../super_admin/companies/company_form_screen.dart';
+import '../../super_admin/marketing/promo_management_screen.dart';
+import '../../super_admin/system/broadcast_screen.dart';
+import '../../super_admin/system/health_dashboard_screen.dart';
+import '../../super_admin/system/system_settings_screen.dart';
 
 class AppRoutes {
   static const String root = '/selection';
@@ -89,6 +93,11 @@ class AppRoutes {
   static const String superAdminBilling = '/super-admin/billing';
   static const String superAdminAudit = '/super-admin/audit';
   static const String superAdminCompanyDetail = '/super-admin/companies/:id';
+  static const String superAdminRegisterCompany = '/super-admin/companies/register';
+  static const String superAdminPromos = '/super-admin/marketing/promos';
+  static const String superAdminBroadcast = '/super-admin/system/broadcast';
+  static const String superAdminHealth = '/super-admin/system/health';
+  static const String superAdminSettings = '/super-admin/system/settings';
   static const String adminVehicleList = '/admin/vehicles';
   static const String adminVehicleDetail = '/admin/vehicles/detail/:id';
   static const String adminDriverList = '/admin/drivers';
@@ -207,15 +216,31 @@ class AppRoutes {
             builder: (context, state) => const BillingManagementScreen(),
           ),
           GoRoute(
-            path: superAdminAudit,
-            builder: (context, state) => const AuditLogScreen(),
-          ),
-          GoRoute(
             path: superAdminCompanyDetail,
             builder: (context, state) {
               final id = state.pathParameters['id']!;
               return CompanyDetailScreen(companyId: id);
             },
+          ),
+          GoRoute(
+            path: superAdminRegisterCompany,
+            builder: (context, state) => const CompanyFormScreen(),
+          ),
+          GoRoute(
+            path: superAdminPromos,
+            builder: (context, state) => const PromoManagementScreen(),
+          ),
+          GoRoute(
+            path: superAdminBroadcast,
+            builder: (context, state) => const BroadcastScreen(),
+          ),
+          GoRoute(
+            path: superAdminHealth,
+            builder: (context, state) => const HealthDashboardScreen(),
+          ),
+          GoRoute(
+            path: superAdminSettings,
+            builder: (context, state) => const SystemSettingsScreen(),
           ),
           // Add other super admin routes here as they are implemented
         ],

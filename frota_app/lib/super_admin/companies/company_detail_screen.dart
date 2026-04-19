@@ -4,8 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/company.dart';
-import '../../mock/mock_companies.dart';
 import '../core/super_admin_manager.dart';
+import '../core/company_manager.dart';
+import '../core/saas_financial_manager.dart';
+import '../core/audit_manager.dart';
+import '../models/audit_entry.dart';
+import 'company_form_screen.dart';
 
 class CompanyDetailScreen extends StatefulWidget {
   final String companyId;
@@ -17,15 +21,32 @@ class CompanyDetailScreen extends StatefulWidget {
 }
 
 class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
+  final _companyManager = CompanyManager();
   late Company _company;
 
   @override
   void initState() {
     super.initState();
-    // In a real app, we would fetch the company by ID
-    _company = MockCompanies.getCompanies().firstWhere(
+    _companyManager.addListener(_onStateChanged);
+    _loadCompany();
+  }
+
+  @override
+  void dispose() {
+    _companyManager.removeListener(_onStateChanged);
+    super.dispose();
+  }
+
+  void _onStateChanged() {
+    if (mounted) {
+      setState(() => _loadCompany());
+    }
+  }
+
+  void _loadCompany() {
+    _company = _companyManager.companies.firstWhere(
       (c) => c.id == widget.companyId,
-      orElse: () => MockCompanies.getCompanies().first,
+      orElse: () => _companyManager.companies.first,
     );
   }
 
@@ -208,7 +229,7 @@ class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
         ),
         const SizedBox(height: 16),
         OutlinedButton(
-          onPressed: () {},
+          onPressed: () => _showChangePlanDialog(context),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(double.infinity, 50),
             side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
@@ -228,19 +249,36 @@ class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
         _buildActionButton(
           label: 'Editar dados',
           icon: Icons.edit_outlined,
-          onTap: () {},
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => CompanyFormScreen(company: _company)),
+          ),
         ),
         _buildActionButton(
           label: _company.status == CompanyStatus.active ? 'Suspender Empresa' : 'Ativar Empresa',
           icon: Icons.pause_circle_outline,
           color: _company.status == CompanyStatus.active ? Colors.orangeAccent : Colors.greenAccent,
-          onTap: () {},
+          onTap: () {
+            final newStatus = _company.status == CompanyStatus.active ? CompanyStatus.inactive : CompanyStatus.active;
+            _companyManager.changeStatus(_company.id, newStatus);
+            AuditManager().logAction(
+              action: newStatus == CompanyStatus.active ? AuditAction.impersonationEnd : AuditAction.companySuspended,
+              target: _company.name,
+              details: 'Status alterado para ${newStatus.name}',
+            );
+          },
         ),
         _buildActionButton(
           label: 'Bloquear Acesso',
           icon: Icons.block_outlined,
           color: Colors.redAccent,
-          onTap: () {},
+          onTap: () {
+            _companyManager.changeStatus(_company.id, CompanyStatus.blocked);
+             AuditManager().logAction(
+              action: AuditAction.companyBlocked,
+              target: _company.name,
+              details: 'Acesso bloqueado administrativamente',
+            );
+          },
         ),
       ],
     );
@@ -286,6 +324,38 @@ class _CompanyDetailScreenState extends State<CompanyDetailScreen> {
           Text(label, style: GoogleFonts.inter(color: Colors.white38, fontSize: 14)),
           Text(value, style: GoogleFonts.inter(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
         ],
+      ),
+    );
+  }
+
+  void _showChangePlanDialog(BuildContext context) {
+    final plans = SaaSFinancialManager().plans;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF0F172A),
+        title: Text('Alterar Plano - ${_company.name}', style: GoogleFonts.manrope(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: plans.map((p) => ListTile(
+            title: Text(p.name, style: const TextStyle(color: Colors.white)),
+            subtitle: Text('Até ${p.maxVehicles} veículos', style: const TextStyle(color: Colors.white54)),
+            trailing: _company.planName == p.name ? const Icon(Icons.check, color: AppColors.accent) : null,
+            onTap: () {
+              _companyManager.changePlan(_company.id, p.name, p.maxVehicles);
+              AuditManager().logAction(
+                action: AuditAction.planUpdated,
+                target: _company.name,
+                details: 'Plano alterado para ${p.name}',
+              );
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Plano alterado para ${p.name}')),
+              );
+            },
+          )).toList(),
+        ),
       ),
     );
   }

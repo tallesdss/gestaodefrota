@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/routes/app_routes.dart';
 import '../../models/company.dart';
-import '../../mock/mock_companies.dart';
 import '../core/super_admin_manager.dart';
+import '../core/company_manager.dart';
 
 class CompanyListScreen extends StatefulWidget {
   const CompanyListScreen({super.key});
@@ -15,13 +15,29 @@ class CompanyListScreen extends StatefulWidget {
 }
 
 class _CompanyListScreenState extends State<CompanyListScreen> {
-  final List<Company> _allCompanies = MockCompanies.getCompanies();
+  final _companyManager = CompanyManager();
   String _searchQuery = '';
   CompanyStatus? _statusFilter;
 
   @override
+  void initState() {
+    super.initState();
+    _companyManager.addListener(_onStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _companyManager.removeListener(_onStateChanged);
+    super.dispose();
+  }
+
+  void _onStateChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final filteredCompanies = _allCompanies.where((c) {
+    final filteredCompanies = _companyManager.companies.where((c) {
       final matchesSearch =
           c.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
               c.cnpj.contains(_searchQuery);
@@ -59,7 +75,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                 ],
               ),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () => context.push(AppRoutes.superAdminRegisterCompany),
                 icon: const Icon(Icons.add_business_outlined, size: 20),
                 label: const Text('Cadastrar Empresa'),
                 style: ElevatedButton.styleFrom(

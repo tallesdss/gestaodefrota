@@ -126,6 +126,56 @@ class SuperAdminSidebar extends StatelessWidget {
             isSelected: location == AppRoutes.superAdminAudit,
             onTap: () => context.go(AppRoutes.superAdminAudit),
           ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              'MARKETING & COMUNICAÇÃO',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: Colors.white24,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          _SidebarItem(
+            icon: Icons.confirmation_number_outlined,
+            label: 'Cupons e Promoções',
+            isSelected: location == AppRoutes.superAdminPromos,
+            onTap: () => context.go(AppRoutes.superAdminPromos),
+          ),
+          _SidebarItem(
+            icon: Icons.campaign_outlined,
+            label: 'Avisos e Broadcast',
+            isSelected: location == AppRoutes.superAdminBroadcast,
+            onTap: () => context.go(AppRoutes.superAdminBroadcast),
+          ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              'SISTEMA',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: Colors.white24,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          _SidebarItem(
+            icon: Icons.monitor_heart_outlined,
+            label: 'Saúde do Sistema',
+            isSelected: location == AppRoutes.superAdminHealth,
+            onTap: () => context.go(AppRoutes.superAdminHealth),
+          ),
+          _SidebarItem(
+            icon: Icons.settings_suggest_outlined,
+            label: 'Configurações Globais',
+            isSelected: location == AppRoutes.superAdminSettings,
+            onTap: () => context.go(AppRoutes.superAdminSettings),
+          ),
           const Spacer(),
           _SidebarItem(
             icon: Icons.logout_rounded,

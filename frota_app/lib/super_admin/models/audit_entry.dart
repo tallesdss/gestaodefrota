@@ -9,6 +9,10 @@ enum AuditAction {
   planUpdated,
   paymentConfirmed,
   userDeleted,
+  companyCreated,
+  companyModified,
+  broadcastSent,
+  promoCodeCreated,
 }
 
 class AuditEntry {
@@ -38,6 +42,10 @@ class AuditEntry {
       case AuditAction.planUpdated: return 'Plano Atualizado';
       case AuditAction.paymentConfirmed: return 'Pagamento Confirmado';
       case AuditAction.userDeleted: return 'Usuário Removido';
+      case AuditAction.companyCreated: return 'Empresa Criada';
+      case AuditAction.companyModified: return 'Empresa Modificada';
+      case AuditAction.broadcastSent: return 'Broadcast Enviado';
+      case AuditAction.promoCodeCreated: return 'Cupom Criado';
     }
   }
 
@@ -51,6 +59,10 @@ class AuditEntry {
       case AuditAction.planUpdated: return Icons.edit_note;
       case AuditAction.paymentConfirmed: return Icons.payments_outlined;
       case AuditAction.userDeleted: return Icons.person_remove_outlined;
+      case AuditAction.companyCreated: return Icons.business;
+      case AuditAction.companyModified: return Icons.edit_note;
+      case AuditAction.broadcastSent: return Icons.campaign_outlined;
+      case AuditAction.promoCodeCreated: return Icons.confirmation_number_outlined;
     }
   }
 
@@ -58,6 +70,9 @@ class AuditEntry {
     switch (action) {
       case AuditAction.companyBlocked:
       case AuditAction.userDeleted: return Colors.redAccent;
+      case AuditAction.broadcastSent: return Colors.orangeAccent;
+      case AuditAction.companyCreated: return Colors.greenAccent;
+      case AuditAction.promoCodeCreated: return Colors.purpleAccent;
       case AuditAction.paymentConfirmed:
       case AuditAction.impersonationEnd: return Colors.greenAccent;
       case AuditAction.impersonationStart: return Colors.orangeAccent;

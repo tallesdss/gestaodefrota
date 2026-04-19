@@ -49,7 +49,21 @@ Este documento serve como o guia mestre para a finalização do sistema SaaS na 
 
 ---
 
-## 🔧 Fase 4: Suporte & Auditoria - 🟢 CONCLUÍDO
+## 🚀 Fase 4: Expansão & Gestão Avançada - 🟢 CONCLUÍDO
+1.  **Onboarding de Novos Clientes**:
+    *   [x] **Formulário de Cadastro de Empresa**: Interface para criar novos tenants manualmente pelo Super Admin.
+    *   [x] **Atribuição Inicial de Recursos**: Definir limites e plano no ato do cadastro.
+2.  **Marketing & Comercial**:
+    *   [x] **Gestão de Cupons e Descontos**: Interface para criar códigos promocionais.
+    *   [x] **Upgrade/Downgrade de Planos**: Funcionalidade para alterar o plano de um cliente ativo.
+3.  **Comunicação & Sistema**:
+    *   [x] **Módulo de Notificações Global (Broadcast)**: Enviar mensagens para todos os administradores simultaneamente.
+    *   [x] **Dashboard de Saúde do Sistema**: Monitoramento de erros e performance global.
+    *   [x] **Configurações Globais**: Chaves de API, gateways de pagamento e modo manutenção.
+
+---
+
+## 🔧 Fase 5: Suporte & Auditoria - 🟢 CONCLUÍDO
 - [x] **Log de Auditoria Master**:
     - [x] Tela para visualizar ações críticas tomadas em qualquer empresa (`AuditLogScreen`).
     - [x] Rastreamento de Impersonation, Pagamentos e Alterações de Planos.
@@ -73,7 +87,7 @@ Este documento serve como o guia mestre para a finalização do sistema SaaS na 
 
 ### 📝 Resumo Técnico:
 *   **Branch:** `CRMSAAS`
-*   **Estado:** Fase 1, 2 e 4 Finalizadas.
+*   **Estado:** Fases 1, 2, 4 e 5 Finalizadas. Próximo: Fase 3.
 *   **Foco Visual:** Design System *Architectural Command*.
 
 ---
