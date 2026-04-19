@@ -2236,6 +2236,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               } else {
                 final newEntry = FinancialEntry(
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  companyId: _vehicle!.companyId,
                   vehicleId: widget.vehicleId,
                   description: descController.text,
                   amount: updatedAmount,

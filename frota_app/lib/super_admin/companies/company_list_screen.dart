@@ -4,8 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../models/company.dart';
 import '../../mock/mock_companies.dart';
 import '../core/super_admin_manager.dart';
-import 'package:go_router/go_router.dart';
-import '../widgets/super_admin_scaffold.dart'; // Just in case, though not needed for manager
 
 class CompanyListScreen extends StatefulWidget {
   const CompanyListScreen({super.key});
@@ -79,9 +77,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(5),
+              color: Colors.white.withValues(alpha: 0.02),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withAlpha(5)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.02)),
             ),
             child: Row(
               children: [
@@ -94,7 +92,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       hintStyle: GoogleFonts.inter(color: Colors.white24),
                       prefixIcon: const Icon(Icons.search, color: Colors.white24),
                       filled: true,
-                      fillColor: Colors.white.withAlpha(5),
+                      fillColor: Colors.white.withValues(alpha: 0.02),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -139,7 +137,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(10),
+              color: Colors.white.withValues(alpha: 0.04),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Row(
@@ -193,14 +191,14 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(5),
+                color: Colors.white.withValues(alpha: 0.02),
                 borderRadius:
                     const BorderRadius.vertical(bottom: Radius.circular(16)),
               ),
               child: ListView.separated(
                 itemCount: filteredCompanies.length,
                 separatorBuilder: (context, index) =>
-                    Divider(color: Colors.white.withAlpha(5), height: 1),
+                    Divider(color: Colors.white.withValues(alpha: 0.02), height: 1),
                 itemBuilder: (context, index) {
                   final company = filteredCompanies[index];
                   return _CompanyRow(company: company);
@@ -239,7 +237,7 @@ class _FilterChip extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
-            color: isSelected ? AppColors.accent : Colors.white.withAlpha(20)),
+            color: isSelected ? AppColors.accent : Colors.white.withValues(alpha: 0.08)),
       ),
     );
   }
@@ -358,9 +356,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withAlpha(40)),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
       ),
       child: Text(
         label,

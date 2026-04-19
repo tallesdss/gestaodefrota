@@ -343,6 +343,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                           final entry = FinancialEntry(
                             id: DateTime.now().millisecondsSinceEpoch
                                 .toString(),
+                            companyId: _driver!.companyId,
                             type: FinancialType.income,
                             category: 'aluguel',
                             driverId: _driver!.id,
@@ -468,6 +469,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                           final entry = FinancialEntry(
                             id: DateTime.now().millisecondsSinceEpoch
                                 .toString(),
+                            companyId: _driver!.companyId,
                             type: FinancialType.expense,
                             category: descriptionController.text.toLowerCase(),
                             driverId: _driver!.id,

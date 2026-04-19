@@ -52,6 +52,7 @@ class _DriverInspectionDetailScreenState
         // Fallback vehicle info if not found
         v = Vehicle(
           id: insp.vehicleId,
+          companyId: insp.companyId,
           model: 'VEÍCULO #102',
           plate: 'BRA2E24',
           brand: 'VW',

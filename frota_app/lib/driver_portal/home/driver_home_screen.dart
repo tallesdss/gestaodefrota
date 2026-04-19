@@ -227,6 +227,7 @@ class DriverHomeScreen extends StatelessWidget {
               AppRoutes.driverPixCheckout,
               extra: FinancialEntry(
                 id: '1',
+                companyId: 'default_company',
                 type: FinancialType.expense,
                 category: 'Aluguel',
                 amount: 550.00,

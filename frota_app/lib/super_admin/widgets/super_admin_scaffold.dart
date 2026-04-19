@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/routes/app_routes.dart';
+import '../core/super_admin_manager.dart';
 
 class SuperAdminScaffold extends StatelessWidget {
   final Widget child;
@@ -176,9 +177,6 @@ class _SidebarItem extends StatelessWidget {
     );
   }
 }
-
-import '../core/super_admin_manager.dart';
-
 class SuperAdminHeader extends StatelessWidget {
   const SuperAdminHeader({super.key});
 

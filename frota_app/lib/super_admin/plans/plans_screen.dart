@@ -58,7 +58,7 @@ class PlansScreen extends StatelessWidget {
               children: [
                 _PlanCard(
                   name: 'Basic',
-                  price: 'R$ 299',
+                  price: r'R$ 299',
                   description: 'Ideal para frotas pequenas e autônomos.',
                   features: const [
                     'Até 20 veículos',
@@ -71,7 +71,7 @@ class PlansScreen extends StatelessWidget {
                 const SizedBox(width: 24),
                 _PlanCard(
                   name: 'Professional',
-                  price: 'R$ 890',
+                  price: r'R$ 890',
                   description: 'Performance e controle para médias empresas.',
                   features: const [
                     'Até 100 veículos',

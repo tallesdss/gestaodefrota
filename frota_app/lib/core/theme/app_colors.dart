@@ -27,6 +27,11 @@ class AppColors {
   static const Color onSurface = Color(0xFF0B1C30); // Pure black is avoided
   static const Color onSurfaceVariant = Color(0xFF44474E); // Typo label color
 
+  // Aliases for compatibility
+  static const Color background = surface;
+  static const Color divider = outlineVariant;
+  static const Color textSecondary = onSurfaceVariant;
+
   // Functional - Triggers e Alertas
   static const Color tertiary = Color(
     0xFF4B1C00,

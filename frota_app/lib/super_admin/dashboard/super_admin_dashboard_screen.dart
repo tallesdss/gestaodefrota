@@ -39,9 +39,9 @@ class SuperAdminDashboardScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(5),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withAlpha(10)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: Row(
                 children: [
@@ -89,7 +89,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
             Expanded(
               child: _MasterKpiCard(
                 label: 'Receita Mensal (SaaS)',
-                value: 'R$ 158.400',
+                value: r'R$ 158.400',
                 trend: '+12% vs mês ant.',
                 icon: Icons.payments_outlined,
                 color: Colors.greenAccent,
@@ -130,21 +130,21 @@ class SuperAdminDashboardScreen extends StatelessWidget {
                     owner: 'Ricardo Almeida',
                     plan: 'Enterprise',
                     date: 'Hoje, 14:30',
-                    veículos: 150,
+                    veiculos: 150,
                   ),
                   _CompanyListItem(
                     name: 'Frota Rápida Delivery',
                     owner: 'Mariana Costa',
                     plan: 'Pro',
                     date: 'Hoje, 09:15',
-                    veículos: 45,
+                    veiculos: 45,
                   ),
                   _CompanyListItem(
                     name: 'Express Encomendas',
                     owner: 'Carlos Eduardo',
                     plan: 'Basic',
                     date: 'Ontem',
-                    veículos: 12,
+                    veiculos: 12,
                   ),
                 ],
               ),
@@ -221,10 +221,10 @@ class _MasterKpiCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(5)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(30),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -236,7 +236,7 @@ class _MasterKpiCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withAlpha(20),
+              color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -322,14 +322,14 @@ class _CompanyListItem extends StatelessWidget {
   final String owner;
   final String plan;
   final String date;
-  final int veículos;
+  final int veiculos;
 
   const _CompanyListItem({
     required this.name,
     required this.owner,
     required this.plan,
     required this.date,
-    required this.veículos,
+    required this.veiculos,
   });
 
   @override
@@ -338,9 +338,9 @@ class _CompanyListItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(5),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withAlpha(5)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
@@ -348,7 +348,7 @@ class _CompanyListItem extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(10),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.business_outlined, color: Colors.white70),
@@ -382,7 +382,7 @@ class _CompanyListItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withAlpha(30),
+                  color: AppColors.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -396,7 +396,7 @@ class _CompanyListItem extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '$veículos veículos',
+                '$veiculos veículos',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: Colors.white38,
@@ -425,9 +425,9 @@ class _HealthCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withAlpha(10),
+        color: color.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withAlpha(20)),
+        border: Border.all(color: color.withValues(alpha: 0.08)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -465,9 +465,9 @@ class _AlertCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withAlpha(10),
+        color: color.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withAlpha(20)),
+        border: Border.all(color: color.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

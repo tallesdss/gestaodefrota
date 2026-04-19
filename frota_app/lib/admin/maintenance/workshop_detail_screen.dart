@@ -795,13 +795,18 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
           ),
           ElevatedButton(
             onPressed: () {
+              final vehicleId = isEditing ? entry.vehicleId : '1';
+              final selectedVehicle = _vehicles.firstWhere(
+                (v) => v.id == vehicleId,
+                orElse: () => _vehicles.first,
+              );
+
               final newEntry = MaintenanceEntry(
                 id: isEditing
                     ? entry.id
                     : DateTime.now().millisecondsSinceEpoch.toString(),
-                vehicleId: isEditing
-                    ? entry.vehicleId
-                    : '1', // Default mock vehicle
+                companyId: selectedVehicle.companyId,
+                vehicleId: vehicleId,
                 driverId: null,
                 driverName: null,
                 type: type,

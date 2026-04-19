@@ -666,10 +666,15 @@ class _MaintenanceFormScreenState extends State<MaintenanceFormScreen> {
             final finalDescription =
                 '$_selectedItem - ${_descriptionController.text}';
 
+            final selectedVehicle = _vehicles.firstWhere(
+              (v) => v.id == _selectedVehicleId,
+            );
+
             final newEntry = MaintenanceEntry(
               id:
                   widget.maintenance?.id ??
                   'MT-${DateTime.now().millisecondsSinceEpoch}',
+              companyId: selectedVehicle.companyId,
               vehicleId: _selectedVehicleId!,
               type: mt,
               description: finalDescription,
@@ -681,7 +686,8 @@ class _MaintenanceFormScreenState extends State<MaintenanceFormScreen> {
               status: _selectedStatus,
               parts: _parts,
               invoiceNumber: _invoiceNumberController.text,
-              invoiceUrl: _attachments.isNotEmpty ? _attachments.first.path : null,
+              invoiceUrl:
+                  _attachments.isNotEmpty ? _attachments.first.path : null,
             );
 
             await _repository.addMaintenance(newEntry);

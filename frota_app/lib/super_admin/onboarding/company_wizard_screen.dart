@@ -63,7 +63,7 @@ class _CompanyWizardScreenState extends State<CompanyWizardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Novo Tenant (SaaS)', style: AppTextStyles.h3),
+        title: Text('Novo Tenant (SaaS)', style: AppTextStyles.headlineSmall),
         backgroundColor: AppColors.surface,
         elevation: 0,
         centerTitle: true,
@@ -143,7 +143,7 @@ class _CompanyWizardScreenState extends State<CompanyWizardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Informações Básicas', style: AppTextStyles.h2),
+        Text('Informações Básicas', style: AppTextStyles.headlineMedium),
         const SizedBox(height: 8),
         Text('Dados cadastrais da nova empresa cliente.', style: AppTextStyles.bodyMedium),
         const SizedBox(height: 32),
@@ -159,19 +159,23 @@ class _CompanyWizardScreenState extends State<CompanyWizardScreen> {
   }
 
   Widget _buildPlanSelectionStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Seleção de Plano', style: AppTextStyles.h2),
-        const SizedBox(height: 8),
-        Text('Escolha o nível de serviço para este tenant.', style: AppTextStyles.bodyMedium),
-        const SizedBox(height: 32),
-        _buildPlanCard(CompanyPlan.basic, 'Plano Básico', 'Até 10 veículos', 'R$ 199/mês'),
-        const SizedBox(height: 16),
-        _buildPlanCard(CompanyPlan.pro, 'Plano Profissional', 'Até 50 veículos', 'R$ 499/mês'),
-        const SizedBox(height: 16),
-        _buildPlanCard(CompanyPlan.enterprise, 'Enterprise', 'Veículos Ilimitados', 'R$ 999/mês'),
-      ],
+    return RadioGroup<CompanyPlan>(
+      groupValue: _selectedPlan,
+      onChanged: (v) => setState(() => _selectedPlan = v!),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Seleção de Plano', style: AppTextStyles.headlineMedium),
+          const SizedBox(height: 8),
+          Text('Escolha o nível de serviço para este tenant.', style: AppTextStyles.bodyMedium),
+          const SizedBox(height: 32),
+          _buildPlanCard(CompanyPlan.basic, 'Plano Básico', 'Até 10 veículos', r'R$ 199/mês'),
+          const SizedBox(height: 16),
+          _buildPlanCard(CompanyPlan.pro, 'Plano Profissional', 'Até 50 veículos', r'R$ 499/mês'),
+          const SizedBox(height: 16),
+          _buildPlanCard(CompanyPlan.enterprise, 'Enterprise', 'Veículos Ilimitados', r'R$ 999/mês'),
+        ],
+      ),
     );
   }
 
@@ -179,7 +183,7 @@ class _CompanyWizardScreenState extends State<CompanyWizardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Configurações Finais', style: AppTextStyles.h2),
+        Text('Configurações Finais', style: AppTextStyles.headlineMedium),
         const SizedBox(height: 8),
         Text('Parâmetros técnicos do sistema.', style: AppTextStyles.bodyMedium),
         const SizedBox(height: 32),
@@ -189,7 +193,7 @@ class _CompanyWizardScreenState extends State<CompanyWizardScreen> {
               ListTile(
                 title: Text('Limite de Veículos', style: AppTextStyles.bodyLarge),
                 subtitle: Text('Máximo de veículos cadastrados na base.'),
-                trailing: Text('$_vehicleLimit', style: AppTextStyles.h3),
+                trailing: Text('$_vehicleLimit', style: AppTextStyles.headlineSmall),
               ),
               Slider(
                 value: _vehicleLimit.toDouble(),
@@ -256,7 +260,7 @@ class _CompanyWizardScreenState extends State<CompanyWizardScreen> {
           boxShadow: [
             if (isSelected)
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -266,20 +270,18 @@ class _CompanyWizardScreenState extends State<CompanyWizardScreen> {
           children: [
             Radio<CompanyPlan>(
               value: plan,
-              groupValue: _selectedPlan,
-              onChanged: (v) => setState(() => _selectedPlan = v!),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.bodyLargeBold),
+                  Text(title, style: AppTextStyles.titleMedium),
                   Text(limit, style: AppTextStyles.bodySmall),
                 ],
               ),
             ),
-            Text(price, style: AppTextStyles.bodyLargeBold.copyWith(color: AppColors.primary)),
+            Text(price, style: AppTextStyles.titleMedium.copyWith(color: AppColors.primary)),
           ],
         ),
       ),
@@ -293,7 +295,7 @@ class _CompanyWizardScreenState extends State<CompanyWizardScreen> {
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -4),
           ),

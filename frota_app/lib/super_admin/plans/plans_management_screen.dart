@@ -3,7 +3,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
-import '../../models/company.dart';
 
 class PlansManagementScreen extends StatelessWidget {
   const PlansManagementScreen({super.key});
@@ -11,9 +10,9 @@ class PlansManagementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: Text('Gestão de Planos', style: AppTextStyles.h3),
+        title: Text('Gestão de Planos', style: AppTextStyles.headlineSmall),
         backgroundColor: AppColors.surface,
         elevation: 0,
         actions: [
@@ -28,14 +27,14 @@ class PlansManagementScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Níveis de Serviço', style: AppTextStyles.h2),
+            Text('Níveis de Serviço', style: AppTextStyles.headlineMedium),
             const SizedBox(height: 8),
             Text('Configure os limites e preços para cada categoria de cliente.', style: AppTextStyles.bodyMedium),
             const SizedBox(height: 24),
             _buildPlanListItem(
               context,
               'Básico',
-              'R$ 199,00',
+              r'R$ 199,00',
               '10 Veículos • 5 Admins',
               AppColors.primary,
             ),
@@ -43,7 +42,7 @@ class PlansManagementScreen extends StatelessWidget {
             _buildPlanListItem(
               context,
               'Profissional',
-              'R$ 499,00',
+              r'R$ 499,00',
               '50 Veículos • 20 Admins • Módulo Oficina',
               Colors.purple,
             ),
@@ -51,7 +50,7 @@ class PlansManagementScreen extends StatelessWidget {
             _buildPlanListItem(
               context,
               'Enterprise',
-              'R$ 999,00',
+              r'R$ 999,00',
               'Ilimitado • Suporte 24h • White-label',
               const Color(0xFF1A237E),
             ),
@@ -82,12 +81,12 @@ class PlansManagementScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: AppTextStyles.h3),
+                      Text(name, style: AppTextStyles.headlineSmall),
                       Text(features, style: AppTextStyles.bodySmall),
                     ],
                   ),
                 ),
-                Text(price, style: AppTextStyles.h3.copyWith(color: AppColors.primary)),
+                Text(price, style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primary)),
               ],
             ),
             const Divider(height: 32),

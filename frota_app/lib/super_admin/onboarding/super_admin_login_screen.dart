@@ -22,7 +22,6 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen>
   late Animation<Offset> _slideUp;
 
   // Super Admin specific colors (Darker, more authoritative)
-  static const Color masterPrimary = Color(0xFF001542);
   static const Color masterSurface = Color(0xFF050A1A);
 
   @override

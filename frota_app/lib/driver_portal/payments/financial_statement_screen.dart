@@ -19,6 +19,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   final List<FinancialEntry> mockEntries = [
     FinancialEntry(
       id: '1',
+      companyId: 'default_company',
       type: FinancialType.expense,
       category: 'Aluguel',
       amount: 550.00,
@@ -29,6 +30,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
     ),
     FinancialEntry(
       id: '2',
+      companyId: 'default_company',
       type: FinancialType.expense,
       category: 'Multa',
       amount: 195.23,
@@ -39,6 +41,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
     ),
     FinancialEntry(
       id: '3',
+      companyId: 'default_company',
       type: FinancialType.expense,
       category: 'Aluguel',
       amount: 550.00,
@@ -49,6 +52,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
     ),
     FinancialEntry(
       id: '4',
+      companyId: 'default_company',
       type: FinancialType.income,
       category: 'Crédito',
       amount: 50.00,
@@ -59,6 +63,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
     ),
     FinancialEntry(
       id: '5',
+      companyId: 'default_company',
       type: FinancialType.expense,
       category: 'Aluguel',
       amount: 550.00,

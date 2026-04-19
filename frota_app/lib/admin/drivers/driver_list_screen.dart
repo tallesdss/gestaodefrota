@@ -88,6 +88,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
             if (amount > 0) {
               final entry = FinancialEntry(
                 id: DateTime.now().millisecondsSinceEpoch.toString(),
+                companyId: driver.companyId,
                 type: FinancialType.income,
                 category: 'aluguel',
                 driverId: driver.id,
@@ -158,6 +159,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
             if (amount > 0) {
               final entry = FinancialEntry(
                 id: DateTime.now().millisecondsSinceEpoch.toString(),
+                companyId: driver.companyId,
                 type: FinancialType.expense,
                 category: descriptionController.text.toLowerCase(),
                 driverId: driver.id,
