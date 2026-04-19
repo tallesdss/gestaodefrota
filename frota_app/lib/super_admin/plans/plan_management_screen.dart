@@ -108,7 +108,7 @@ class _PlanManagementScreenState extends State<PlanManagementScreen> {
           labelText: label,
           labelStyle: const TextStyle(color: Colors.white54),
           filled: true,
-          fillColor: Colors.white.withOpacity(0.05),
+          fillColor: Colors.white.withValues(alpha: 0.05),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         ),
       ),

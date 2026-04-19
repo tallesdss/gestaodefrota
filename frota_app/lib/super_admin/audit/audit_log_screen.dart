@@ -77,7 +77,7 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
               hintStyle: const TextStyle(color: Colors.white24),
               prefixIcon: const Icon(Icons.search, color: Colors.white24),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.03),
+              fillColor: Colors.white.withValues(alpha: 0.03),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             ),
           ),
@@ -86,7 +86,7 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
+            color: Colors.white.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -107,9 +107,9 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
@@ -121,7 +121,7 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
             leading: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: log.color.withOpacity(0.1),
+                color: log.color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(log.icon, color: log.color, size: 20),
