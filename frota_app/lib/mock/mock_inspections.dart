@@ -3,6 +3,7 @@ import '../models/inspection.dart';
 List<Inspection> mockInspections = [
   Inspection(
     id: 'insp_001',
+    companyId: 'default_company',
     vehicleId: '1',
     driverId: 'd1',
     type: InspectionType.checkin,
@@ -46,6 +47,7 @@ List<Inspection> mockInspections = [
   ),
   Inspection(
     id: 'insp_002',
+    companyId: 'default_company',
     vehicleId: '2',
     driverId: 'd1',
     type: InspectionType.checkout,
@@ -79,6 +81,7 @@ List<Inspection> mockInspections = [
   ),
   Inspection(
     id: 'insp_003',
+    companyId: 'company_2',
     vehicleId: '3',
     driverId: 'd1',
     type: InspectionType.checkin,
@@ -109,6 +112,7 @@ List<Inspection> mockInspections = [
   // Adicionando mais para cobrir a lista do histórico
   Inspection(
     id: 'insp_004',
+    companyId: 'company_2',
     vehicleId: '1',
     driverId: 'd1',
     type: InspectionType.checkout,

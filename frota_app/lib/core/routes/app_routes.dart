@@ -67,6 +67,11 @@ import '../../driver_portal/notifications/notifications_screen.dart';
 import '../../driver_portal/support/support_screen.dart';
 import '../../models/financial_entry.dart';
 import '../../driver_portal/widgets/driver_scaffold.dart';
+import '../../super_admin/onboarding/super_admin_login_screen.dart';
+import '../../super_admin/dashboard/super_admin_dashboard_screen.dart';
+import '../../super_admin/widgets/super_admin_scaffold.dart';
+import '../../super_admin/companies/company_list_screen.dart';
+import '../../super_admin/plans/plans_screen.dart';
 
 class AppRoutes {
   static const String root = '/selection';
@@ -74,6 +79,10 @@ class AppRoutes {
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String adminDashboard = '/admin/dashboard';
+  static const String superAdminLogin = '/super-admin/login';
+  static const String superAdminDashboard = '/super-admin/dashboard';
+  static const String superAdminCompanies = '/super-admin/companies';
+  static const String superAdminPlans = '/super-admin/plans';
   static const String adminVehicleList = '/admin/vehicles';
   static const String adminVehicleDetail = '/admin/vehicles/detail/:id';
   static const String adminDriverList = '/admin/drivers';
@@ -164,6 +173,31 @@ class AppRoutes {
       GoRoute(
         path: root,
         builder: (context, state) => const SelectionProfileScreen(),
+      ),
+
+      // Super Admin Routes
+      GoRoute(
+        path: superAdminLogin,
+        builder: (context, state) => const SuperAdminLoginScreen(),
+      ),
+
+      ShellRoute(
+        builder: (context, state, child) => SuperAdminScaffold(child: child),
+        routes: [
+          GoRoute(
+            path: superAdminDashboard,
+            builder: (context, state) => const SuperAdminDashboardScreen(),
+          ),
+          GoRoute(
+            path: superAdminCompanies,
+            builder: (context, state) => const CompanyListScreen(),
+          ),
+          GoRoute(
+            path: superAdminPlans,
+            builder: (context, state) => const PlansScreen(),
+          ),
+          // Add other super admin routes here as they are implemented
+        ],
       ),
 
       // Admin Shell

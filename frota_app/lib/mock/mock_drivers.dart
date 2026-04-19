@@ -4,6 +4,7 @@ List<Driver> mockDrivers = [
   Driver(
     id: 'd1',
     name: 'João Silva',
+    companyId: 'default_company',
     cpf: '123.456.789-00',
     phone: '(11) 98765-4321',
     email: 'joao.silva@email.com',
@@ -19,6 +20,7 @@ List<Driver> mockDrivers = [
   Driver(
     id: 'd2',
     name: 'Maria Oliveira',
+    companyId: 'default_company',
     cpf: '987.654.321-11',
     phone: '(11) 91234-5678',
     email: 'maria.oliveira@email.com',
@@ -34,6 +36,7 @@ List<Driver> mockDrivers = [
   Driver(
     id: 'd3',
     name: 'Carlos Santos',
+    companyId: 'company_2',
     cpf: '456.789.123-22',
     phone: '(11) 99887-7665',
     email: 'carlos.santos@email.com',
@@ -49,6 +52,7 @@ List<Driver> mockDrivers = [
   Driver(
     id: 'd4',
     name: 'Ana Sousa',
+    companyId: 'company_2',
     cpf: '789.123.456-78',
     phone: '(11) 95555-4444',
     email: 'ana.sousa@email.com',
@@ -64,6 +68,7 @@ List<Driver> mockDrivers = [
   Driver(
     id: 'd5',
     name: 'Ricardo Mendonça',
+    companyId: 'default_company',
     cpf: '111.222.333-44',
     phone: '(11) 90000-1111',
     email: 'ricardo.mendonca@email.com',

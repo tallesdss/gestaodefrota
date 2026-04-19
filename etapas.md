@@ -104,8 +104,28 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
 
 ---
 
+## ☁️ Etapas: SaaS Master (Super Administrador) - [BRANCH: CRMSAAS]
+*Responsável pelo ecossistema SaaS, gestão de múltiplas empresas (Tenants) e monetização da plataforma.*
+
+- [x] **FASE 1: Infraestrutura Multi-Tenant**
+    - [x] **Modelagem de Contexto**: Adição de `companyId` em todos os modelos core (Veículos, Motoristas, Vistorias).
+    - [x] **Tenant Management**: Implementação do `TenantManager` para isolamento de dados no frontend.
+    - [x] **Isolamento de Dados**: Refatoração do `MockRepository` para filtrar por empresa logada.
+
+- [/] **FASE 2: Gestão de Ecossistema**
+    - [x] **Dashboard Master**: Visão consolidada de todas as empresas e MRR global.
+    - [x] **Onboarding Wizard**: Fluxo passo-a-passo para criação de novos Tenants (`CompanyWizardScreen`).
+    - [x] **Gestão de Planos**: Interface para controle de limites, preços e permissões por nível de serviço.
+    - [ ] **Billing & Invoicing Master**: Monitoramento central de pagamentos das empresas parceiras.
+
+- [ ] **FASE 3: Features White-Label & Customização**
+    - [ ] **Dynamic Branding**: Customização de logo e cores por tenant.
+    - [ ] **Subdomínios Dinâmicos (Simulado)**: Fluxo de entrada baseado no identificador da empresa.
+
+---
+
 ### 📝 Resumo das Responsabilidades Técnicas:
-*   **Administrador:** Perfil "Superuser". Possui acesso irrestrito, define a estrutura da frota e possui autoridade final em auditorias.
-*   **Gestor:** Foca na saúde financeira imediata e na gestão humana, utilizando um subconjunto das ferramentas do Admin.
-*   **Motorista:** Responsável pela operação do ativo e conformidade financeira.
-*   **Sistema:** Regula a visibilidade e acesso aos módulos com base no `user_role` atribuído no banco de dados.
+*   **SaaS Master:** Gerencia as empresas que usam o sistema, define planos e monitora o crescimento da plataforma.
+*   **Administrador (Empresa):** Perfil "Superuser" de uma empresa específica. Possui acesso irrestrito aos dados da SUA empresa.
+*   **Gestor:** Foca na saúde financeira imediata e na gestão humana da sua empresa.
+*   **Motorista:** Responsável pela operação do ativo e conformidade financeira dentro de uma empresa.

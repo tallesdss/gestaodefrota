@@ -3,6 +3,7 @@ import '../models/vehicle.dart';
 List<Vehicle> mockVehicles = [
   Vehicle(
     id: '1',
+    companyId: 'comp1',
     plate: 'ABC-1234',
     brand: 'Chevrolet',
     model: 'Onix',
@@ -57,6 +58,7 @@ List<Vehicle> mockVehicles = [
   ),
   Vehicle(
     id: '2',
+    companyId: 'comp1',
     plate: 'DEF-5678',
     brand: 'Fiat',
     model: 'Cronos',
@@ -94,6 +96,7 @@ List<Vehicle> mockVehicles = [
   ),
   Vehicle(
     id: '3',
+    companyId: 'comp2',
     plate: 'GHI-9012',
     brand: 'Toyota',
     model: 'Corolla',
@@ -123,6 +126,7 @@ List<Vehicle> mockVehicles = [
   ),
   Vehicle(
     id: '4',
+    companyId: 'comp2',
     plate: 'JKL-3456',
     brand: 'Volkswagen',
     model: 'Polo',

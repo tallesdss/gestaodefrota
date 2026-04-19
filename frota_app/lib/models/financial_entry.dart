@@ -2,6 +2,7 @@ enum FinancialType { income, expense }
 
 class FinancialEntry {
   final String id;
+  final String companyId; // Added for SaaS
   final FinancialType type;
   final String category; // aluguel / manutenção / ipva / seguro / multa / outro
   final String? vehicleId;
@@ -14,6 +15,7 @@ class FinancialEntry {
 
   FinancialEntry({
     required this.id,
+    required this.companyId,
     required this.type,
     required this.category,
     this.vehicleId,
@@ -28,6 +30,7 @@ class FinancialEntry {
   factory FinancialEntry.fromMap(Map<String, dynamic> map) {
     return FinancialEntry(
       id: map['id'],
+      companyId: map['companyId'] ?? 'default_company',
       type: FinancialType.values.firstWhere((e) => e.name == map['type']),
       category: map['category'],
       vehicleId: map['vehicleId'],
@@ -43,6 +46,7 @@ class FinancialEntry {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'companyId': companyId,
       'type': type.name,
       'category': category,
       'vehicleId': vehicleId,
@@ -57,6 +61,7 @@ class FinancialEntry {
 
   FinancialEntry copyWith({
     String? id,
+    String? companyId,
     FinancialType? type,
     String? category,
     String? vehicleId,
@@ -69,6 +74,7 @@ class FinancialEntry {
   }) {
     return FinancialEntry(
       id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
       type: type ?? this.type,
       category: category ?? this.category,
       vehicleId: vehicleId ?? this.vehicleId,

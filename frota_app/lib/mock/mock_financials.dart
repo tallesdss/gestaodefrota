@@ -3,6 +3,7 @@ import '../models/financial_entry.dart';
 List<FinancialEntry> mockFinancialEntries = [
   FinancialEntry(
     id: 'f1',
+    companyId: 'default_company',
     type: FinancialType.income,
     category: 'aluguel',
     driverId: 'd1',
@@ -14,6 +15,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f2',
+    companyId: 'default_company',
     type: FinancialType.expense,
     category: 'manutenção',
     vehicleId: '1',
@@ -24,6 +26,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f3',
+    companyId: 'company_2',
     type: FinancialType.expense,
     category: 'multa',
     vehicleId: '1',
@@ -34,6 +37,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f4',
+    companyId: 'default_company',
     type: FinancialType.income,
     category: 'aluguel',
     driverId: 'd2',
@@ -45,6 +49,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f5',
+    companyId: 'default_company',
     type: FinancialType.expense,
     category: 'seguro',
     vehicleId: '1',
@@ -55,6 +60,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f6',
+    companyId: 'company_2',
     type: FinancialType.expense,
     category: 'manutenção',
     vehicleId: '3',
@@ -65,6 +71,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f7',
+    companyId: 'default_company',
     type: FinancialType.income,
     category: 'aluguel',
     driverId: 'd1',
@@ -75,6 +82,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f8',
+    companyId: 'default_company',
     type: FinancialType.income,
     category: 'aluguel',
     driverId: 'd2',
@@ -85,6 +93,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f9',
+    companyId: 'company_2',
     type: FinancialType.income,
     category: 'aluguel',
     driverId: 'd1',
@@ -95,6 +104,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f10',
+    companyId: 'company_2',
     type: FinancialType.income,
     category: 'aluguel',
     driverId: 'd4',
@@ -105,6 +115,7 @@ List<FinancialEntry> mockFinancialEntries = [
   ),
   FinancialEntry(
     id: 'f11',
+    companyId: 'default_company',
     type: FinancialType.income,
     category: 'aluguel',
     driverId: 'd5',

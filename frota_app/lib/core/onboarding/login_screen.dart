@@ -238,6 +238,24 @@ class _LoginScreenState extends State<LoginScreen>
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => context.push(AppRoutes.superAdminLogin),
+                  icon: const Icon(Icons.shield_outlined, size: 16),
+                  label: Text(
+                    'Acesso Corporativo Master',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.onSurfaceVariant.withAlpha(150),
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ),
               const SizedBox(height: 32),
               const AuthFooter(),
               const SizedBox(height: 16),

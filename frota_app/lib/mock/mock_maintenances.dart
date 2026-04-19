@@ -3,6 +3,7 @@ import '../models/maintenance_entry.dart';
 final List<MaintenanceEntry> mockMaintenances = [
   MaintenanceEntry(
     id: 'm1',
+    companyId: 'default_company',
     vehicleId: '1',
     driverId: 'd1',
     driverName: 'João da Silva',
@@ -22,6 +23,7 @@ final List<MaintenanceEntry> mockMaintenances = [
   ),
   MaintenanceEntry(
     id: 'm2',
+    companyId: 'default_company',
     vehicleId: '2',
     driverId: 'd2',
     driverName: 'Maria Santos',
@@ -44,6 +46,7 @@ final List<MaintenanceEntry> mockMaintenances = [
   ),
   MaintenanceEntry(
     id: 'm3',
+    companyId: 'company_2',
     vehicleId: '1',
     driverId: 'd1',
     driverName: 'João da Silva',
@@ -67,6 +70,7 @@ final List<MaintenanceEntry> mockMaintenances = [
   ),
   MaintenanceEntry(
     id: 'm4',
+    companyId: 'company_2',
     vehicleId: '1',
     driverId: 'd1',
     driverName: 'João da Silva',

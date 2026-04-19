@@ -83,6 +83,7 @@ class MaintenancePart {
 
 class MaintenanceEntry {
   final String id;
+  final String companyId; // Added for SaaS
   final String vehicleId;
   final String? driverId;
   final String? driverName;
@@ -100,6 +101,7 @@ class MaintenanceEntry {
 
   MaintenanceEntry({
     required this.id,
+    required this.companyId,
     required this.vehicleId,
     this.driverId,
     this.driverName,
@@ -119,6 +121,7 @@ class MaintenanceEntry {
   factory MaintenanceEntry.fromMap(Map<String, dynamic> map) {
     return MaintenanceEntry(
       id: map['id'],
+      companyId: map['companyId'] ?? 'default_company',
       vehicleId: map['vehicleId'],
       driverId: map['driverId'],
       driverName: map['driverName'],
@@ -147,6 +150,7 @@ class MaintenanceEntry {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'companyId': companyId,
       'vehicleId': vehicleId,
       'driverId': driverId,
       'driverName': driverName,

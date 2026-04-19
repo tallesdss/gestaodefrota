@@ -4,6 +4,7 @@ enum DriverStatus { active, inactive }
 
 class Driver {
   final String id;
+  final String companyId; // Added for SaaS
   final String name;
   final String cpf;
   final String phone;
@@ -20,6 +21,7 @@ class Driver {
 
   Driver({
     required this.id,
+    required this.companyId,
     required this.name,
     required this.cpf,
     required this.phone,
@@ -38,6 +40,7 @@ class Driver {
   factory Driver.fromMap(Map<String, dynamic> map) {
     return Driver(
       id: map['id'],
+      companyId: map['companyId'] ?? 'default_company',
       name: map['name'],
       cpf: map['cpf'],
       phone: map['phone'],
@@ -57,6 +60,7 @@ class Driver {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'companyId': companyId,
       'name': name,
       'cpf': cpf,
       'phone': phone,
@@ -75,6 +79,7 @@ class Driver {
 
   Driver copyWith({
     String? id,
+    String? companyId,
     String? name,
     String? cpf,
     String? phone,
@@ -91,6 +96,7 @@ class Driver {
   }) {
     return Driver(
       id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
       name: name ?? this.name,
       cpf: cpf ?? this.cpf,
       phone: phone ?? this.phone,

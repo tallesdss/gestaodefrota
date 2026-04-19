@@ -34,23 +34,27 @@ Abaixo, o checklist das telas necessárias para a parte de Super Administração
 - [ ] **Gráficos de Crescimento**: Evolução de novas adesões e cancelamentos (Churn rate).
 - [ ] **Mapa de Calor**: Localização geográfica das empresas/frotas em tempo real.
 - [ ] **Alertas de Faturamento**: Empresas com pagamentos em atraso ou vencendo hoje.
+- [x] **Dashboard Global Master**
+    - [x] KPIs Consolidados (Total de Empresas, Veículos na Base, MRR)
+    - [x] Monitor de Saúde do Sistema (Server Status)
+    - [x] Listagem de Atividades Recentes (Audit Log simplificado)
 
 ### 3.2 Gestão de Empresas (Tenants)
-- [ ] **Listagem de Empresas**: Tabela com filtros por Plano, Status (Ativa/Inativa) e Quantidade de Veículos.
-- [ ] **Cadastro de Nova Empresa (Wizard de Onboarding)**:
-    - [ ] Dados Cadastrais (CNPJ, Razão Social, Nome Fantasia).
-    - [ ] Dados de Contato/Proprietário (Admin Master da empresa).
-    - [ ] Configuração de Endereço e Fuso Horário.
-    - [ ] Configuração de Plano (Seleção de limite de veículos e módulos ativos).
-- [ ] **Painel de Controle da Empresa (Visão 360)**:
-    - [ ] Edição de dados e limite de veículos.
-    - [ ] Configuração de Módulos (ex: habilitar ou desabilitar módulo de Oficina/Manutenção).
-    - [ ] Histórico de faturas e pagamentos.
-    - [ ] Botão "Acessar como Empresa" (Shadow Access para suporte).
+- [x] **Login de Super Administrador**
+- [x] Design diferenciado (Master Access)
+- [x] Gateway de acesso na tela principal
+- [x] **Módulo: Gestão de Empresas**
+    - [x] Listagem de Empresas (Com filtros avançados e status)
+    - [/] Onboarding Wizard (Criação de novo Tenant) - [Em andamento]
+- [x] **Acessar como Empresa (Shadow Mode)**
+    - [x] Impersonation de Tenant para suporte técnico
+    - [x] Overlay visual de segurança (Header Laranja)
 - [ ] **Suspensão/Bloqueio**: Interface para bloqueio imediato de acesso por inadimplência.
 
 ### 3.3 Planos e Monetização
-- [ ] **Gestão de Planos**: Cadastro de tiers (ex: Basic, Pro, Enterprise).
+- [x] **Módulo: Planos e Tarifas**
+    - [x] Listagem de Planos (Configuração de limites e preços)
+    - [/] CRUD de Planos (Editar/Criar níveis de serviço) - [Em andamento]
 - [ ] **Configuração de Preços/Limites**:
     - [ ] Preço por veículo ou preço fixo.
     - [ ] Limite de usuários administradores por empresa.
@@ -86,6 +90,15 @@ Seguindo o **Design System: Architectural Command**:
 - **Paleta Elevada:** O Super Admin deve usar tons levemente mais escuros que o admin comum para denotar autoridade (ex: `surface` com um toque mais focado em Azul Profundo).
 - **Sem Linhas:** Divisões entre empresas na listagem devem usar `tonal layering`, não bordas de 1px.
 - **Tipografia:** Uso extensivo de *Manrope* para KPIs globais, transmitindo segurança e controle.
+
+---
+
+## 5. Próximas Etapas (Branch CRMSAAS)
+
+1. **Refatoração de Modelos**: Adicionar `companyId` em todas as entidades (Veículos, Motoristas, Vistorias).
+2. **Wizard de Onboarding**: Finalizar a tela de cadastro rápido de nova empresa.
+3. **Filtro de Contexto**: Implementar o `TenantManager` para filtrar os mocks por `companyId`.
+4. **Branding Dinâmico**: Permitir que cada empresa tenha seu logo no dashboard.
 
 ---
 

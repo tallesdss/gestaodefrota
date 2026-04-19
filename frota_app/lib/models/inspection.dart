@@ -47,6 +47,7 @@ class ChecklistItem {
 
 class Inspection {
   final String id;
+  final String companyId; // Added for SaaS
   final String vehicleId;
   final String driverId;
   final InspectionType type;
@@ -63,6 +64,7 @@ class Inspection {
 
   Inspection({
     required this.id,
+    required this.companyId,
     required this.vehicleId,
     required this.driverId,
     required this.type,
@@ -81,6 +83,7 @@ class Inspection {
   factory Inspection.fromMap(Map<String, dynamic> map) {
     return Inspection(
       id: map['id'],
+      companyId: map['companyId'] ?? 'default_company',
       vehicleId: map['vehicleId'],
       driverId: map['driverId'],
       type: InspectionType.values.firstWhere((e) => e.name == map['type']),
@@ -112,6 +115,7 @@ class Inspection {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'companyId': companyId,
       'vehicleId': vehicleId,
       'driverId': driverId,
       'type': type.name,
@@ -130,6 +134,7 @@ class Inspection {
 
   Inspection copyWith({
     String? id,
+    String? companyId,
     String? vehicleId,
     String? driverId,
     InspectionType? type,
@@ -146,6 +151,7 @@ class Inspection {
   }) {
     return Inspection(
       id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
       vehicleId: vehicleId ?? this.vehicleId,
       driverId: driverId ?? this.driverId,
       type: type ?? this.type,

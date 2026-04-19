@@ -68,6 +68,7 @@ class RentalValueHistory {
 
 class Vehicle {
   final String id;
+  final String companyId; // Added for SaaS
   final String plate;
   final String brand;
   final String model;
@@ -109,6 +110,7 @@ class Vehicle {
 
   Vehicle({
     required this.id,
+    required this.companyId,
     required this.plate,
     required this.brand,
     required this.model,
@@ -146,6 +148,7 @@ class Vehicle {
   factory Vehicle.fromMap(Map<String, dynamic> map) {
     return Vehicle(
       id: map['id'],
+      companyId: map['companyId'] ?? 'default_company', // Default for legacy data
       plate: map['plate'],
       brand: map['brand'],
       model: map['model'],
@@ -194,6 +197,7 @@ class Vehicle {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'companyId': companyId,
       'plate': plate,
       'brand': brand,
       'model': model,
@@ -231,6 +235,7 @@ class Vehicle {
 
   Vehicle copyWith({
     String? id,
+    String? companyId,
     String? plate,
     String? brand,
     String? model,
@@ -266,6 +271,7 @@ class Vehicle {
   }) {
     return Vehicle(
       id: id ?? this.id,
+      companyId: companyId ?? this.companyId,
       plate: plate ?? this.plate,
       brand: brand ?? this.brand,
       model: model ?? this.model,

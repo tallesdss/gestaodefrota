@@ -18,16 +18,19 @@ import '../../mock/mock_financials.dart';
 import '../../mock/mock_timeline.dart';
 import '../../mock/mock_workshops.dart';
 import '../../mock/mock_expense_categories.dart';
+import '../saas/tenant_manager.dart';
 
 class MockRepository {
   static final MockRepository _instance = MockRepository._internal();
   factory MockRepository() => _instance;
   MockRepository._internal();
 
+  final _tenantManager = TenantManager();
+
   // Vehicles
   Future<List<Vehicle>> getVehicles() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return mockVehicles;
+    return _tenantManager.filterByTenant(mockVehicles, (v) => v.companyId);
   }
 
   Future<Vehicle> getVehicleById(String id) async {
@@ -38,13 +41,13 @@ class MockRepository {
   // Drivers
   Future<List<Driver>> getDrivers() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return mockDrivers;
+    return _tenantManager.filterByTenant(mockDrivers, (d) => d.companyId);
   }
 
   // Managers
   Future<List<Manager>> getManagers() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return mockManagers;
+    return mockManagers; // Managers are currently global or need companyId too
   }
 
   // Contracts
@@ -67,7 +70,7 @@ class MockRepository {
 
   Future<List<MaintenanceEntry>> getMaintenances() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return mockMaintenances;
+    return _tenantManager.filterByTenant(mockMaintenances, (m) => m.companyId);
   }
 
   Future<List<MaintenanceEntry>> getMaintenancesByVehicle(
@@ -107,7 +110,7 @@ class MockRepository {
   // Inspections
   Future<List<Inspection>> getInspections() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return mockInspections;
+    return _tenantManager.filterByTenant(mockInspections, (i) => i.companyId);
   }
 
   Future<Inspection?> getInspectionById(String id) async {
@@ -140,7 +143,7 @@ class MockRepository {
   // Financials
   Future<List<FinancialEntry>> getFinancialEntries() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return mockFinancialEntries;
+    return _tenantManager.filterByTenant(mockFinancialEntries, (f) => f.companyId);
   }
 
   Future<List<FinancialEntry>> getFinancialEntriesByVehicle(
