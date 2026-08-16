@@ -1,4 +1,4 @@
-# 🏛️ Plano de Arquitetura de Backend — Supabase (Gestão de Frota Premium)
+# 🏛️ Plano de Arquitetura e Migração Backend — Supabase (Gestão de Frota Premium)
 
 > **Projeto Supabase Ativo:** `Gestaodefrota`  
 > **Project Reference ID:** `rwksrejrmjqnuspqnokp`  
@@ -220,9 +220,188 @@ Controle de receitas (aluguéis, taxas) e despesas (IPVA, seguros, manutenções
 
 ---
 
-## 🚀 5. Próximos Passos de Execução
+## 📋 5. Checklist Sequencial de Execução: Migração de Mock para Backend Real
 
-1. [ ] **Gerar Migration SQL Inicial:** Criar o script SQL completo com `TABLES`, `ENUMS`, `INDEXES`, `TRIGGERS` (atualização automática de timestamps e status) e `RLS POLICIES`.
-2. [ ] **Executar Schema no Supabase:** Aplicar as migrações no projeto `Gestaodefrota` (`rwksrejrmjqnuspqnokp`).
-3. [ ] **Configurar Buckets de Storage:** Provisionar os 5 buckets com as políticas de acesso.
-4. [ ] **Implementar Repositories do Flutter:** Integrar o pacote `supabase_flutter` substituindo os mocks pelos repositories reais.
+> [!IMPORTANT]
+> A execução deve seguir a ordem estrita das fases abaixo para garantir integridade referencial, segurança e zero quebras na interface do aplicativo.
+
+---
+
+### 🔹 FASE 1: Infraestrutura & Banco de Dados (Supabase)
+- [ ] **1.1. Script de Migração SQL Master:**
+  - [ ] Criar tipos ENUM (`user_role`, `vehicle_status`, `driver_status`, `contract_status`, `inspection_type`, `inspection_status`, `financial_type`, `financial_status`, `payment_method_enum`, `workshop_status`, `maintenance_status`).
+  - [ ] Criar tabelas com chaves primárias UUID, chaves estrangeiras e constraints:
+    - [ ] `profiles`
+    - [ ] `vehicles`
+    - [ ] `drivers`
+    - [ ] `contracts`
+    - [ ] `inspections`
+    - [ ] `expense_categories`
+    - [ ] `financial_entries`
+    - [ ] `workshops`
+    - [ ] `maintenance_entries`
+    - [ ] `managers`
+    - [ ] `timeline_items`
+  - [ ] Criar triggers automáticos de `updated_at` em todas as tabelas.
+  - [ ] Criar trigger `handle_new_user()` para popular `public.profiles` automaticamente a cada novo registro no `auth.users`.
+- [ ] **1.2. Políticas de Segurança (Row Level Security - RLS):**
+  - [ ] Ativar RLS em todas as tabelas (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY`).
+  - [ ] Criar helper function `auth.is_admin()` para otimização de regras de admin.
+  - [ ] Criar policies para `profiles`, `vehicles`, `drivers`, `contracts`, `inspections`, `financial_entries`, `workshops`, `maintenance_entries`, `managers`.
+- [ ] **1.3. Configuração dos Buckets de Storage:**
+  - [ ] Criar bucket `driver-documents` (privado) + RLS policies de upload/download.
+  - [ ] Criar bucket `inspection-photos` (privado/autenticado) + RLS policies.
+  - [ ] Criar bucket `vehicle-documents` (autenticado) + RLS policies.
+  - [ ] Criar bucket `workshop-invoices` (autenticado) + RLS policies.
+  - [ ] Criar bucket `payment-receipts` (privado) + RLS policies.
+- [ ] **1.4. Execução do Schema & Seed Inicial:**
+  - [ ] Executar migration no projeto Supabase `Gestaodefrota` (`rwksrejrmjqnuspqnokp`).
+  - [ ] Inserir dados base de categorias de despesas no `expense_categories` (conforme plano de contas).
+  - [ ] Criar primeiro usuário Administrador Master no Supabase Auth.
+
+---
+
+### 🔹 FASE 2: Configuração do Cliente Flutter
+- [ ] **2.1. Instalação de Dependências:**
+  - [ ] Adicionar `supabase_flutter: ^2.8.0` no `frota_app/pubspec.yaml`.
+  - [ ] Adicionar dependências auxiliares se necessário (`flutter_dotenv`).
+  - [ ] Rodar `flutter pub get`.
+- [ ] **2.2. Inicialização & Configuração Central:**
+  - [ ] Criar arquivo de constantes/ambiente `lib/core/config/supabase_config.dart` (URL e Anon Key).
+  - [ ] Inicializar `Supabase.initialize()` no `lib/main.dart`.
+  - [ ] Criar helper global `supabase` (`Supabase.instance.client`).
+
+---
+
+### 🔹 FASE 3: Mapeamento de Modelos (Mappers & Serialization)
+- [ ] **3.1. Atualizar Modelos com `fromMap` e `toMap` compatíveis com o PostgreSQL:**
+  - [ ] `lib/models/vehicle.dart` (mapear campos snake_case <-> camelCase e enums).
+  - [ ] `lib/models/driver.dart` (mapear campos de CNH, endereço e score).
+  - [ ] `lib/models/contract.dart` (mapear relacionamentos e periodicidade).
+  - [ ] `lib/models/inspection.dart` (mapear URLs das fotos e JSON de danos).
+  - [ ] `lib/models/financial_entry.dart` (mapear valores numéricos, datas e método de pagamento).
+  - [ ] `lib/models/expense_category.dart` (mapear hierarquia de categorias).
+  - [ ] `lib/models/workshop.dart` (mapear CNPJ, dados bancários e status).
+  - [ ] `lib/models/maintenance_entry.dart` (mapear lista de peças e NFes).
+  - [ ] `lib/models/manager.dart` (mapear salário base e JSON de permissões).
+  - [ ] `lib/models/timeline_item.dart` (mapear histórico de eventos).
+
+---
+
+### 🔹 FASE 4: Implementação dos Repositórios Concretos Supabase
+- [ ] **4.1. Criar `AuthRepository` (`lib/core/repositories/auth_repository.dart`):**
+  - [ ] Login com Email e Senha (`signInWithPassword`).
+  - [ ] Cadastro de Motorista / Gestor (`signUp`).
+  - [ ] Recuperação de Senha (`resetPasswordForEmail`).
+  - [ ] Obter Sessão e Perfil Atual (`getCurrentProfile`).
+  - [ ] Logout (`signOut`).
+- [ ] **4.2. Criar `VehicleRepository` (`lib/core/repositories/vehicle_repository.dart`):**
+  - [ ] Listar veículos com filtros de status e busca (`getVehicles`).
+  - [ ] Obter detalhes por ID (`getVehicleById`).
+  - [ ] Cadastrar novo veículo (`createVehicle`).
+  - [ ] Atualizar dados do veículo / KM / IPVA / Financiamento (`updateVehicle`).
+  - [ ] Inativar veículo (`deleteVehicle`).
+- [ ] **4.3. Criar `DriverRepository` (`lib/core/repositories/driver_repository.dart`):**
+  - [ ] Listar motoristas com status e busca (`getDrivers`).
+  - [ ] Obter perfil 360 do motorista (`getDriverById`).
+  - [ ] Atualizar status cadastral (Aprovar/Bloquear).
+  - [ ] Atualizar Trust Score e saldo devedor.
+  - [ ] Upload de CNH e Comprovante de Residência no Storage do Supabase.
+- [ ] **4.4. Criar `ContractRepository` (`lib/core/repositories/contract_repository.dart`):**
+  - [ ] Criar novo contrato vinculando veículo e motorista.
+  - [ ] Listar contratos ativos e histórico.
+  - [ ] Finalizar ou rescindir contrato.
+- [ ] **4.5. Criar `InspectionRepository` (`lib/core/repositories/inspection_repository.dart`):**
+  - [ ] Upload de fotos da vistoria 360º no bucket `inspection-photos`.
+  - [ ] Salvar vistoria de Check-in ou Check-out com odômetro e nível de combustível.
+  - [ ] Listar vistorias por motorista ou veículo.
+  - [ ] Aprovar / Rejeitar laudo de vistoria (Admin/Gestor).
+- [ ] **4.6. Criar `FinancialRepository` (`lib/core/repositories/financial_repository.dart`):**
+  - [ ] Listar entradas financeiras com filtros de período e status.
+  - [ ] Registrar entrada / saída manual (Função de Caixa).
+  - [ ] Realizar baixa manual de recebimento.
+  - [ ] Gerar cobrança / QR Code PIX para faturas de motorista.
+  - [ ] Upload e visualização de comprovantes de pagamento.
+- [ ] **4.7. Criar `WorkshopRepository` & `MaintenanceRepository`:**
+  - [ ] CRUD completo de oficinas credenciadas.
+  - [ ] Registrar nova manutenção com upload de NFe e lista de peças.
+  - [ ] Listar manutenções por veículo e por oficina.
+- [ ] **4.8. Criar `ManagerRepository`:**
+  - [ ] Listar gestores e suas permissões.
+  - [ ] Configurar salários e comissões.
+  - [ ] Atualizar permissões operacionais.
+
+---
+
+### 🔹 FASE 5: Autenticação Real & Controle de Acesso (RBAC)
+- [ ] **5.1. Tela de Login (`/auth`):**
+  - [ ] Conectar formulário ao `AuthRepository.signInWithPassword`.
+  - [ ] Tratamento de erros de credenciais inválidas.
+  - [ ] Redirecionamento automático com base na role (`admin` -> `/admin`, `gestor` -> `/gestor`, `driver` -> `/driver`).
+- [ ] **5.2. Fluxo de Auto-Cadastro do Motorista:**
+  - [ ] Criar usuário no Supabase Auth + registro inicial em `profiles` e `drivers`.
+  - [ ] Upload de CNH e comprovante direto para o bucket `driver-documents`.
+  - [ ] Redirecionar para tela de "Aguardando Aprovação".
+- [ ] **5.3. Guard de Rotas (`app_routes.dart`):**
+  - [ ] Proteger rotas `/admin/*`, `/gestor/*` e `/driver/*` validando a sessão ativa e permissões.
+
+---
+
+### 🔹 FASE 6: Migração do Painel Master (Admin & Gestor)
+- [ ] **6.1. Dashboard Principal:**
+  - [ ] Conectar cards de KPIs (Veículos Ativos, Taxa de Ocupação, Receita Mensal, Despesas) a queries agregadas do Supabase.
+  - [ ] Conectar gráficos de Receita vs Despesa com `financial_entries`.
+  - [ ] Painel de alertas de CNH e IPVA com queries filtradas por data de vencimento.
+- [ ] **6.2. Módulo de Frota:**
+  - [ ] Substituir `mockVehicles` por `VehicleRepository.getVehicles()`.
+  - [ ] Conectar tela de criação e edição de veículos ao backend.
+- [ ] **6.3. Módulo de Motoristas & Auditoria:**
+  - [ ] Substituir `mockDrivers` por `DriverRepository.getDrivers()`.
+  - [ ] Tela de auditoria de documentos conectada aos links seguros do Storage.
+  - [ ] Visualização 360 do motorista carregando histórico real de contratos, vistorias e débitos.
+- [ ] **6.4. Módulo de Vistorias:**
+  - [ ] Comparativo de Check-in vs Check-out com fotos reais do Storage.
+  - [ ] Aprovação de laudos salvando no banco.
+- [ ] **6.5. Módulo de Oficinas & Manutenções:**
+  - [ ] Perfil 360 da oficina com KPIs financeiros calculados a partir das manutenções reais.
+  - [ ] Formulário de nova manutenção com upload de NFe.
+- [ ] **6.6. Módulo Financeiro & Painel de Controle:**
+  - [ ] Fluxo de caixa em tempo real e conciliação de recebimentos.
+  - [ ] Gestão de categorias de despesas dinâmicas do banco.
+  - [ ] Configuração de salários e permissões dos gestores.
+
+---
+
+### 🔹 FASE 7: Migração do Portal do Motorista (Driver Portal)
+- [ ] **7.1. Home do Motorista:**
+  - [ ] Carregar dados reais do veículo em posse a partir do contrato ativo.
+  - [ ] Exibir status real de manutenção preventiva e KM do ativo.
+- [ ] **7.2. Vistorias 360º:**
+  - [ ] Fluxo de Check-in e Check-out tirando fotos pela câmera e enviando para o bucket `inspection-photos`.
+  - [ ] Registro do odômetro e nível de combustível no `inspections`.
+- [ ] **7.3. Extrato Financeiro & PIX:**
+  - [ ] Listagem de faturas e mensalidades reais daquele motorista.
+  - [ ] Geração dinâmica de PIX Copia e Cola.
+  - [ ] Upload de comprovante de pagamento para `payment-receipts`.
+- [ ] **7.4. Perfil & Documentos:**
+  - [ ] Visualização do CRLV e Apólice de Seguro a partir dos links do veículo ativo.
+  - [ ] Exibição do Trust Score atualizado do banco.
+
+---
+
+### 🔹 FASE 8: Realtime & Notificações
+- [ ] **8.1. Inscrições em Tempo Real (Supabase Realtime):**
+  - [ ] Atualização instantânea de novas vistorias submetidas no painel do Gestor/Admin.
+  - [ ] Notificação instantânea ao motorista quando um pagamento ou vistoria for aprovado.
+  - [ ] Atualização dinâmica do saldo de caixa ao registrar novas entradas/saídas.
+
+---
+
+### 🔹 FASE 9: Limpeza, Seed & Validação Final
+- [ ] **9.1. Limpeza de Mocks:**
+  - [ ] Remover pasta `lib/mock/` e classe `MockRepository`.
+  - [ ] Garantir que 100% dos imports apontem para os novos repositórios Supabase.
+- [ ] **9.2. Testes de Integração & RLS:**
+  - [ ] Testar fluxo completo de login e operações para cada role (Admin, Gestor, Driver).
+  - [ ] Validar que Motoristas não conseguem acessar dados de terceiros via RLS.
+  - [ ] Validar integridade dos uploads e visualização de imagens do Storage.
