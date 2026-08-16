@@ -11,6 +11,11 @@ class Workshop {
   final double totalSpent;
   final double pendingPayment;
   final List<String> specializedServices;
+  final String? bankName;
+  final String? agency;
+  final String? account;
+  final String? pixKeyType;
+  final String? pixKey;
   final String? bankInfo;
 
   Workshop({
@@ -26,6 +31,11 @@ class Workshop {
     this.totalSpent = 0.0,
     this.pendingPayment = 0.0,
     this.specializedServices = const [],
+    this.bankName,
+    this.agency,
+    this.account,
+    this.pixKeyType,
+    this.pixKey,
     this.bankInfo,
   });
 
@@ -35,20 +45,23 @@ class Workshop {
   factory Workshop.fromMap(Map<String, dynamic> map) {
     return Workshop(
       id: (map['id'] ?? '').toString(),
-      name: map['nome_fantasia'] ?? map['name'] ?? '',
-      corporateName: map['razao_social'] ?? map['corporateName'],
-      cnpj: map['cnpj'] ?? '',
-      phone: map['telefone'] ?? map['phone'] ?? '',
-      email: map['email'] ?? '',
-      address: map['endereco'] ?? map['address'] ?? '',
+      name: (map['nome_fantasia'] ?? map['name'] ?? '').toString(),
+      corporateName: (map['razao_social'] ?? map['corporateName'])?.toString(),
+      cnpj: (map['cnpj'] ?? '').toString(),
+      phone: (map['telefone'] ?? map['phone'] ?? '').toString(),
+      email: (map['email'] ?? '').toString(),
+      address: (map['endereco'] ?? map['address'] ?? '').toString(),
       isAccredited: map['isAccredited'] ?? (map['status'] == 'ativo' || map['status'] == 'active'),
       rating: (map['avaliacao'] ?? map['rating'] ?? 5.0).toDouble(),
       totalSpent: (map['totalSpent'] ?? 0.0).toDouble(),
       pendingPayment: (map['pendingPayment'] ?? 0.0).toDouble(),
       specializedServices: List<String>.from(map['specializedServices'] ?? []),
-      bankInfo: map['dados_bancarios_json'] != null
-          ? map['dados_bancarios_json'].toString()
-          : map['bankInfo'],
+      bankName: (map['banco_nome'] ?? map['bankName'])?.toString(),
+      agency: (map['agencia'] ?? map['agency'])?.toString(),
+      account: (map['conta_corrente'] ?? map['account'])?.toString(),
+      pixKeyType: (map['tipo_chave_pix'] ?? map['pixKeyType'])?.toString(),
+      pixKey: (map['chave_pix'] ?? map['pixKey'])?.toString(),
+      bankInfo: (map['dados_bancarios_json'] ?? map['bankInfo'])?.toString(),
     );
   }
 
@@ -66,22 +79,38 @@ class Workshop {
       'totalSpent': totalSpent,
       'pendingPayment': pendingPayment,
       'specializedServices': specializedServices,
+      'bankName': bankName,
+      'agency': agency,
+      'account': account,
+      'pixKeyType': pixKeyType,
+      'pixKey': pixKey,
       'bankInfo': bankInfo,
     };
   }
 
+  /// Mapeamento para inserção na tabela `oficinas` do Supabase
   Map<String, dynamic> toDatabaseMap() {
-    return {
-      'id': id,
-      'nome_fantasia': name,
-      'razao_social': corporateName,
-      'cnpj': cnpj,
-      'telefone': phone,
-      'email': email,
-      'endereco': address,
-      'avaliacao': rating,
+    final data = <String, dynamic>{
+      'cnpj': cnpj.replaceAll(RegExp(r'[^0-9]'), ''),
+      'nome_fantasia': name.trim(),
+      'razao_social': corporateName?.trim() ?? name.trim(),
+      'telefone': phone.trim(),
+      'email': email.trim(),
+      'endereco': address.trim(),
+      'avaliacao': rating.clamp(1.0, 5.0),
       'status': isAccredited ? 'ativo' : 'inativo',
     };
+
+    if (id.isNotEmpty && id.contains('-')) {
+      data['id'] = id;
+    }
+    if (bankName != null && bankName!.isNotEmpty) data['banco_nome'] = bankName;
+    if (agency != null && agency!.isNotEmpty) data['agencia'] = agency;
+    if (account != null && account!.isNotEmpty) data['conta_corrente'] = account;
+    if (pixKey != null && pixKey!.isNotEmpty) data['chave_pix'] = pixKey;
+    if (pixKeyType != null && pixKeyType!.isNotEmpty) data['tipo_chave_pix'] = pixKeyType;
+
+    return data;
   }
 }
 
@@ -105,11 +134,11 @@ class WorkshopParts {
   factory WorkshopParts.fromMap(Map<String, dynamic> map) {
     return WorkshopParts(
       id: (map['id'] ?? '').toString(),
-      workshopId: map['oficina_id'] ?? map['workshopId'] ?? '',
-      name: map['nome'] ?? map['name'] ?? '',
-      price: (map['valor'] ?? map['price'] ?? 0.0).toDouble(),
-      date: DateTime.tryParse(map['data'] ?? map['date'] ?? '') ?? DateTime.now(),
-      vehiclePlate: map['placa_veiculo'] ?? map['vehiclePlate'] ?? '',
+      workshopId: (map['oficina_id'] ?? map['workshopId'] ?? '').toString(),
+      name: (map['descricao_peca'] ?? map['nome'] ?? map['name'] ?? '').toString(),
+      price: (map['valor_unitario'] ?? map['valor'] ?? map['price'] ?? 0.0).toDouble(),
+      date: DateTime.tryParse((map['data_servico'] ?? map['data'] ?? map['date'] ?? '').toString()) ?? DateTime.now(),
+      vehiclePlate: (map['placa_veiculo'] ?? map['vehiclePlate'] ?? '').toString(),
     );
   }
 
@@ -149,13 +178,13 @@ class WorkshopDocument {
   factory WorkshopDocument.fromMap(Map<String, dynamic> map) {
     return WorkshopDocument(
       id: (map['id'] ?? '').toString(),
-      workshopId: map['oficina_id'] ?? map['workshopId'] ?? '',
-      title: map['titulo'] ?? map['title'] ?? 'NFe',
-      type: map['tipo'] ?? map['type'] ?? 'NFe',
-      date: DateTime.tryParse(map['data'] ?? map['date'] ?? '') ?? DateTime.now(),
-      value: (map['valor'] ?? map['value'] ?? 0.0).toDouble(),
-      status: map['status'] ?? 'Paid',
-      imageUrl: map['nota_fiscal_nfe_url'] ?? map['imageUrl'],
+      workshopId: (map['oficina_id'] ?? map['workshopId'] ?? '').toString(),
+      title: (map['descricao'] ?? map['title'] ?? 'Documento').toString(),
+      type: (map['type'] ?? 'NFe').toString(),
+      date: DateTime.tryParse((map['data_servico'] ?? map['date'] ?? '').toString()) ?? DateTime.now(),
+      value: (map['custo_total'] ?? map['value'] ?? 0.0).toDouble(),
+      status: (map['status'] ?? 'Paid').toString(),
+      imageUrl: (map['nota_fiscal_nfe_url'] ?? map['imageUrl'])?.toString(),
     );
   }
 

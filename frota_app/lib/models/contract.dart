@@ -14,6 +14,9 @@ class Contract {
   final bool depositPaid;
   final double depositAmount;
   final String? billingFrequency;
+  final int? dueDay;
+  final String? signatureUrl;
+  final DateTime? signedAt;
 
   Contract({
     required this.id,
@@ -29,6 +32,9 @@ class Contract {
     required this.depositPaid,
     this.depositAmount = 0.0,
     this.billingFrequency,
+    this.dueDay,
+    this.signatureUrl,
+    this.signedAt,
   });
 
   factory Contract.fromMap(Map<String, dynamic> map) {
@@ -38,6 +44,7 @@ class Contract {
       if (s == 'ativo' || s == 'active') return ContractStatus.active;
       if (s == 'concluido' || s == 'expired' || s == 'concluded') return ContractStatus.concluded;
       if (s == 'cancelado' || s == 'cancelled') return ContractStatus.cancelled;
+      if (s == 'inadimplente' || s == 'default') return ContractStatus.defaultStatus;
       return ContractStatus.active;
     }
 
@@ -45,10 +52,10 @@ class Contract {
 
     return Contract(
       id: (map['id'] ?? '').toString(),
-      contractNumber: map['numero_contrato'] ?? map['contractNumber'],
-      vehicleId: map['veiculo_id'] ?? map['vehicleId'] ?? '',
-      driverId: map['motorista_id'] ?? map['driverId'] ?? '',
-      type: map['type'] ?? 'uber',
+      contractNumber: (map['numero_contrato'] ?? map['contractNumber'])?.toString(),
+      vehicleId: (map['veiculo_id'] ?? map['vehicleId'] ?? '').toString(),
+      driverId: (map['motorista_id'] ?? map['driverId'] ?? '').toString(),
+      type: (map['type'] ?? 'uber').toString(),
       startDate: DateTime.tryParse(map['data_inicio'] ?? map['startDate'] ?? '') ?? DateTime.now(),
       endDate: DateTime.tryParse(map['data_fim'] ?? map['endDate'] ?? '') ?? DateTime.now().add(const Duration(days: 365)),
       weeklyValue: map['weeklyValue'] != null ? (map['weeklyValue'] as num).toDouble() : rentalVal / 4,
@@ -56,7 +63,10 @@ class Contract {
       status: parseStatus(map['status']),
       depositPaid: (map['depositPaid'] ?? ((map['valor_caucao'] ?? 0.0) > 0)) as bool,
       depositAmount: (map['valor_caucao'] ?? map['depositAmount'] ?? 0.0).toDouble(),
-      billingFrequency: map['frequencia_cobranca'] ?? map['billingFrequency'] ?? 'mensal',
+      billingFrequency: (map['frequencia_cobranca'] ?? map['billingFrequency'] ?? 'semanal').toString(),
+      dueDay: (map['dia_vencimento'] ?? map['dueDay']) as int?,
+      signatureUrl: map['assinatura_digital_url'] ?? map['signatureUrl'],
+      signedAt: map['assinado_em'] != null ? DateTime.tryParse(map['assinado_em'].toString()) : null,
     );
   }
 
@@ -75,23 +85,52 @@ class Contract {
       'depositPaid': depositPaid,
       'depositAmount': depositAmount,
       'billingFrequency': billingFrequency,
+      'dueDay': dueDay,
+      'signatureUrl': signatureUrl,
+      'signedAt': signedAt?.toIso8601String(),
     };
   }
 
+  /// Mapeamento para inserção/atualização na tabela `contratos` do Supabase
   Map<String, dynamic> toDatabaseMap() {
-    return {
-      'id': id,
-      'numero_contrato': contractNumber,
+    String statusStr = 'ativo';
+    switch (status) {
+      case ContractStatus.active:
+        statusStr = 'ativo';
+        break;
+      case ContractStatus.cancelled:
+        statusStr = 'cancelado';
+        break;
+      case ContractStatus.concluded:
+      case ContractStatus.expired:
+        statusStr = 'concluido';
+        break;
+      case ContractStatus.defaultStatus:
+        statusStr = 'inadimplente';
+        break;
+    }
+
+    final data = <String, dynamic>{
+      'numero_contrato': contractNumber ?? 'CTR-${DateTime.now().millisecondsSinceEpoch}',
       'motorista_id': driverId,
       'veiculo_id': vehicleId,
       'data_inicio': startDate.toIso8601String().split('T')[0],
       'data_fim': endDate.toIso8601String().split('T')[0],
-      'valor_locacao': monthlyValue,
+      'valor_locacao': monthlyValue > 0 ? monthlyValue : weeklyValue * 4,
       'valor_caucao': depositAmount,
-      'frequencia_cobranca': billingFrequency ?? 'mensal',
-      'status': status == ContractStatus.active
-          ? 'ativo'
-          : (status == ContractStatus.cancelled ? 'cancelado' : 'concluido'),
+      'frequencia_cobranca': (billingFrequency == 'mensal' || billingFrequency == 'quinzenal') ? billingFrequency : 'semanal',
+      'dia_vencimento': dueDay ?? 10,
+      'status': statusStr,
     };
+
+    if (id.isNotEmpty && id.contains('-')) {
+      data['id'] = id;
+    }
+    if (signatureUrl != null && signatureUrl!.isNotEmpty) {
+      data['assinatura_digital_url'] = signatureUrl;
+      data['assinado_em'] = (signedAt ?? DateTime.now()).toIso8601String();
+    }
+
+    return data;
   }
 }

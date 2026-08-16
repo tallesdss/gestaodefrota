@@ -755,17 +755,17 @@ USING (public.eh_gestor_ou_admin());
 ---
 
 ### 🔹 FASE 3: Modelos & Mappers Relacionais (Dart ↔ PostgreSQL)
-- [ ] **3.1. Atualizar Modelos para mapear entidades normalizadas:**
-  - [ ] `lib/models/vehicle.dart` ↔ `veiculos`
-  - [ ] `lib/models/driver.dart` ↔ `motoristas` + `perfis`
-  - [ ] `lib/models/contract.dart` ↔ `contratos`
-  - [ ] `lib/models/inspection.dart` ↔ `vistorias` + `fotos_vistoria` + `itens_checklist_vistoria`
-  - [ ] `lib/models/maintenance_entry.dart` ↔ `manutencoes` + `itens_manutencao`
-  - [ ] `lib/models/workshop.dart` ↔ `oficinas`
-  - [ ] `lib/models/financial_entry.dart` ↔ `lancamentos_financeiros`
-  - [ ] `lib/models/expense_category.dart` ↔ `categorias_despesa`
-  - [ ] `lib/models/manager.dart` ↔ `gestores` + `gestor_permissoes`
-  - [ ] `lib/models/timeline_item.dart` ↔ `historico_atividades`
+- [x] **3.1. Atualizar Modelos para mapear entidades normalizadas:**
+  - [x] `lib/models/vehicle.dart` ↔ `veiculos`
+  - [x] `lib/models/driver.dart` ↔ `motoristas` + `perfis`
+  - [x] `lib/models/contract.dart` ↔ `contratos`
+  - [x] `lib/models/inspection.dart` ↔ `vistorias` + `fotos_vistoria` + `itens_checklist_vistoria`
+  - [x] `lib/models/maintenance_entry.dart` ↔ `manutencoes` + `itens_manutencao`
+  - [x] `lib/models/workshop.dart` ↔ `oficinas`
+  - [x] `lib/models/financial_entry.dart` ↔ `lancamentos_financeiros`
+  - [x] `lib/models/expense_category.dart` ↔ `categorias_despesa`
+  - [x] `lib/models/manager.dart` ↔ `gestores` + `gestor_permissoes`
+  - [x] `lib/models/timeline_item.dart` ↔ `historico_atividades`
 
 ---
 
