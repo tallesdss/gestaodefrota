@@ -708,6 +708,12 @@ USING (public.eh_gestor_ou_admin());
 
 ## 📋 10. Checklist Sequencial de Execução da Migração
 
+> [!TIP]
+> 🎯 **MARCOS DE ENTREGA PARA TESTES DO USUÁRIO:**  
+> O desenvolvimento segue estritamente fase a fase. Para garantir que você possa testar o aplicativo assim que houver um mínimo viável funcional, definimos dois pontos de parada oficiais:
+> * 🚗 **Marco #1 (Fim da FASE 6):** **MVP do Painel Master (Admin & Gestor)** — Login real, navegação em todas as telas conectadas ao banco, cadastro e edição de carros com salvamento em tempo real no Supabase.
+> * 📱 **Marco #2 (Fim da FASE 7):** **MVP do Portal do Motorista** — Auto-cadastro com envio de CNH/comprovante para o Storage, visualização de veículos em posse e vistoria 360 com upload de fotos.
+
 ---
 
 ### 🔹 FASE 1: Infraestrutura Relacional & DDL SQL no Supabase
@@ -740,10 +746,11 @@ USING (public.eh_gestor_ou_admin());
 ---
 
 ### 🔹 FASE 2: Configuração do Cliente Flutter
-- [ ] **2.1. Dependências & Inicialização:**
-  - [ ] Adicionar `supabase_flutter: ^2.8.0` no `frota_app/pubspec.yaml`.
-  - [ ] Configurar `lib/core/config/supabase_config.dart` com URL e Anon Key.
-  - [ ] Inicializar `Supabase.initialize()` no `lib/main.dart`.
+- [x] **2.1. Dependências & Inicialização:**
+  - [x] Adicionar `supabase_flutter: ^2.8.0` no `frota_app/pubspec.yaml`.
+  - [x] Configurar `lib/core/config/supabase_config.dart` com URL e Anon Key.
+  - [x] Inicializar `Supabase.initialize()` no `lib/main.dart`.
+
 
 ---
 
@@ -782,15 +789,35 @@ USING (public.eh_gestor_ou_admin());
 ---
 
 ### 🔹 FASE 6: Migração do Painel Master (Admin & Gestor)
-- [ ] Conectar Dashboard Master à view `vw_kpis_dashboard_master`.
-- [ ] Conectar telas de Frota, Motoristas, Vistorias, Oficinas e Financeiro aos repositórios Supabase.
+- [ ] **6.1. Dashboard Principal:** Conectar cards de KPIs e gráficos à view `vw_kpis_dashboard_master` e `lancamentos_financeiros`.
+- [ ] **6.2. Módulo de Frota:** Conectar listagem, criação e edição de veículos ao `VehicleRepository` (CRUD real no Supabase).
+- [ ] **6.3. Módulo de Motoristas & Auditoria:** Conectar listagem de condutores, aprovação de cadastro e links de CNH/Comprovantes do Storage.
+- [ ] **6.4. Módulo de Vistorias:** Conectar lista de vistorias, fotos 360 do Storage e aprovação de laudos.
+- [ ] **6.5. Módulo de Oficinas & Manutenções:** Conectar credenciamento de oficinas e ordens de serviço.
+- [ ] **6.6. Módulo Financeiro:** Conectar fluxo de caixa, conciliação e categorias de despesa.
+
+> [!IMPORTANT]
+> 🚨 **MARCO DE TESTE DO USUÁRIO #1 — MÍNIMO VIÁVEL OPERACIONAL (MVP PAINEL MASTER)**  
+> **Aviso de Teste:** Ao concluir a **FASE 6**, o agente irá **parar e notificar você formalmente** para que você possa rodar o app e testar na prática:
+> 1. 🔑 **Login Real:** Entrar com conta de Administrador/Gestor via Supabase Auth.
+> 2. 🚗 **Criar e Gerenciar Carros:** Cadastrar novos veículos pelo formulário e conferir os dados persistidos em tempo real na tabela `veiculos` do PostgreSQL.
+> 3. 🧭 **Navegar em Todas as Telas:** Navegar fluidamente pelo Dashboard, Frota, Motoristas, Vistorias, Oficinas e Financeiro com dados reais.
+> 4. ✏️ **Edição & Filtros:** Testar filtros por status de veículo, edição de placa/KM/IPVA e consistência visual.
 
 ---
 
 ### 🔹 FASE 7: Migração do Portal do Motorista (Driver Portal)
-- [ ] Conectar Home do Motorista ao contrato ativo e dados do veículo locado.
-- [ ] Conectar Check-in / Check-out com fotos reais enviadas para o bucket `fotos-vistorias`.
-- [ ] Conectar Extrato Financeiro e PIX Copia e Cola.
+- [ ] **7.1. Home do Motorista:** Conectar contrato ativo e dados do veículo em posse.
+- [ ] **7.2. Vistoria 360 Digital:** Conectar fluxo de fotos com upload direto para o bucket `fotos-vistorias`.
+- [ ] **7.3. Extrato Financeiro & PIX:** Conectar listagem de débitos, comprovantes e PIX Copia e Cola.
+- [ ] **7.4. Perfil & Documentação:** Conectar visualização de CNH, CRLV e pontuação de confiança.
+
+> [!IMPORTANT]
+> 🚨 **MARCO DE TESTE DO USUÁRIO #2 — MÍNIMO VIÁVEL DO PORTAL DO MOTORISTA**  
+> **Aviso de Teste:** Ao concluir a **FASE 7**, você será notificado para testar o app na perspectiva do motorista (mobile touch-first):
+> 1. 📝 Auto-cadastro com upload de CNH e comprovante no Supabase Storage.
+> 2. 📸 Execução de Vistoria 360º com fotos reais.
+> 3. 💳 Visualização de faturas e simulação de pagamento via PIX.
 
 ---
 
