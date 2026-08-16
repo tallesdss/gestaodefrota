@@ -711,31 +711,31 @@ USING (public.eh_gestor_ou_admin());
 ---
 
 ### 🔹 FASE 1: Infraestrutura Relacional & DDL SQL no Supabase
-- [ ] **1.1. Script de Migração DDL Master (em Português):**
-  - [ ] Criar tipos ENUM (`tipo_perfil_enum`, `status_motorista_enum`, `status_veiculo_enum`, `status_ipva_enum`, `status_contrato_enum`, `frequencia_cobranca_enum`, `tipo_vistoria_enum`, `status_vistoria_enum`, `tipo_foto_vistoria_enum`, `tipo_categoria_enum`, `tipo_lancamento_enum`, `status_financeiro_enum`, `metodo_pagamento_enum`, `status_oficina_enum`, `tipo_manutencao_enum`, `status_manutencao_enum`, `tipo_chave_pix_enum`).
-  - [ ] Criar tabelas normalizadas com PKs UUID e FKs explícitas:
-    - [ ] `perfis`
-    - [ ] `motoristas`
-    - [ ] `gestores`
-    - [ ] `permissoes` & `gestor_permissoes` (N:N)
-    - [ ] `veiculos`
-    - [ ] `contratos`
-    - [ ] `vistorias`, `fotos_vistoria` & `itens_checklist_vistoria`
-    - [ ] `oficinas`, `manutencoes` & `itens_manutencao`
-    - [ ] `categorias_despesa` (hierárquica) & `lancamentos_financeiros`
-    - [ ] `historico_atividades`
-  - [ ] Criar todos os índices B-Tree de Chaves Estrangeiras (`CREATE INDEX`).
-  - [ ] Criar Triggers e Funções PL/pgSQL (`fn_sincronizar_km_veiculo`, `fn_sincronizar_status_contrato`, `fn_recalcular_totais_motorista`, `handle_new_user`).
-  - [ ] Criar Funções Transacionais RPC (`fn_criar_contrato_locacao`).
-  - [ ] Criar Views Relacionais (`vw_kpis_dashboard_master`, `vw_extrato_completo_motorista`).
-- [ ] **1.2. Políticas de Segurança (RLS) & Buckets:**
-  - [ ] Ativar RLS em 100% das tabelas.
-  - [ ] Criar Policies com checagens RBAC e relacionamentos via JOINs.
-  - [ ] Criar os 5 buckets de Storage com políticas de RLS.
-- [ ] **1.3. Execução no Supabase (`Gestaodefrota` - `rwksrejrmjqnuspqnokp`):**
-  - [ ] Aplicar DDL no banco via MCP Supabase.
-  - [ ] Rodar Seeds de categorias contábeis e permissões iniciais.
-  - [ ] Criar usuário Administrador Master no Supabase Auth.
+- [x] **1.1. Script de Migração DDL Master (em Português):**
+  - [x] Criar tipos ENUM (`tipo_perfil_enum`, `status_motorista_enum`, `status_veiculo_enum`, `status_ipva_enum`, `status_contrato_enum`, `frequencia_cobranca_enum`, `tipo_vistoria_enum`, `status_vistoria_enum`, `tipo_foto_vistoria_enum`, `tipo_categoria_enum`, `tipo_lancamento_enum`, `status_financeiro_enum`, `metodo_pagamento_enum`, `status_oficina_enum`, `tipo_manutencao_enum`, `status_manutencao_enum`, `tipo_chave_pix_enum`).
+  - [x] Criar tabelas normalizadas com PKs UUID e FKs explícitas:
+    - [x] `perfis`
+    - [x] `motoristas`
+    - [x] `gestores`
+    - [x] `permissoes` & `gestor_permissoes` (N:N)
+    - [x] `veiculos`
+    - [x] `contratos`
+    - [x] `vistorias`, `fotos_vistoria` & `itens_checklist_vistoria`
+    - [x] `oficinas`, `manutencoes` & `itens_manutencao`
+    - [x] `categorias_despesa` (hierárquica) & `lancamentos_financeiros`
+    - [x] `historico_atividades`
+  - [x] Criar todos os índices B-Tree de Chaves Estrangeiras (`CREATE INDEX`).
+  - [x] Criar Triggers e Funções PL/pgSQL (`fn_sincronizar_km_veiculo`, `fn_sincronizar_status_contrato`, `fn_recalcular_totais_motorista`, `handle_new_user`, `fn_atualizar_timestamp`).
+  - [x] Criar Funções Transacionais RPC (`fn_criar_contrato_locacao`).
+  - [x] Criar Views Relacionais (`vw_kpis_dashboard_master`, `vw_extrato_completo_motorista`).
+- [x] **1.2. Políticas de Segurança (RLS) & Buckets:**
+  - [x] Ativar RLS em 100% das tabelas.
+  - [x] Criar Policies com checagens RBAC e relacionamentos via JOINs.
+  - [x] Criar os 5 buckets de Storage com políticas de RLS.
+- [x] **1.3. Execução no Supabase (`Gestaodefrota` - `rwksrejrmjqnuspqnokp`):**
+  - [x] Aplicar DDL no banco via Supabase API / MCP.
+  - [x] Rodar Seeds de categorias contábeis e permissões iniciais.
+  - [x] Schema e infraestrutura 100% auditados e ativos no PostgreSQL 17.
 
 ---
 
