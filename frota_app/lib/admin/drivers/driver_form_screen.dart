@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/repositories/driver_repository.dart';
 import '../../models/driver.dart';
 
 class DriverFormScreen extends StatefulWidget {
@@ -14,6 +15,9 @@ class DriverFormScreen extends StatefulWidget {
 
 class _DriverFormScreenState extends State<DriverFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final DriverRepository _driverRepo = DriverRepository();
+  bool _isLoading = false;
+
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
@@ -34,7 +38,7 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
       text: widget.driver?.cnhNumber ?? '',
     );
     _cnhCategoryController = TextEditingController(
-      text: widget.driver?.cnhCategory ?? '',
+      text: widget.driver?.cnhCategory ?? 'B',
     );
     _selectedType = widget.driver?.type ?? DriverType.uber;
     _selectedStatus = widget.driver?.status ?? DriverStatus.active;
@@ -49,6 +53,61 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
     _cnhNumberController.dispose();
     _cnhCategoryController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSaveDriver() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final driver = Driver(
+        id: widget.driver?.id ?? '',
+        name: _nameController.text.trim(),
+        cpf: _cpfController.text.trim(),
+        phone: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        type: _selectedType,
+        status: _selectedStatus,
+        cnhNumber: _cnhNumberController.text.trim(),
+        cnhExpiry: widget.driver?.cnhExpiry ?? DateTime.now().add(const Duration(days: 365 * 4)),
+        cnhCategory: _cnhCategoryController.text.trim().isNotEmpty
+            ? _cnhCategoryController.text.trim().toUpperCase()
+            : 'B',
+        avatarUrl: widget.driver?.avatarUrl ?? '',
+        isApproved: _selectedStatus == DriverStatus.active,
+        trustScore: widget.driver?.trustScore ?? 100,
+        outstandingBalance: widget.driver?.outstandingBalance ?? 0.0,
+        totalGenerated: widget.driver?.totalGenerated ?? 0.0,
+      );
+
+      if (widget.driver != null && widget.driver!.id.isNotEmpty) {
+        await _driverRepo.updateDriver(driver);
+      } else {
+        await _driverRepo.createDriver(driver);
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Motorista ${_nameController.text} salvo com sucesso no banco de dados!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao salvar motorista: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -81,14 +140,15 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
                 const SizedBox(height: AppSpacing.md),
                 _buildTextField(
                   _nameController,
-                  'Nome Completo',
+                  'Nome Completo *',
                   Icons.person_outline,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _buildTextField(
                   _emailController,
-                  'E-mail',
+                  'E-mail *',
                   Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
@@ -96,37 +156,41 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
                     Expanded(
                       child: _buildTextField(
                         _phoneController,
-                        'Telefone',
+                        'Telefone *',
                         Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: _buildTextField(
                         _cpfController,
-                        'CPF',
+                        'CPF *',
                         Icons.badge_outlined,
+                        keyboardType: TextInputType.number,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                _buildSectionTitle('DADOS DA CNH'),
+                _buildSectionTitle('HABILITAÇÃO (CNH)'),
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     Expanded(
+                      flex: 2,
                       child: _buildTextField(
                         _cnhNumberController,
-                        'Número CNH',
-                        Icons.card_membership_outlined,
+                        'Número da CNH *',
+                        Icons.credit_card_outlined,
+                        keyboardType: TextInputType.number,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: _buildTextField(
                         _cnhCategoryController,
-                        'Categoria',
+                        'Categoria *',
                         Icons.category_outlined,
                       ),
                     ),
@@ -152,25 +216,23 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        Navigator.pop(context);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: Text(
-                      isEditing ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR MOTORISTA',
-                      style: AppTextStyles.labelLarge.copyWith(
-                        color: AppColors.onPrimary,
-                      ),
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: _handleSaveDriver,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            isEditing ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR MOTORISTA',
+                            style: AppTextStyles.labelLarge.copyWith(
+                              color: AppColors.onPrimary,
+                            ),
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -194,10 +256,12 @@ class _DriverFormScreenState extends State<DriverFormScreen> {
   Widget _buildTextField(
     TextEditingController controller,
     String label,
-    IconData icon,
-  ) {
+    IconData icon, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return TextFormField(
       controller: controller,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: AppColors.primary),

@@ -444,7 +444,10 @@ class _DriverListScreenState extends State<DriverListScreen> {
               ],
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.adminDriverForm),
+        onPressed: () async {
+          await context.push(AppRoutes.adminDriverForm);
+          _fetchDrivers();
+        },
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: AppColors.onPrimary),
       ),

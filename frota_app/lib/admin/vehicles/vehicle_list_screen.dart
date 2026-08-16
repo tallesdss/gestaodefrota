@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
 import '../../core/widgets/vehicle_grid_card.dart';
 import '../../models/vehicle.dart';
 import '../../core/routes/app_routes.dart';
@@ -16,7 +16,7 @@ class VehicleListScreen extends StatefulWidget {
 }
 
 class _VehicleListScreenState extends State<VehicleListScreen> {
-  final MockRepository _repository = MockRepository();
+  final VehicleRepository _repository = VehicleRepository();
   List<Vehicle> _vehicles = [];
   List<Vehicle> _filteredVehicles = [];
   bool _isLoading = true;
@@ -29,12 +29,21 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
   }
 
   Future<void> _fetchVehicles() async {
-    final list = await _repository.getVehicles();
-    setState(() {
-      _vehicles = list;
-      _filteredVehicles = list;
-      _isLoading = false;
-    });
+    setState(() => _isLoading = true);
+    try {
+      final list = await _repository.getVehicles();
+      if (mounted) {
+        setState(() {
+          _vehicles = list;
+          _filteredVehicles = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _applyFilter(String filter) {
@@ -71,15 +80,12 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search, color: AppColors.onSurface),
+            onPressed: _fetchVehicles,
+            icon: const Icon(Icons.refresh, color: AppColors.onSurface),
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(
-              Icons.filter_list_outlined,
-              color: AppColors.onSurface,
-            ),
+            icon: const Icon(Icons.search, color: AppColors.onSurface),
           ),
         ],
       ),
@@ -106,30 +112,53 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.xl,
                     ),
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: AppSpacing.xl,
-                            mainAxisSpacing: AppSpacing.xl,
-                            childAspectRatio: 0.82,
+                    child: _filteredVehicles.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.directions_car_outlined, size: 64, color: AppColors.outlineVariant),
+                                const SizedBox(height: 16),
+                                Text('Nenhum veículo encontrado no Supabase.', style: AppTextStyles.titleMedium),
+                                const SizedBox(height: 8),
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await context.push(AppRoutes.adminVehicleForm);
+                                    _fetchVehicles();
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Cadastrar Primeiro Veículo'),
+                                ),
+                              ],
+                            ),
+                          )
+                        : GridView.builder(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: AppSpacing.xl,
+                              mainAxisSpacing: AppSpacing.xl,
+                              childAspectRatio: 0.82,
+                            ),
+                            itemCount: _filteredVehicles.length,
+                            itemBuilder: (context, index) {
+                              return VehicleGridCard(
+                                vehicle: _filteredVehicles[index],
+                                onTap: () => context.push(
+                                  '/admin/vehicles/detail/${_filteredVehicles[index].id}',
+                                ),
+                              );
+                            },
                           ),
-                      itemCount: _filteredVehicles.length,
-                      itemBuilder: (context, index) {
-                        return VehicleGridCard(
-                          vehicle: _filteredVehicles[index],
-                          onTap: () => context.push(
-                            '/admin/vehicles/detail/${_filteredVehicles[index].id}',
-                          ),
-                        );
-                      },
-                    ),
                   ),
                 ),
               ],
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go(AppRoutes.adminVehicleForm),
+        onPressed: () async {
+          await context.push(AppRoutes.adminVehicleForm);
+          _fetchVehicles();
+        },
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),

@@ -791,12 +791,13 @@ USING (public.eh_gestor_ou_admin());
 ---
 
 ### 🔹 FASE 6: Migração do Painel Master (Admin & Gestor)
-- [ ] **6.1. Dashboard Principal:** Conectar cards de KPIs e gráficos à view `vw_kpis_dashboard_master` e `lancamentos_financeiros`.
-- [ ] **6.2. Módulo de Frota:** Conectar listagem, criação e edição de veículos ao `VehicleRepository` (CRUD real no Supabase).
-- [ ] **6.3. Módulo de Motoristas & Auditoria:** Conectar listagem de condutores, aprovação de cadastro e links de CNH/Comprovantes do Storage.
-- [ ] **6.4. Módulo de Vistorias:** Conectar lista de vistorias, fotos 360 do Storage e aprovação de laudos.
-- [ ] **6.5. Módulo de Oficinas & Manutenções:** Conectar credenciamento de oficinas e ordens de serviço.
-- [ ] **6.6. Módulo Financeiro:** Conectar fluxo de caixa, conciliação e categorias de despesa.
+- [x] **6.1. Dashboard Principal:** Conectar cards de KPIs e gráficos à view `vw_kpis_dashboard_master` e `lancamentos_financeiros`.
+- [x] **6.2. Módulo de Frota:** Conectar listagem, criação e edição de veículos ao `VehicleRepository` (CRUD real no Supabase).
+- [x] **6.3. Módulo de Motoristas & Auditoria:** Conectar listagem de condutores, aprovação de cadastro e links de CNH/Comprovantes do Storage.
+- [x] **6.4. Módulo de Vistorias:** Conectar lista de vistorias, fotos 360 do Storage e aprovação de laudos.
+- [x] **6.5. Módulo de Oficinas & Manutenções:** Conectar credenciamento de oficinas e ordens de serviço.
+- [x] **6.6. Módulo Financeiro:** Conectar fluxo de caixa, conciliação e categorias de despesa.
+
 
 > [!IMPORTANT]
 > 🚨 **MARCO DE TESTE DO USUÁRIO #1 — MÍNIMO VIÁVEL OPERACIONAL (MVP PAINEL MASTER)**  

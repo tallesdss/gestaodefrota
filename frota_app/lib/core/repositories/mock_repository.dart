@@ -232,4 +232,10 @@ class MockRepository {
       mockFinancialEntries.add(entry);
     }
   }
+
+  Future<void> markAsPaid(String entryId, {DateTime? paymentDate, String? paymentMethod}) async {
+    try {
+      await _financialRepo.markAsPaid(entryId, paymentDate: paymentDate, paymentMethod: paymentMethod);
+    } catch (_) {}
+  }
 }

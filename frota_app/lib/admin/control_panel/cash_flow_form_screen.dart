@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/repositories/financial_repository.dart';
+import '../../models/financial_entry.dart';
 
 class CashFlowFormScreen extends StatefulWidget {
   const CashFlowFormScreen({super.key});
@@ -11,14 +13,84 @@ class CashFlowFormScreen extends StatefulWidget {
 }
 
 class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
+  final FinancialRepository _financialRepo = FinancialRepository();
   String type = 'Saída';
   final List<String> categories = [
     'Manutenção',
     'Combustível',
     'Limpeza',
+    'IPVA/Licenciamento',
+    'Seguro',
+    'Multa',
+    'Aluguel',
     'Outros',
   ];
   String selectedCategory = 'Manutenção';
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    final amount = double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0.0;
+    if (amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, informe um valor válido.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final isIncome = type == 'Entrada';
+      final entry = FinancialEntry(
+        id: '',
+        type: isIncome ? FinancialType.income : FinancialType.expense,
+        category: selectedCategory,
+        amount: amount,
+        date: DateTime.now(),
+        paymentDate: DateTime.now(),
+        description: _descriptionController.text.trim().isNotEmpty
+            ? _descriptionController.text.trim()
+            : '$type manual - $selectedCategory',
+        isPaid: true,
+        paymentMethod: 'pix',
+      );
+
+      await _financialRepo.createFinancialEntry(entry);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lançamento de R\$ ${amount.toStringAsFixed(2)} registrado no Supabase!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao salvar lançamento: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +103,7 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
           'Função de Caixa',
           style: AppTextStyles.headlineSmall.copyWith(color: AppColors.primary),
         ),
-        leading: BackButton(color: AppColors.primary),
+        leading: const BackButton(color: AppColors.primary),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -39,7 +111,7 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Registrar Movimentação Manual',
+              'Registrar Movimentação Manual no Supabase',
               style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -58,12 +130,14 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
             const SizedBox(height: AppSpacing.xxl),
 
             // Form Fields
-            _buildFieldLabel(r'Valor (R$)'),
+            _buildFieldLabel(r'Valor (R$) *'),
             TextField(
+              controller: _amountController,
               decoration: InputDecoration(
                 hintText: '0,00',
                 filled: true,
                 fillColor: AppColors.surfaceContainerLowest,
+                prefixIcon: const Icon(Icons.attach_money, color: AppColors.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -74,7 +148,7 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
 
             const SizedBox(height: AppSpacing.xl),
 
-            _buildFieldLabel('Categoria'),
+            _buildFieldLabel('Categoria *'),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               decoration: BoxDecoration(
@@ -92,9 +166,11 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
                     );
                   }).toList(),
                   onChanged: (newValue) {
-                    setState(() {
-                      selectedCategory = newValue!;
-                    });
+                    if (newValue != null) {
+                      setState(() {
+                        selectedCategory = newValue;
+                      });
+                    }
                   },
                 ),
               ),
@@ -102,11 +178,12 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
 
             const SizedBox(height: AppSpacing.xl),
 
-            _buildFieldLabel('Descrição / Observação'),
+            _buildFieldLabel('Descrição / Observações'),
             TextField(
+              controller: _descriptionController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Ex: Troca de óleo - Veículo XYZ-1234',
+                hintText: 'Ex: Abastecimento de emergência ou taxa bancária...',
                 filled: true,
                 fillColor: AppColors.surfaceContainerLowest,
                 border: OutlineInputBorder(
@@ -116,34 +193,29 @@ class _CashFlowFormScreenState extends State<CashFlowFormScreen> {
               ),
             ),
 
-            const SizedBox(height: AppSpacing.xxl * 2),
+            const SizedBox(height: AppSpacing.xxl),
 
-            // Submit Button
             SizedBox(
               width: double.infinity,
-              height: 56,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              height: 54,
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _handleSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Confirmar e Salvar no Supabase',
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    'Confirmar Registro',
-                    style: AppTextStyles.titleMedium.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
             ),
           ],
         ),

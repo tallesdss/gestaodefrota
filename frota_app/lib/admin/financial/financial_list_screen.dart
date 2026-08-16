@@ -35,21 +35,30 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
     });
   }
 
-  void _togglePaymentStatus(FinancialEntry entry) {
+  Future<void> _togglePaymentStatus(FinancialEntry entry) async {
+    final newPaid = !entry.isPaid;
     setState(() {
       final index = _entries.indexWhere((e) => e.id == entry.id);
       if (index != -1) {
-        _entries[index] = _entries[index].copyWith(isPaid: !entry.isPaid);
+        _entries[index] = _entries[index].copyWith(isPaid: newPaid);
       }
     });
+
+    try {
+      if (newPaid) {
+        await _repository.markAsPaid(entry.id, paymentDate: DateTime.now());
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Status de pagamento atualizado para: ${!entry.isPaid ? "PAGO" : "PENDENTE"}',
+          'Status de pagamento atualizado para: ${newPaid ? "PAGO" : "PENDENTE"}',
         ),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: !entry.isPaid ? AppColors.success : AppColors.error,
+        backgroundColor: newPaid ? AppColors.success : AppColors.error,
       ),
     );
   }

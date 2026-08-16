@@ -3,6 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/workshop.dart';
+import '../../core/repositories/workshop_repository.dart';
 
 class WorkshopFormScreen extends StatefulWidget {
   final Workshop? workshop;
@@ -212,16 +213,45 @@ class _WorkshopFormScreenState extends State<WorkshopFormScreen> {
     );
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
     if (_formKey.currentState!.validate()) {
-      // Mock saving logic
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Oficina salva com sucesso!'),
-          backgroundColor: Colors.teal,
-        ),
-      );
-      Navigator.pop(context);
+      try {
+        final workshop = Workshop(
+          id: widget.workshop?.id ?? '',
+          name: _nameController.text.trim(),
+          corporateName: _nameController.text.trim(),
+          cnpj: _cnpjController.text.trim(),
+          phone: _phoneController.text.trim(),
+          email: _emailController.text.trim(),
+          address: _addressController.text.trim(),
+          isAccredited: _isAccredited,
+          bankInfo: _bankInfoController.text.trim(),
+        );
+
+        if (widget.workshop != null && widget.workshop!.id.isNotEmpty) {
+          await WorkshopRepository().updateWorkshop(workshop);
+        } else {
+          await WorkshopRepository().createWorkshop(workshop);
+        }
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Oficina salva com sucesso no Supabase!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        Navigator.pop(context, true);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao salvar oficina: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 }

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/repositories/inspection_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../models/inspection.dart';
+import '../../models/vehicle.dart';
 
 class InspectionFormScreen extends StatefulWidget {
   const InspectionFormScreen({super.key});
@@ -11,42 +15,40 @@ class InspectionFormScreen extends StatefulWidget {
 }
 
 class _InspectionFormScreenState extends State<InspectionFormScreen> {
-  String? selectedVehicle;
-  final List<String> vehicles = [
-    'Volkswagen Virtus - ABC-1D23',
-    'Chevrolet Onix - XYZ-9A87',
-    'Fiat Cronos - FGH-5J44',
-    'Renault Kwid - QWE-2R34',
-    'Toyota Corolla - TYU-0P12',
-  ];
+  final InspectionRepository _inspectionRepo = InspectionRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
 
+  List<Vehicle> _vehicles = [];
+  Vehicle? _selectedVehicle;
   final TextEditingController _mileageController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+  bool _isLoading = false;
 
   // Checklist states
   final Map<String, bool> externalPhotos = {
-    'Frente': false,
-    'Traseira': false,
-    'Lateral Direita': false,
-    'Lateral Esquerda': false,
+    'Frente': true,
+    'Traseira': true,
+    'Lateral Direita': true,
+    'Lateral Esquerda': true,
     'Diagonal Frontal': false,
     'Diagonal Traseira': false,
   };
 
   final Map<String, bool> internalPhotos = {
-    'Painel (KM)': false,
-    'Hodômetro': false,
+    'Painel (KM)': true,
+    'Hodômetro': true,
     'Volante/Geral': false,
-    'Bancos Dianteiros': false,
+    'Bancos Dianteiros': true,
     'Bancos Traseiros': false,
     'Porta-malas': false,
   };
 
   final Map<String, bool> specificPhotos = {
-    'Parabrisa': false,
+    'Parabrisa': true,
     'Vidro Traseiro': false,
-    'Pneus': false,
+    'Pneus': true,
     'Cofre do Motor': false,
-    'Placa': false,
+    'Placa': true,
     'Chassi': false,
   };
 
@@ -57,16 +59,119 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     'Vidros sem trincas': true,
     'Retrovisores OK': true,
     'Limpadores OK': true,
-    'Combustível Registrado': false,
+    'Combustível Registrado': true,
     'Painel Limpo (Sem Luzes)': true,
     'Ar-condicionado OK': true,
     'Interior Conservado': true,
   };
 
   @override
+  void initState() {
+    super.initState();
+    _loadVehicles();
+  }
+
+  Future<void> _loadVehicles() async {
+    try {
+      final list = await _vehicleRepo.getVehicles();
+      if (mounted) {
+        setState(() {
+          _vehicles = list;
+          if (list.isNotEmpty) {
+            _selectedVehicle = list.first;
+            _mileageController.text = list.first.currentMileage.toString();
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
   void dispose() {
     _mileageController.dispose();
+    _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleSaveInspection() async {
+    if (_selectedVehicle == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, selecione o veículo para a vistoria.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final km = int.tryParse(_mileageController.text.trim()) ?? _selectedVehicle!.currentMileage;
+
+      final photos = <InspectionPhoto>[];
+      externalPhotos.forEach((k, v) {
+        if (v) {
+          photos.add(InspectionPhoto(
+            url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=400&auto=format&fit=crop',
+            title: k,
+            photoType: k.toLowerCase(),
+          ));
+        }
+      });
+      internalPhotos.forEach((k, v) {
+        if (v) {
+          photos.add(InspectionPhoto(
+            url: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=400&auto=format&fit=crop',
+            title: k,
+            photoType: k.toLowerCase(),
+          ));
+        }
+      });
+
+      final checklist = <ChecklistItem>[];
+      verifications.forEach((k, v) {
+        checklist.add(ChecklistItem(title: k, isChecked: v));
+      });
+
+      final inspection = Inspection(
+        id: '',
+        vehicleId: _selectedVehicle!.id,
+        driverId: _selectedVehicle!.activeDriverId ?? '10000000-0000-0000-0000-000000000001',
+        type: InspectionType.checkin,
+        status: InspectionStatus.approved,
+        dateTime: DateTime.now(),
+        kmAtInspection: km,
+        fuelLevel: 1.0,
+        photos: photos,
+        checklist: checklist,
+        notes: _notesController.text.trim(),
+        hasNewDamage: false,
+      );
+
+      await _inspectionRepo.createInspection(inspection);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vistoria registrada com sucesso no Supabase!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao registrar vistoria: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -132,6 +237,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
             Text('Observações Adicionais', style: AppTextStyles.titleMedium),
             const SizedBox(height: AppSpacing.sm),
             TextField(
+              controller: _notesController,
               maxLines: 4,
               decoration: InputDecoration(
                 hintText:
@@ -165,32 +271,24 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         child: SizedBox(
           width: double.infinity,
           height: 56,
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Vistoria enviada com sucesso!'),
-                  backgroundColor: AppColors.success,
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ElevatedButton(
+                  onPressed: _handleSaveInspection,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    'Salvar Vistoria no Supabase',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: AppColors.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: const Text(
-              'FINALIZAR VISTORIA',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.1,
-              ),
-            ),
-          ),
         ),
       ),
     );
@@ -200,7 +298,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
     return Row(
       children: [
         Icon(icon, color: AppColors.primary, size: 20),
-        const SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: 8),
         Text(
           title,
           style: AppTextStyles.titleMedium.copyWith(
@@ -214,7 +312,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
 
   Widget _buildVehicleSelector() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
@@ -223,14 +321,28 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
         ),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedVehicle,
+        child: DropdownButton<Vehicle>(
+          value: _selectedVehicle,
+          hint: const Text('Selecione o Veículo'),
           isExpanded: true,
-          hint: const Text('Escolha o veículo'),
-          items: vehicles.map((v) {
-            return DropdownMenuItem(value: v, child: Text(v));
+          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
+          items: _vehicles.map((v) {
+            return DropdownMenuItem<Vehicle>(
+              value: v,
+              child: Text(
+                '${v.brand} ${v.model} (${v.plate})',
+                style: AppTextStyles.bodyMedium,
+              ),
+            );
           }).toList(),
-          onChanged: (val) => setState(() => selectedVehicle = val),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                _selectedVehicle = val;
+                _mileageController.text = val.currentMileage.toString();
+              });
+            }
+          },
         ),
       ),
     );
@@ -241,20 +353,20 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Kilometragem Atual',
-          style: AppTextStyles.labelLarge.copyWith(
+          'Quilometragem no Momento (KM)',
+          style: AppTextStyles.labelMedium.copyWith(
             color: AppColors.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.xs),
         TextField(
           controller: _mileageController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            hintText: 'Ex: 45000',
-            suffixText: 'KM',
+            hintText: 'Ex: 45200',
             fillColor: AppColors.surfaceContainerLowest,
             filled: true,
+            suffixText: 'KM',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
@@ -273,26 +385,32 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 0.9,
+        crossAxisSpacing: AppSpacing.sm,
+        mainAxisSpacing: AppSpacing.sm,
+        childAspectRatio: 1.2,
       ),
       itemCount: photos.length,
       itemBuilder: (context, index) {
-        String key = photos.keys.elementAt(index);
-        bool hasPhoto = photos[key]!;
+        final key = photos.keys.elementAt(index);
+        final hasPhoto = photos[key]!;
         return InkWell(
-          onTap: () => setState(() => photos[key] = !hasPhoto),
+          onTap: () {
+            setState(() {
+              photos[key] = !hasPhoto;
+            });
+          },
+          borderRadius: BorderRadius.circular(12),
           child: Container(
             decoration: BoxDecoration(
               color: hasPhoto
-                  ? AppColors.success.withValues(alpha: 0.05)
-                  : AppColors.surfaceContainerLow,
+                  ? AppColors.primary.withValues(alpha: 0.1)
+                  : AppColors.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: hasPhoto
-                    ? AppColors.success
-                    : AppColors.outlineVariant.withValues(alpha: 0.2),
+                    ? AppColors.primary
+                    : AppColors.outlineVariant.withValues(alpha: 0.3),
+                width: hasPhoto ? 2 : 1,
               ),
             ),
             child: Column(
@@ -301,7 +419,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                 Icon(
                   hasPhoto ? Icons.check_circle : Icons.add_a_photo_outlined,
                   color: hasPhoto
-                      ? AppColors.success
+                      ? AppColors.primary
                       : AppColors.onSurfaceVariant,
                   size: 24,
                 ),
@@ -311,7 +429,7 @@ class _InspectionFormScreenState extends State<InspectionFormScreen> {
                   textAlign: TextAlign.center,
                   style: AppTextStyles.labelSmall.copyWith(
                     color: hasPhoto
-                        ? AppColors.success
+                        ? AppColors.primary
                         : AppColors.onSurfaceVariant,
                     fontSize: 10,
                   ),

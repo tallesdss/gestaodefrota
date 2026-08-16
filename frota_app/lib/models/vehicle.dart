@@ -95,7 +95,7 @@ class Vehicle {
   final double? financingInstallmentValue;
   final int? financingDueDay;
 
-  // Identification & Insurance fields
+  final int? modelYear;
   final String? renavam;
   final String? chassi;
   final String? insurancePolicyNumber;
@@ -123,15 +123,16 @@ class Vehicle {
     required this.brand,
     required this.model,
     required this.year,
-    required this.color,
-    required this.status,
-    required this.currentKm,
-    required this.fuelLevel,
-    required this.contractType,
-    required this.imageUrl,
-    required this.ipvaExpiry,
-    required this.insuranceExpiry,
-    required this.licensingExpiry,
+    this.modelYear,
+    this.color = 'Branco',
+    this.status = VehicleStatus.available,
+    this.currentKm = 0,
+    this.fuelLevel = 1.0,
+    this.contractType = ContractType.uber,
+    this.imageUrl = 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=400&auto=format&fit=crop',
+    DateTime? ipvaExpiry,
+    DateTime? insuranceExpiry,
+    DateTime? licensingExpiry,
     this.ipvaValue,
     this.insuranceValue,
     this.licensingValue,
@@ -157,7 +158,21 @@ class Vehicle {
     this.fipeValue,
     this.isEncumbered = false,
     this.encumberedBank,
-  });
+  })  : ipvaExpiry = ipvaExpiry ?? DateTime.now().add(const Duration(days: 365)),
+        insuranceExpiry = insuranceExpiry ?? DateTime.now().add(const Duration(days: 365)),
+        licensingExpiry = licensingExpiry ?? DateTime.now().add(const Duration(days: 365));
+
+  // Convenience getters
+  int get currentMileage => currentKm;
+  String? get chassis => chassi;
+  String get photoUrl => imageUrl;
+  double get dailyRate => rentalValue ?? 100.0;
+  bool get isFinanced => isEncumbered;
+  String? get financeBank => encumberedBank;
+  int? get paidInstallments => financingInstallmentsPaid;
+  int? get totalInstallments => financingTotalInstallments;
+  double? get installmentValue => financingInstallmentValue;
+  String? get activeDriverId => currentDriverId;
 
   factory Vehicle.fromMap(Map<String, dynamic> map) {
     VehicleStatus parseStatus(dynamic val) {
