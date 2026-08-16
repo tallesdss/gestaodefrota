@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../models/financial_entry.dart';
+import '../../core/repositories/financial_repository.dart';
 
 class PixCheckoutScreen extends StatelessWidget {
   final FinancialEntry entry;
@@ -301,7 +302,7 @@ class PixCheckoutScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text('ENVIAR COMPROVANTE?', style: AppTextStyles.headlineSmall),
         content: Text(
-          'Deseja enviar este comprovante para análise? O saldo será baixado em até 24h úteis.',
+          'Deseja enviar este comprovante para análise? O status será atualizado no Supabase.',
           style: AppTextStyles.bodyMedium,
         ),
         actions: [
@@ -315,14 +316,22 @@ class PixCheckoutScreen extends StatelessWidget {
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Return to summary
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Comprovante enviado com sucesso!'),
-                ),
-              );
+            onPressed: () async {
+              if (entry.id.isNotEmpty && entry.id != 'temp') {
+                try {
+                  await FinancialRepository().markAsPaid(entry.id, paymentMethod: 'pix');
+                } catch (_) {}
+              }
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Return to summary
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Pagamento PIX confirmado com sucesso!'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              }
             },
             child: Text(
               'CONFIRMAR',

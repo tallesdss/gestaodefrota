@@ -7,6 +7,10 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_avatar.dart';
 import '../../core/routes/app_routes.dart';
 
+import '../../core/repositories/auth_repository.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../../models/driver.dart';
+
 class DriverProfileDetailScreen extends StatefulWidget {
   const DriverProfileDetailScreen({super.key});
 
@@ -16,19 +20,41 @@ class DriverProfileDetailScreen extends StatefulWidget {
 }
 
 class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
+  final AuthRepository _authRepo = AuthRepository();
+  final DriverRepository _driverRepo = DriverRepository();
   bool _isEditing = false;
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  Driver? _driver;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: 'João da Silva');
-    _emailController = TextEditingController(text: 'joao.silva@email.com');
-    _phoneController = TextEditingController(text: '(11) 98765-4321');
+    _nameController = TextEditingController(text: 'Carlos Silva Motorista');
+    _emailController = TextEditingController(text: 'motorista@gestaodefrota.com');
+    _phoneController = TextEditingController(text: '(11) 99999-0003');
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    final uid = _authRepo.currentUserId;
+    if (uid != null) {
+      try {
+        final profile = await _authRepo.getCurrentProfile();
+        final driver = await _driverRepo.getDriverById(uid);
+        if (mounted && profile != null) {
+          setState(() {
+            _driver = driver;
+            _nameController.text = profile['nome']?.toString() ?? _nameController.text;
+            _emailController.text = profile['email']?.toString() ?? _emailController.text;
+            _phoneController.text = profile['telefone']?.toString() ?? _phoneController.text;
+          });
+        }
+      } catch (_) {}
+    }
   }
 
   @override
@@ -137,6 +163,7 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
   }
 
   Widget _buildScoreBadge() {
+    final score = _driver?.trustScore ?? 100;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -152,7 +179,7 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
           const Icon(Icons.star, color: Color(0xFF4CAF50), size: 16),
           const SizedBox(width: AppSpacing.xs),
           Text(
-            'Score 4.9',
+            'Score $score pts',
             style: AppTextStyles.labelSmall.copyWith(
               color: const Color(0xFF4CAF50),
               fontWeight: FontWeight.bold,
@@ -548,7 +575,12 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
 
   Widget _buildLogoutButton(BuildContext context) {
     return TextButton(
-      onPressed: () => context.go(AppRoutes.login),
+      onPressed: () async {
+        await AuthRepository().signOut();
+        if (context.mounted) {
+          context.go(AppRoutes.login);
+        }
+      },
       child: Text(
         'ENCERRAR SESSÃO',
         style: AppTextStyles.labelMedium.copyWith(

@@ -6,29 +6,103 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/repositories/auth_repository.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../../core/repositories/contract_repository.dart';
+import '../../core/repositories/financial_repository.dart';
+import '../../core/repositories/timeline_repository.dart';
+import '../../models/driver.dart';
+import '../../models/contract.dart';
 import '../../models/financial_entry.dart';
+import '../../models/timeline_item.dart';
 
-class DriverHomeScreen extends StatelessWidget {
+class DriverHomeScreen extends StatefulWidget {
   const DriverHomeScreen({super.key});
 
   @override
+  State<DriverHomeScreen> createState() => _DriverHomeScreenState();
+}
+
+class _DriverHomeScreenState extends State<DriverHomeScreen> {
+  final AuthRepository _authRepo = AuthRepository();
+  final DriverRepository _driverRepo = DriverRepository();
+  final ContractRepository _contractRepo = ContractRepository();
+  final FinancialRepository _financialRepo = FinancialRepository();
+  final TimelineRepository _timelineRepo = TimelineRepository();
+
+  Driver? _driver;
+  Contract? _activeContract;
+  List<FinancialEntry> _pendingDebts = [];
+  List<TimelineItem> _timeline = [];
+  bool _isLoading = true;
+  String _driverName = 'Motorista';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDriverData();
+  }
+
+  Future<void> _loadDriverData() async {
+    setState(() => _isLoading = true);
+    try {
+      final uid = _authRepo.currentUserId;
+      if (uid != null) {
+        final profile = await _authRepo.getCurrentProfile();
+        if (profile != null && profile['nome'] != null) {
+          _driverName = profile['nome'].toString();
+        }
+
+        final driver = await _driverRepo.getDriverById(uid);
+        final contract = await _contractRepo.getActiveContractByDriver(uid);
+        final debts = await _financialRepo.getFinancialEntries(driverId: uid, status: 'pendente');
+        final timeline = await _timelineRepo.getDriverTimeline(driverId: uid, page: 1, pageSize: 4);
+
+        if (mounted) {
+          setState(() {
+            _driver = driver;
+            _activeContract = contract;
+            _pendingDebts = debts;
+            _timeline = timeline;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final double totalPending = _pendingDebts.fold(0.0, (acc, item) => acc + item.amount);
+    final String vehicleModel = _activeContract != null ? 'Veículo Sob Contrato' : 'Volkswagen Gol';
+    final String vehiclePlate = _activeContract != null ? 'CONTRATO ATIVO' : 'PLACA: ABC-1234';
+
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: AppSpacing.xl),
-            _buildVehicleStatusCard(),
-            const SizedBox(height: AppSpacing.lg),
-            _buildFinancialSummaryCard(context),
-            const SizedBox(height: AppSpacing.lg),
-            _buildQuickActions(context),
-            const SizedBox(height: AppSpacing.lg),
-            _buildActivityTimeline(context),
-          ],
+      child: RefreshIndicator(
+        onRefresh: _loadDriverData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_isLoading) const LinearProgressIndicator(),
+              if (_isLoading) const SizedBox(height: AppSpacing.md),
+              _buildHeader(context),
+              const SizedBox(height: AppSpacing.xl),
+              _buildVehicleStatusCard(vehicleModel, vehiclePlate),
+              const SizedBox(height: AppSpacing.lg),
+              _buildFinancialSummaryCard(context, totalPending),
+              const SizedBox(height: AppSpacing.lg),
+              _buildQuickActions(context),
+              const SizedBox(height: AppSpacing.lg),
+              _buildActivityTimeline(context),
+            ],
+          ),
         ),
       ),
     );
@@ -48,14 +122,14 @@ class DriverHomeScreen extends StatelessWidget {
                 letterSpacing: 2,
               ),
             ),
-            Text('João da Silva', style: AppTextStyles.headlineMedium),
+            Text(_driver?.name.isNotEmpty == true ? _driver!.name : _driverName, style: AppTextStyles.headlineMedium),
           ],
         ),
         GestureDetector(
           onTap: () => context.push(AppRoutes.driverNotifications),
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surfaceContainerHigh,
               shape: BoxShape.circle,
             ),
@@ -69,7 +143,7 @@ class DriverHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVehicleStatusCard() {
+  Widget _buildVehicleStatusCard(String model, String plate) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -94,15 +168,15 @@ class DriverHomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'VEÍCULO ATIVO',
+                    'VEÍCULO EM POSSE',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.onSurfaceVariant,
                       letterSpacing: 1,
                     ),
                   ),
-                  Text('Volkswagen Gol', style: AppTextStyles.headlineSmall),
+                  Text(model, style: AppTextStyles.headlineSmall),
                   Text(
-                    'PLACA: ABC-1234',
+                    plate,
                     style: AppTextStyles.labelMedium.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
@@ -118,36 +192,22 @@ class DriverHomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'DOCUMENTO EM DIA',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              _buildVehicleInfoItem('Odômetro', '45.230 km'),
-              const SizedBox(width: AppSpacing.xl),
-              _buildVehicleInfoItem('Próx. Manut.', 'em 4.770 km'),
+              Expanded(
+                child: _buildMetricItem(
+                  'Próxima Revisão',
+                  '50.000 KM',
+                  Icons.build_circle_outlined,
+                ),
+              ),
+              Expanded(
+                child: _buildMetricItem(
+                  'Pontuação Confiança',
+                  '${_driver?.trustScore ?? 100} pts',
+                  Icons.shield_outlined,
+                ),
+              ),
             ],
           ),
         ],
@@ -155,89 +215,117 @@ class DriverHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVehicleInfoItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildMetricItem(String label, String value, IconData icon) {
+    return Row(
       children: [
-        Text(
-          label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.onSurfaceVariant,
-          ),
-        ),
-        Text(
-          value,
-          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+        AppIcon(icon: icon, color: AppColors.primary, size: 20),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            Text(
+              value,
+              style: AppTextStyles.labelLarge.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildFinancialSummaryCard(BuildContext context) {
+  Widget _buildFinancialSummaryCard(BuildContext context, double totalPending) {
+    final hasPending = totalPending > 0;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.onSurface.withValues(alpha: 0.04),
+            blurRadius: 40,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'FINANCEIRO PRÓXIMO VENCIMENTO',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.onSurfaceVariant,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'R\$ 550,00',
-                style: AppTextStyles.headlineLarge.copyWith(
-                  fontWeight: FontWeight.w800,
+                'SITUAÇÃO FINANCEIRA',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  letterSpacing: 1,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
+                  color: (hasPending ? AppColors.error : AppColors.success).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Vence em 2 dias',
+                  hasPending ? 'Pendente' : 'Em Dia',
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.error,
+                    color: hasPending ? AppColors.error : AppColors.success,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            label: 'PAGAR COM PIX',
-            onPressed: () => context.push(
-              AppRoutes.driverPixCheckout,
-              extra: FinancialEntry(
-                id: '1',
-                type: FinancialType.expense,
-                category: 'Aluguel',
-                amount: 550.00,
-                date: DateTime.now().add(const Duration(days: 2)),
-                description: 'Semana 12/03 a 19/03',
-                isPaid: false,
-              ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'R\$ ${hasPending ? totalPending.toStringAsFixed(2) : "0,00"}',
+            style: AppTextStyles.headlineMedium.copyWith(
+              color: hasPending ? AppColors.error : AppColors.onSurface,
+              fontWeight: FontWeight.bold,
             ),
-            variant: AppButtonVariant.secondary,
-            icon: Icons.qr_code_scanner_outlined,
-            isFullWidth: true,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Pagar com PIX',
+                  variant: AppButtonVariant.primary,
+                  onPressed: () => context.push(
+                    AppRoutes.driverPixCheckout,
+                    extra: _pendingDebts.isNotEmpty
+                        ? _pendingDebts.first
+                        : FinancialEntry(
+                            id: 'temp',
+                            type: FinancialType.expense,
+                            category: 'aluguel',
+                            amount: totalPending > 0 ? totalPending : 350.0,
+                            date: DateTime.now(),
+                            description: 'Mensalidade de Locação de Veículo',
+                            isPaid: false,
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppButton(
+                  label: 'Extrato',
+                  variant: AppButtonVariant.ghost,
+                  onPressed: () => context.push(AppRoutes.driverFinancialStatement),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -248,208 +336,67 @@ class DriverHomeScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: AppSpacing.xl),
         Text(
           'AÇÕES RÁPIDAS',
-          style: AppTextStyles.labelMedium.copyWith(
+          style: AppTextStyles.labelSmall.copyWith(
             color: AppColors.onSurfaceVariant,
-            letterSpacing: 2,
+            letterSpacing: 1,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: _buildActionButton(
-                icon: Icons.camera_alt_outlined,
-                label: 'Vistoria',
-                onPressed: () => _showInspectionSelection(context),
-              ),
+            _buildActionButton(
+              'Vistoria 360',
+              Icons.camera_alt_outlined,
+              () => context.push(AppRoutes.driverInspectionCheckIn),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildActionButton(
-                icon: Icons.document_scanner_outlined,
-                label: 'Documentos',
-                onPressed: () => context.push(AppRoutes.driverDocuments),
-              ),
+            _buildActionButton(
+              'Documentos',
+              Icons.folder_shared_outlined,
+              () => context.push(AppRoutes.driverDocuments),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildActionButton(
-                icon: Icons.report_problem_outlined,
-                label: 'Ocorrência',
-                onPressed: () => context.push(AppRoutes.driverOccurrenceReport),
-              ),
+            _buildActionButton(
+              'Ocorrência',
+              Icons.warning_amber_outlined,
+              () => context.push(AppRoutes.driverOccurrenceReport),
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                icon: Icons.support_agent_outlined,
-                label: 'Suporte',
-                onPressed: () => context.push(AppRoutes.driverSupport),
-              ),
+            _buildActionButton(
+              'Suporte',
+              Icons.help_outline,
+              () => context.push(AppRoutes.driverSupport),
             ),
-            const SizedBox(width: AppSpacing.md),
-            const Spacer(flex: 2), // Keeps the same button size
           ],
         ),
       ],
     );
   }
 
-  void _showInspectionSelection(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      isScrollControlled: true,
-      useRootNavigator: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      builder: (modalContext) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.xxl,
-          AppSpacing.xxl,
-          AppSpacing.xxl,
-          AppSpacing.xxl + MediaQuery.of(modalContext).padding.bottom,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'TIPO DE VISTORIA',
-                style: AppTextStyles.labelMedium.copyWith(
-                  letterSpacing: 2,
-                  color: AppColors.onSurfaceVariant,
+  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.onSurface.withValues(alpha: 0.04),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              _buildSelectionItem(
-                modalContext,
-                Icons.login_outlined,
-                'Check-in (Retirada)',
-                'Iniciar jornada com o veículo',
-                () {
-                  context.push(AppRoutes.driverInspectionCheckIn);
-                },
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildSelectionItem(
-                modalContext,
-                Icons.logout_outlined,
-                'Check-out (Entrega)',
-                'Finalizar jornada e devolver veículo',
-                () {
-                  context.push(AppRoutes.driverInspectionCheckOut);
-                },
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildSelectionItem(
-                modalContext,
-                Icons.history_outlined,
-                'Histórico de Vistorias',
-                'Ver todas as inspeções anteriores',
-                () {
-                  context.push(AppRoutes.driverInspectionHistory);
-                },
-              ),
-            ],
+              ],
+            ),
+            child: AppIcon(icon: icon, color: AppColors.primary),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectionItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String subtitle,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).pop();
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: AppColors.primary),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          children: [
-            AppIcon(icon: icon, color: AppColors.primary, size: 32),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              label,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(label, style: AppTextStyles.labelSmall),
+        ],
       ),
     );
   }
@@ -458,21 +405,20 @@ class DriverHomeScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: AppSpacing.xl),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'LINHA DO TEMPO',
-              style: AppTextStyles.labelMedium.copyWith(
+              'ATIVIDADE RECENTE',
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.onSurfaceVariant,
-                letterSpacing: 2,
+                letterSpacing: 1,
               ),
             ),
             GestureDetector(
               onTap: () => context.push(AppRoutes.driverActivityTimeline),
               child: Text(
-                'VER TUDO',
+                'Ver tudo',
                 style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,
@@ -482,61 +428,60 @@ class DriverHomeScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        _buildTimelineItem(
-          'Manutenção Concluída',
-          'Troca de óleo e filtros realizada.',
-          'Ontem, 14:30',
-          Icons.build_circle_outlined,
-          Colors.blue,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _buildTimelineItem(
-          'Vistoria Aprovada',
-          'Seu check-in foi validado com sucesso.',
-          '28 Mar, 09:15',
-          Icons.verified_outlined,
-          Colors.green,
-        ),
+        if (_timeline.isEmpty)
+          _buildTimelineItem(
+            'Check-in Realizado',
+            'Vistoria de entrada aprovada',
+            'Hoje, 08:30',
+            Icons.check_circle_outline,
+            AppColors.success,
+          )
+        else
+          ..._timeline.map(
+            (t) => _buildTimelineItem(
+              t.title,
+              t.description,
+              '${t.date.day}/${t.date.month} às ${t.date.hour}:${t.date.minute.toString().padLeft(2, '0')}',
+              Icons.notifications_active_outlined,
+              AppColors.primary,
+            ),
+          ),
       ],
     );
   }
 
   Widget _buildTimelineItem(
     String title,
-    String description,
+    String subtitle,
     String time,
     IconData icon,
-    Color iconColor,
+    Color color,
   ) {
     return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: AppIcon(icon: icon, color: color, size: 20),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(title, style: AppTextStyles.titleMedium),
                 Text(
-                  title,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  description,
+                  subtitle,
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -544,12 +489,10 @@ class DriverHomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
           Text(
             time,
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
-              fontSize: 10,
+              color: AppColors.onSurfaceVariant,
             ),
           ),
         ],

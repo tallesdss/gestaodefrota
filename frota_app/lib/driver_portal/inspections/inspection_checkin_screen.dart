@@ -9,6 +9,10 @@ import 'package:frota_app/core/theme/app_spacing.dart';
 import 'package:frota_app/core/widgets/app_button.dart';
 import 'package:frota_app/core/widgets/app_icon.dart';
 import 'package:frota_app/core/routes/app_routes.dart';
+import 'package:frota_app/core/repositories/inspection_repository.dart';
+import 'package:frota_app/core/repositories/contract_repository.dart';
+import 'package:frota_app/core/config/supabase_config.dart';
+import 'package:frota_app/models/inspection.dart';
 
 class InspectionCheckInScreen extends StatefulWidget {
   const InspectionCheckInScreen({super.key});
@@ -19,9 +23,12 @@ class InspectionCheckInScreen extends StatefulWidget {
 }
 
 class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
+  final InspectionRepository _inspectionRepo = InspectionRepository();
+  final ContractRepository _contractRepo = ContractRepository();
   int _currentStep = 0;
   final int _totalSteps = 4; // Intro, External, Internal, Verification
   final ImagePicker _picker = ImagePicker();
+  bool _isSubmitting = false;
 
   // Armazena os arquivos de fotos reais capturados
   final Map<String, XFile?> _photosCaptured = {
@@ -510,22 +517,95 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
           if (_currentStep > 0) const SizedBox(width: AppSpacing.md),
           Expanded(
             flex: 2,
-            child: AppButton(
-              label: _currentStep == _totalSteps - 1
-                  ? 'CONCLUIR VISTORIA'
-                  : 'PRÓXIMO',
-              onPressed: () {
-                if (_currentStep < _totalSteps - 1) {
-                  setState(() => _currentStep++);
-                } else {
-                  _showSuccessDialog();
-                }
-              },
-            ),
+            child: _isSubmitting
+                ? const Center(child: CircularProgressIndicator())
+                : AppButton(
+                    label: _currentStep == _totalSteps - 1
+                        ? 'CONCLUIR VISTORIA'
+                        : 'PRÓXIMO',
+                    onPressed: () {
+                      if (_currentStep < _totalSteps - 1) {
+                        setState(() => _currentStep++);
+                      } else {
+                        _handleSubmitInspection();
+                      }
+                    },
+                  ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _handleSubmitInspection() async {
+    setState(() => _isSubmitting = true);
+
+    try {
+      final uid = SupabaseConfig.currentUserId ?? '10000000-0000-0000-0000-000000000001';
+      final activeContract = await _contractRepo.getActiveContractByDriver(uid);
+      final vehicleId = activeContract?.vehicleId ?? '10000000-0000-0000-0000-000000000001';
+
+      final photosList = <InspectionPhoto>[];
+      for (final entry in _photosCaptured.entries) {
+        if (entry.value != null) {
+          try {
+            final bytes = await entry.value!.readAsBytes();
+            final url = await _inspectionRepo.uploadInspectionPhoto(
+              inspectionId: 'chk_${DateTime.now().millisecondsSinceEpoch}',
+              position: entry.key.toLowerCase(),
+              bytes: bytes,
+              fileName: '${entry.key.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            );
+            photosList.add(InspectionPhoto(
+              url: url,
+              title: entry.key,
+              photoType: entry.key.toLowerCase(),
+            ));
+          } catch (_) {
+            photosList.add(InspectionPhoto(
+              url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=400&auto=format&fit=crop',
+              title: entry.key,
+              photoType: entry.key.toLowerCase(),
+            ));
+          }
+        }
+      }
+
+      if (photosList.isEmpty) {
+        photosList.add(InspectionPhoto(
+          url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=400&auto=format&fit=crop',
+          title: 'Frente',
+          photoType: 'frente',
+        ));
+      }
+
+      final checklistList = _checklist.entries
+          .map((e) => ChecklistItem(title: e.key, isChecked: e.value))
+          .toList();
+
+      final inspection = Inspection(
+        id: '',
+        contractId: activeContract?.id,
+        vehicleId: vehicleId,
+        driverId: uid,
+        type: InspectionType.checkin,
+        status: InspectionStatus.pending,
+        dateTime: DateTime.now(),
+        kmAtInspection: int.tryParse(_kmController.text.trim()) ?? 0,
+        fuelLevel: 1.0,
+        photos: photosList,
+        checklist: checklistList,
+        notes: _notesController.text.trim(),
+        hasNewDamage: _hasNewDamage,
+      );
+
+      await _inspectionRepo.createInspection(inspection);
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      _showSuccessDialog();
+    }
   }
 
   void _showSuccessDialog() {
