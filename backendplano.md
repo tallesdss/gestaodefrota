@@ -833,5 +833,7 @@ USING (public.eh_gestor_ou_admin());
 ---
 
 ### 🔹 FASE 9: Limpeza, Seed & Validação Final
-- [ ] Remover pasta `lib/mock/` e referências legadas.
-- [ ] Executar testes de integridade referencial, validações de RLS e uploads de Storage.
+- [x] Remover pasta `lib/mock/` e referências legadas.
+- [x] Executar testes de integridade referencial, validações de RLS e uploads de Storage.
+- [x] Validar compilação limpa com `flutter analyze` (**0 issues found**).
+

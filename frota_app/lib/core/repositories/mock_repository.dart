@@ -8,16 +8,6 @@ import '../../models/financial_entry.dart';
 import '../../models/timeline_item.dart';
 import '../../models/workshop.dart';
 import '../../models/expense_category.dart';
-import '../../mock/mock_vehicles.dart';
-import '../../mock/mock_drivers.dart';
-import '../../mock/mock_managers.dart';
-import '../../mock/mock_contracts.dart';
-import '../../mock/mock_maintenances.dart';
-import '../../mock/mock_inspections.dart';
-import '../../mock/mock_financials.dart';
-import '../../mock/mock_timeline.dart';
-import '../../mock/mock_workshops.dart';
-import '../../mock/mock_expense_categories.dart';
 import 'vehicle_repository.dart';
 import 'driver_repository.dart';
 import 'manager_repository.dart';
@@ -28,6 +18,7 @@ import 'inspection_repository.dart';
 import 'financial_repository.dart';
 import 'timeline_repository.dart';
 
+/// Facade central para os repositórios Supabase.
 class MockRepository {
   static final MockRepository _instance = MockRepository._internal();
   factory MockRepository() => _instance;
@@ -45,168 +36,99 @@ class MockRepository {
 
   // Vehicles
   Future<List<Vehicle>> getVehicles({String? status, String? search}) async {
-    try {
-      final list = await _vehicleRepo.getVehicles(status: status, search: search);
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockVehicles;
+    return _vehicleRepo.getVehicles(status: status, search: search);
   }
 
-  Future<Vehicle> getVehicleById(String id) async {
-    try {
-      final v = await _vehicleRepo.getVehicleById(id);
-      if (v != null) return v;
-    } catch (_) {}
-    return mockVehicles.firstWhere((v) => v.id == id, orElse: () => mockVehicles.first);
+  Future<Vehicle?> getVehicleById(String id) async {
+    return _vehicleRepo.getVehicleById(id);
   }
 
   // Drivers
   Future<List<Driver>> getDrivers({String? status, String? search, String? city}) async {
-    try {
-      final list = await _driverRepo.getDrivers(status: status, search: search, city: city);
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockDrivers;
+    return _driverRepo.getDrivers(status: status, search: search, city: city);
+  }
+
+  Future<Driver?> getDriverById(String id) async {
+    return _driverRepo.getDriverById(id);
   }
 
   // Managers
   Future<List<Manager>> getManagers() async {
-    try {
-      final list = await _managerRepo.getManagers();
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockManagers;
+    return _managerRepo.getManagers();
   }
 
   // Contracts
   Future<List<Contract>> getContracts({String? status, String? driverId, String? vehicleId}) async {
-    try {
-      final list = await _contractRepo.getContracts(status: status, driverId: driverId, vehicleId: vehicleId);
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockContracts;
+    return _contractRepo.getContracts(status: status, driverId: driverId, vehicleId: vehicleId);
   }
 
   // Workshops
   Future<List<Workshop>> getWorkshops({String? search, bool? isAccredited}) async {
-    try {
-      final list = await _workshopRepo.getWorkshops(search: search, isAccredited: isAccredited);
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockWorkshops;
+    return _workshopRepo.getWorkshops(search: search, isAccredited: isAccredited);
   }
 
   // Expense Categories
   Future<List<ExpenseCategory>> getExpenseCategories() async {
-    try {
-      final list = await _financialRepo.getExpenseCategories();
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockExpenseCategories;
+    return _financialRepo.getExpenseCategories();
   }
 
+  // Maintenance
   Future<List<MaintenanceEntry>> getMaintenances({String? vehicleId, String? workshopId, String? status}) async {
-    try {
-      final list = await _maintenanceRepo.getMaintenances(vehicleId: vehicleId, workshopId: workshopId, status: status);
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockMaintenances;
+    return _maintenanceRepo.getMaintenances(vehicleId: vehicleId, workshopId: workshopId, status: status);
   }
 
   Future<List<MaintenanceEntry>> getMaintenancesByVehicle(String vehicleId) async {
-    return getMaintenances(vehicleId: vehicleId);
+    return _maintenanceRepo.getMaintenances(vehicleId: vehicleId);
   }
 
   Future<MaintenanceEntry?> getMaintenanceById(String id) async {
-    try {
-      final m = await _maintenanceRepo.getMaintenanceById(id);
-      if (m != null) return m;
-    } catch (_) {}
-    try {
-      return mockMaintenances.firstWhere((m) => m.id == id);
-    } catch (_) {
-      return null;
-    }
+    return _maintenanceRepo.getMaintenanceById(id);
   }
 
   Future<void> addMaintenance(MaintenanceEntry entry) async {
-    try {
-      await _maintenanceRepo.createMaintenance(entry);
-    } catch (_) {
-      mockMaintenances.add(entry);
-    }
+    await _maintenanceRepo.createMaintenance(entry);
   }
 
   Future<void> updateMaintenance(MaintenanceEntry updated) async {
-    try {
-      await _maintenanceRepo.updateMaintenance(updated);
-    } catch (_) {
-      final index = mockMaintenances.indexWhere((m) => m.id == updated.id);
-      if (index != -1) mockMaintenances[index] = updated;
-    }
+    await _maintenanceRepo.updateMaintenance(updated);
   }
 
   Future<void> deleteMaintenance(String id) async {
-    try {
-      await _maintenanceRepo.deleteMaintenance(id);
-    } catch (_) {
-      mockMaintenances.removeWhere((m) => m.id == id);
-    }
+    await _maintenanceRepo.deleteMaintenance(id);
   }
 
   // Inspections
   Future<List<Inspection>> getInspections({String? driverId, String? vehicleId, String? status}) async {
-    try {
-      final list = await _inspectionRepo.getInspections(driverId: driverId, vehicleId: vehicleId, status: status);
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockInspections;
+    return _inspectionRepo.getInspections(driverId: driverId, vehicleId: vehicleId, status: status);
   }
 
   Future<Inspection?> getInspectionById(String id) async {
-    try {
-      final i = await _inspectionRepo.getInspectionById(id);
-      if (i != null) return i;
-    } catch (_) {}
-    try {
-      return mockInspections.firstWhere((i) => i.id == id);
-    } catch (_) {
-      return null;
-    }
+    return _inspectionRepo.getInspectionById(id);
   }
 
   Future<List<Inspection>> getInspectionsByDriver(String driverId) async {
-    return getInspections(driverId: driverId);
+    return _inspectionRepo.getInspections(driverId: driverId);
   }
 
   Future<List<Inspection>> getInspectionsByVehicle(String vehicleId) async {
-    return getInspections(vehicleId: vehicleId);
+    return _inspectionRepo.getInspections(vehicleId: vehicleId);
   }
 
   Future<void> updateInspection(Inspection updated) async {
-    try {
-      await _inspectionRepo.updateInspectionStatus(updated.id, updated.status);
-    } catch (_) {
-      final index = mockInspections.indexWhere((i) => i.id == updated.id);
-      if (index != -1) mockInspections[index] = updated;
-    }
+    await _inspectionRepo.updateInspectionStatus(updated.id, updated.status);
   }
 
   // Financials
   Future<List<FinancialEntry>> getFinancialEntries({String? type, String? status, String? driverId, String? vehicleId}) async {
-    try {
-      final list = await _financialRepo.getFinancialEntries(type: type, status: status, driverId: driverId, vehicleId: vehicleId);
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    return mockFinancialEntries;
+    return _financialRepo.getFinancialEntries(type: type, status: status, driverId: driverId, vehicleId: vehicleId);
   }
 
   Future<List<FinancialEntry>> getFinancialEntriesByVehicle(String vehicleId) async {
-    return getFinancialEntries(vehicleId: vehicleId);
+    return _financialRepo.getFinancialEntries(vehicleId: vehicleId);
   }
 
   Future<List<FinancialEntry>> getFinancialEntriesByDriver(String driverId) async {
-    return getFinancialEntries(driverId: driverId);
+    return _financialRepo.getFinancialEntries(driverId: driverId);
   }
 
   // Timeline
@@ -215,27 +137,14 @@ class MockRepository {
     int page = 1,
     int pageSize = 5,
   }) async {
-    try {
-      final list = await _timelineRepo.getDriverTimeline(driverId: driverId, page: page, pageSize: pageSize);
-      if (list.isNotEmpty) return list;
-    } catch (_) {}
-    final start = (page - 1) * pageSize;
-    if (start >= mockTimeline.length) return [];
-    final end = (start + pageSize) > mockTimeline.length ? mockTimeline.length : (start + pageSize);
-    return mockTimeline.sublist(start, end);
+    return _timelineRepo.getDriverTimeline(driverId: driverId, page: page, pageSize: pageSize);
   }
 
   Future<void> addFinancialEntry(FinancialEntry entry) async {
-    try {
-      await _financialRepo.createFinancialEntry(entry);
-    } catch (_) {
-      mockFinancialEntries.add(entry);
-    }
+    await _financialRepo.createFinancialEntry(entry);
   }
 
   Future<void> markAsPaid(String entryId, {DateTime? paymentDate, String? paymentMethod}) async {
-    try {
-      await _financialRepo.markAsPaid(entryId, paymentDate: paymentDate, paymentMethod: paymentMethod);
-    } catch (_) {}
+    await _financialRepo.markAsPaid(entryId, paymentDate: paymentDate, paymentMethod: paymentMethod);
   }
 }
