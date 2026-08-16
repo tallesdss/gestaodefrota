@@ -15,8 +15,9 @@
 
 * **Nunca codar "rápido" quebrando padrão.**
 
-* **Somente Frontend (Fase Inicial):** Este projeto deve ser desenvolvido utilizando **apenas** o frontend com dados fictícios (mocks). 
-* **Migração Planejada:** A integração com backend real e banco de dados externo só será iniciada **após o frontend estar 100% pronto e validado**. Toda a lógica de persistência deve ser simulada localmente até lá.
+* **Somente Supabase como Backend Oficial:** Este projeto utiliza exclusivamente o **Supabase (PostgreSQL Relacional + Supabase Auth + Supabase Storage + Supabase Realtime)** como infraestrutura de backend, banco de dados e autenticação. É expressamente proibido o uso de qualquer outro backend ou banco de dados externo.
+* **Transição de Mock para Supabase Real:** O desenvolvimento do frontend com mocks foi concluído e a integração ocorre estritamente fase a fase conforme o [`backendplano.md`](file:///c:/gestaodefrota/backendplano.md).
+* **Padrão Relacional Estrito:** O Supabase é utilizado em sua plenitude relacional (3FN, Foreign Keys, Triggers PL/pgSQL, RPCs transacionais, Views e RLS). Nomenclatura 100% em Português (`snake_case`).
 
 ---
 
@@ -124,13 +125,12 @@ Toda tela deve tratar:
 
 ---
 
-## 📡 5. PREPARAÇÃO PARA BACKEND
-
-Mesmo sendo mock:
-
-* Simular delay (Future.delayed)
-* Simular erro (random)
-* Estrutura pronta para API
+## 📡 5. INTEGRAÇÃO BACKEND — SUPABASE EXCLUSIVO
+* **Cliente Oficial:** Utilizar o SDK `supabase_flutter`.
+* **Repositórios Supabase:** Toda chamada de dados passa pelo padrão `Repository` conectado às tabelas e RPCs do Supabase.
+* **Segurança & RLS:** Nunca desativar RLS; todas as regras de controle de acesso (RBAC) devem respeitar as policies do banco relacional.
+* **Storage:** Upload de documentos (CNH, CRLV, Vistorias, NFe, Comprovantes) exclusivamente nos buckets do Supabase Storage.
+* **Tratamento de Exceções:** Tratar `PostgrestException` e `AuthException` mapeando para os estados visuais da interface (Loading / Success / Empty / Error).
 
 ---
 

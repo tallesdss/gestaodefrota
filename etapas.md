@@ -3,7 +3,8 @@
 Este documento detalha o plano de execução para o frontend da aplicação, organizado por perfis de acesso e etapas lógicas, sob a filosofia de **Comando Arquitetônico**.
 
 > [!IMPORTANT]
-> **REGRA DE ESCOPO:** O foco atual é **100% Frontend**. A migração para o backend ocorrerá somente após a conclusão desta etapa de design e funcionalidade mockada.
+> **STATUS DO PROJETO:** A fase de prototipagem e desenvolvimento de frontend com dados mockados foi **100% concluída**.
+> **BACKEND OFICIAL EXCLUSIVO:** O backend oficial é exclusivamente o **Supabase (PostgreSQL Relacional + Auth + Storage + Realtime)**. A integração técnica detalhada e o checklist de execução fase a fase estão documentados em [`backendplano.md`](file:///c:/gestaodefrota/backendplano.md).
 
 ---
 
@@ -104,8 +105,14 @@ Este documento detalha o plano de execução para o frontend da aplicação, org
 
 ---
 
-### 📝 Resumo das Responsabilidades Técnicas:
-*   **Administrador:** Perfil "Superuser". Possui acesso irrestrito, define a estrutura da frota e possui autoridade final em auditorias.
-*   **Gestor:** Foca na saúde financeira imediata e na gestão humana, utilizando um subconjunto das ferramentas do Admin.
-*   **Motorista:** Responsável pela operação do ativo e conformidade financeira.
-*   **Sistema:** Regula a visibilidade e acesso aos módulos com base no `user_role` atribuído no banco de dados.
+## 🏛️ Fases de Integração do Backend Supabase (Conforme `backendplano.md`)
+
+- [ ] **FASE 1:** Infraestrutura Relacional & DDL SQL no Supabase (Enums, Tabelas 3FN, Triggers, Views, RPCs, Storage & RLS)
+- [ ] **FASE 2:** Configuração do Cliente Flutter (`supabase_flutter` & `supabase_config.dart`)
+- [ ] **FASE 3:** Modelos & Mappers Relacionais (Dart ↔ PostgreSQL)
+- [ ] **FASE 4:** Implementação dos Repositórios Concretos Supabase
+- [ ] **FASE 5:** Autenticação Real & Controle de Acesso (RBAC)
+- [ ] **FASE 6:** Migração do Painel Master (Admin & Gestor)
+- [ ] **FASE 7:** Migração do Portal do Motorista (Driver Portal)
+- [ ] **FASE 8:** Realtime & Notificações
+- [ ] **FASE 9:** Limpeza de Mocks, Seed & Validação Final

@@ -1,6 +1,9 @@
 # Painel de Controle - Funcionalidades
 
-Este documento serve como guia para a implementação do Painel de Controle na barra lateral do sistema de gestão de frota.
+> **Backend Oficial:** Exclusivamente **Supabase (PostgreSQL + Auth + RLS)**  
+> **Status:** Interface e regras alinhadas para integração com os módulos de Gestores e Finanças do Supabase.
+
+---
 
 ## Checklist de Funcionalidades
 

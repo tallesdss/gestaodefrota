@@ -1,6 +1,5 @@
-# 🛠️ Checklist Pré-Backend: Ajustes e Alinhamentos no Frontend
-
-Este documento lista todas as pendências, correções de layout e preparações necessárias no **Frontend (Flutter)** antes de iniciarmos a conexão com o Supabase.
+> **Status:** `100% CONCLUÍDO & VALIDADO`  
+> **Próxima Etapa:** Execução da **FASE 1** do [`backendplano.md`](file:///c:/gestaodefrota/backendplano.md) no Supabase.
 
 ---
 
