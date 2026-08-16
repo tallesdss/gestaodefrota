@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/inspection_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
 import '../../models/inspection.dart';
 import '../../models/vehicle.dart';
 import '../../core/widgets/app_icon.dart';
@@ -21,7 +22,8 @@ class DriverInspectionDetailScreen extends StatefulWidget {
 
 class _DriverInspectionDetailScreenState
     extends State<DriverInspectionDetailScreen> {
-  final MockRepository _repository = MockRepository();
+  final InspectionRepository _inspectionRepo = InspectionRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
 
   Inspection? _inspection;
   Vehicle? _vehicle;
@@ -43,29 +45,13 @@ class _DriverInspectionDetailScreenState
   }
 
   Future<void> _loadData() async {
-    final insp = await _repository.getInspectionById(widget.inspectionId);
+    final insp = await _inspectionRepo.getInspectionById(widget.inspectionId);
     if (insp != null) {
       Vehicle? v;
-      try {
-        v = await _repository.getVehicleById(insp.vehicleId);
-      } catch (_) {
-        // Fallback vehicle info if not found
-        v = Vehicle(
-          id: insp.vehicleId,
-          model: 'VEÍCULO #102',
-          plate: 'BRA2E24',
-          brand: 'VW',
-          year: 2024,
-          color: 'Preto',
-          status: VehicleStatus.available,
-          currentKm: insp.kmAtInspection,
-          fuelLevel: insp.fuelLevel,
-          contractType: ContractType.uber,
-          imageUrl: '',
-          ipvaExpiry: DateTime.now(),
-          insuranceExpiry: DateTime.now(),
-          licensingExpiry: DateTime.now(),
-        );
+      if (insp.vehicleId.isNotEmpty) {
+        try {
+          v = await _vehicleRepo.getVehicleById(insp.vehicleId);
+        } catch (_) {}
       }
 
       if (mounted) {

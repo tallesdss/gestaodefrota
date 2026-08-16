@@ -75,14 +75,10 @@ class RealtimeService {
         list.add(_mapActivityToNotification(row));
       }
 
-      if (list.isEmpty) {
-        list.addAll(_getDefaultNotifications());
-      }
-
       notificationsNotifier.value = list;
       _updateUnreadCount();
     } catch (_) {
-      notificationsNotifier.value = _getDefaultNotifications();
+      notificationsNotifier.value = [];
       _updateUnreadCount();
     }
   }
@@ -211,38 +207,6 @@ class RealtimeService {
       category: tipo,
       isRead: false,
     );
-  }
-
-  List<AppNotification> _getDefaultNotifications() {
-    return [
-      AppNotification(
-        id: '1',
-        title: 'SISTEMA INICIALIZADO',
-        message: 'Conectado ao Supabase Realtime com sucesso.',
-        timestamp: DateTime.now(),
-        type: AppNotificationType.success,
-        category: 'sistema',
-        isRead: false,
-      ),
-      AppNotification(
-        id: '2',
-        title: 'MONITORAMENTO DE REVISÕES',
-        message: 'Veículos próximos de 10.000 KM sinalizados no painel.',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        type: AppNotificationType.warning,
-        category: 'manutencao',
-        isRead: false,
-      ),
-      AppNotification(
-        id: '3',
-        title: 'VISTORIAS EM TEMPO REAL',
-        message: 'Aguardando novas entradas de vistorias digitais.',
-        timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-        type: AppNotificationType.info,
-        category: 'vistoria',
-        isRead: true,
-      ),
-    ];
   }
 
   void dispose() {

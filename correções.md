@@ -65,3 +65,13 @@ $$\text{Valor Semanal Estimado} = \frac{\text{Valor Mensal}}{4{,}33}$$
 ## ✅ 4. Resultado da Validação Estática
 * **`flutter analyze`:** **`No issues found!`** (0 erros e 0 alertas em todo o projeto).
 * **Supabase SQL Engine:** DDL e Views sincronizadas com sucesso no PostgreSQL 17.
+
+---
+
+## 🛡️ 5. Auditoria e Correção: Autenticação, Cadastro e RBAC
+
+| Módulo / Camada | Item Auditado | Diagnóstico Inicial | Correção Aplicada | Impacto no Negócio |
+| :--- | :--- | :--- | :--- | :--- |
+| **Supabase Auth / Trigger** | `handle_new_user()` & `public.motoristas` | Erro `23505 duplicate key value violates unique constraint "motoristas_cpf_key"` ao cadastrar novo usuário porque o trigger tentava inserir CPF `'00000000000'` duplicado. | `cpf` e `numero_cnh` agora aceitam `NULL` no momento do registro inicial (preenchidos no Onboarding); trigger atualizado com blocos `EXCEPTION` defensivos. | Cadastro de novos usuários 100% funcional sem travamentos. |
+| **Modelagem RBAC** | `public.perfis` & `UserProfile` | Controle de perfil era estritamente baseado no enum `cargo`, sem suporte a flags booleanas de permissão. | Adicionadas colunas booleanas `is_admin`, `is_gestor`, `is_motorista` em `public.perfis` e modelo [user_profile.dart](file:///c:/gestaodefrota/frota_app/lib/models/user_profile.dart). | Arquitetura unificada de identidade com papéis flexíveis por flags. |
+

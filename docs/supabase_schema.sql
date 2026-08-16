@@ -85,6 +85,9 @@ CREATE TABLE IF NOT EXISTS public.perfis (
     telefone VARCHAR(20),
     foto_url TEXT,
     cargo tipo_perfil_enum NOT NULL DEFAULT 'motorista',
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    is_gestor BOOLEAN NOT NULL DEFAULT FALSE,
+    is_motorista BOOLEAN NOT NULL DEFAULT TRUE,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
     atualizado_em TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -96,10 +99,10 @@ FOR EACH ROW EXECUTE FUNCTION public.fn_atualizar_timestamp();
 -- 4.2. Motoristas (1:1 Especialização de perfis)
 CREATE TABLE IF NOT EXISTS public.motoristas (
     id UUID PRIMARY KEY REFERENCES public.perfis(id) ON DELETE CASCADE,
-    cpf VARCHAR(14) UNIQUE NOT NULL,
-    numero_cnh VARCHAR(20) UNIQUE NOT NULL,
-    categoria_cnh VARCHAR(5) NOT NULL,
-    validade_cnh DATE NOT NULL,
+    cpf VARCHAR(14) UNIQUE,
+    numero_cnh VARCHAR(20) UNIQUE,
+    categoria_cnh VARCHAR(5) NOT NULL DEFAULT 'B',
+    validade_cnh DATE,
     cnh_frente_url TEXT,
     cnh_verso_url TEXT,
     comprovante_residencia_url TEXT,
@@ -488,22 +491,29 @@ DECLARE
     v_cargo public.tipo_perfil_enum;
     v_nome TEXT;
     v_tel TEXT;
+    v_cpf TEXT;
+    v_cnh TEXT;
+    v_cat TEXT;
 BEGIN
     -- Obter nome
-    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'nome' IS NOT NULL THEN
-        v_nome := NEW.raw_user_meta_data->>'nome';
+    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'nome' IS NOT NULL AND TRIM(NEW.raw_user_meta_data->>'nome') != '' THEN
+        v_nome := TRIM(NEW.raw_user_meta_data->>'nome');
+    ELSIF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'name' IS NOT NULL AND TRIM(NEW.raw_user_meta_data->>'name') != '' THEN
+        v_nome := TRIM(NEW.raw_user_meta_data->>'name');
+    ELSIF NEW.email IS NOT NULL THEN
+        v_nome := SPLIT_PART(NEW.email, '@', 1);
     ELSE
         v_nome := 'Usuário ' || SUBSTRING(NEW.id::text, 1, 8);
     END IF;
 
     -- Obter telefone
-    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'telefone' IS NOT NULL THEN
-        v_tel := NEW.raw_user_meta_data->>'telefone';
+    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'telefone' IS NOT NULL AND TRIM(NEW.raw_user_meta_data->>'telefone') != '' THEN
+        v_tel := TRIM(NEW.raw_user_meta_data->>'telefone');
     ELSE
         v_tel := NULL;
     END IF;
 
-    -- Obter cargo
+    -- Obter cargo com fallback seguro
     v_cargo := 'motorista'::public.tipo_perfil_enum;
     IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'cargo' IS NOT NULL THEN
         BEGIN
@@ -513,42 +523,123 @@ BEGIN
         END;
     END IF;
 
-    -- Inserir em public.perfis
-    INSERT INTO public.perfis (id, nome, email, telefone, cargo)
-    VALUES (
-        NEW.id,
-        v_nome,
-        COALESCE(NEW.email, NEW.id::text || '@temporario.com'),
-        v_tel,
-        v_cargo
-    )
-    ON CONFLICT (id) DO UPDATE 
-    SET nome = EXCLUDED.nome,
-        email = EXCLUDED.email,
-        telefone = EXCLUDED.telefone,
-        cargo = EXCLUDED.cargo,
-        atualizado_em = now();
+    -- Obter CPF e CNH se informados
+    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'cpf' IS NOT NULL AND TRIM(NEW.raw_user_meta_data->>'cpf') != '' THEN
+        v_cpf := TRIM(NEW.raw_user_meta_data->>'cpf');
+    ELSE
+        v_cpf := NULL;
+    END IF;
+
+    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'numero_cnh' IS NOT NULL AND TRIM(NEW.raw_user_meta_data->>'numero_cnh') != '' THEN
+        v_cnh := TRIM(NEW.raw_user_meta_data->>'numero_cnh');
+    ELSE
+        v_cnh := NULL;
+    END IF;
+
+    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'categoria_cnh' IS NOT NULL AND TRIM(NEW.raw_user_meta_data->>'categoria_cnh') != '' THEN
+        v_cat := TRIM(NEW.raw_user_meta_data->>'categoria_cnh');
+    ELSE
+        v_cat := 'B';
+    END IF;
+
+    -- Determinar flags booleanas de papel
+    DECLARE
+        v_is_admin BOOLEAN := FALSE;
+        v_is_gestor BOOLEAN := FALSE;
+        v_is_motorista BOOLEAN := TRUE;
+    BEGIN
+        IF NEW.raw_user_meta_data IS NOT NULL AND (NEW.raw_user_meta_data->>'is_admin')::boolean IS NOT NULL THEN
+            v_is_admin := (NEW.raw_user_meta_data->>'is_admin')::boolean;
+        ELSE
+            v_is_admin := (v_cargo = 'admin'::public.tipo_perfil_enum);
+        END IF;
+
+        IF NEW.raw_user_meta_data IS NOT NULL AND (NEW.raw_user_meta_data->>'is_gestor')::boolean IS NOT NULL THEN
+            v_is_gestor := (NEW.raw_user_meta_data->>'is_gestor')::boolean;
+        ELSE
+            v_is_gestor := (v_cargo = 'gestor'::public.tipo_perfil_enum OR v_is_admin);
+        END IF;
+
+        IF NEW.raw_user_meta_data IS NOT NULL AND (NEW.raw_user_meta_data->>'is_motorista')::boolean IS NOT NULL THEN
+            v_is_motorista := (NEW.raw_user_meta_data->>'is_motorista')::boolean;
+        ELSE
+            v_is_motorista := (v_cargo = 'motorista'::public.tipo_perfil_enum);
+        END IF;
+
+        -- Inserir / atualizar em public.perfis
+        BEGIN
+            INSERT INTO public.perfis (id, nome, email, telefone, cargo, is_admin, is_gestor, is_motorista)
+            VALUES (
+                NEW.id,
+                v_nome,
+                COALESCE(NEW.email, NEW.id::text || '@temporario.com'),
+                v_tel,
+                v_cargo,
+                v_is_admin,
+                v_is_gestor,
+                v_is_motorista
+            )
+            ON CONFLICT (id) DO UPDATE 
+            SET nome = EXCLUDED.nome,
+                email = EXCLUDED.email,
+                telefone = COALESCE(EXCLUDED.telefone, public.perfis.telefone),
+                cargo = EXCLUDED.cargo,
+                is_admin = EXCLUDED.is_admin,
+                is_gestor = EXCLUDED.is_gestor,
+                is_motorista = EXCLUDED.is_motorista,
+                atualizado_em = now();
+        EXCEPTION WHEN OTHERS THEN
+            NULL;
+        END;
+    END;
 
     -- Se for motorista, criar registro correspondente em public.motoristas se não existir
     IF v_cargo = 'motorista'::public.tipo_perfil_enum THEN
-        INSERT INTO public.motoristas (
-            id, cpf, numero_cnh, categoria_cnh, validade_cnh, status
-        ) VALUES (
-            NEW.id,
-            COALESCE(NEW.raw_user_meta_data->>'cpf', '00000000000'),
-            COALESCE(NEW.raw_user_meta_data->>'numero_cnh', '00000000000'),
-            COALESCE(NEW.raw_user_meta_data->>'categoria_cnh', 'B'),
-            CURRENT_DATE + INTERVAL '5 years',
-            'ativo'::public.status_motorista_enum
-        )
-        ON CONFLICT (id) DO NOTHING;
+        BEGIN
+            INSERT INTO public.motoristas (
+                id, cpf, numero_cnh, categoria_cnh, validade_cnh, status
+            ) VALUES (
+                NEW.id,
+                v_cpf,
+                v_cnh,
+                v_cat,
+                CURRENT_DATE + INTERVAL '5 years',
+                'pendente_aprovacao'::public.status_motorista_enum
+            )
+            ON CONFLICT (id) DO UPDATE
+            SET 
+                cpf = COALESCE(EXCLUDED.cpf, public.motoristas.cpf),
+                numero_cnh = COALESCE(EXCLUDED.numero_cnh, public.motoristas.numero_cnh),
+                categoria_cnh = COALESCE(EXCLUDED.categoria_cnh, public.motoristas.categoria_cnh),
+                atualizado_em = now();
+        EXCEPTION WHEN OTHERS THEN
+            BEGIN
+                INSERT INTO public.motoristas (
+                    id, cpf, numero_cnh, categoria_cnh, validade_cnh, status
+                ) VALUES (
+                    NEW.id,
+                    NULL,
+                    NULL,
+                    'B',
+                    CURRENT_DATE + INTERVAL '5 years',
+                    'pendente_aprovacao'::public.status_motorista_enum
+                )
+                ON CONFLICT (id) DO NOTHING;
+            EXCEPTION WHEN OTHERS THEN
+                NULL;
+            END;
+        END;
     END IF;
 
     -- Se for gestor, criar registro correspondente em public.gestores se não existir
     IF v_cargo = 'gestor'::public.tipo_perfil_enum THEN
-        INSERT INTO public.gestores (id, salario_base, percentual_comissao, ativo)
-        VALUES (NEW.id, 0.00, 0.00, true)
-        ON CONFLICT (id) DO NOTHING;
+        BEGIN
+            INSERT INTO public.gestores (id, salario_base, percentual_comissao, ativo)
+            VALUES (NEW.id, 0.00, 0.00, true)
+            ON CONFLICT (id) DO NOTHING;
+        EXCEPTION WHEN OTHERS THEN
+            NULL;
+        END;
     END IF;
 
     RETURN NEW;

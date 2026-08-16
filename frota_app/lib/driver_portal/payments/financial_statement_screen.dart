@@ -6,7 +6,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/routes/app_routes.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/financial_repository.dart';
+import '../../core/repositories/auth_repository.dart';
 import '../../models/financial_entry.dart';
 
 class FinancialStatementScreen extends StatefulWidget {
@@ -18,7 +19,8 @@ class FinancialStatementScreen extends StatefulWidget {
 }
 
 class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
-  final MockRepository _repository = MockRepository();
+  final FinancialRepository _financialRepo = FinancialRepository();
+  final AuthRepository _authRepo = AuthRepository();
   List<FinancialEntry> _entries = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -37,7 +39,10 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
     });
 
     try {
-      final data = await _repository.getFinancialEntries();
+      final uid = _authRepo.currentUserId;
+      final data = uid != null
+          ? await _financialRepo.getFinancialEntries(driverId: uid)
+          : <FinancialEntry>[];
       if (mounted) {
         setState(() {
           _entries = data;

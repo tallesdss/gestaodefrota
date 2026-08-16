@@ -3,9 +3,49 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_empty_state.dart';
+import '../../core/repositories/timeline_repository.dart';
+import '../../core/repositories/auth_repository.dart';
+import '../../models/timeline_item.dart';
 
-class DriverActivityTimelineScreen extends StatelessWidget {
+class DriverActivityTimelineScreen extends StatefulWidget {
   const DriverActivityTimelineScreen({super.key});
+
+  @override
+  State<DriverActivityTimelineScreen> createState() =>
+      _DriverActivityTimelineScreenState();
+}
+
+class _DriverActivityTimelineScreenState
+    extends State<DriverActivityTimelineScreen> {
+  final TimelineRepository _timelineRepo = TimelineRepository();
+  final AuthRepository _authRepo = AuthRepository();
+  List<TimelineItem> _items = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTimeline();
+  }
+
+  Future<void> _loadTimeline() async {
+    setState(() => _isLoading = true);
+    try {
+      final uid = _authRepo.currentUserId;
+      final data = uid != null
+          ? await _timelineRepo.getDriverTimeline(driverId: uid, page: 1, pageSize: 30)
+          : <TimelineItem>[];
+      if (mounted) {
+        setState(() {
+          _items = data;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,62 +57,36 @@ class DriverActivityTimelineScreen extends StatelessWidget {
           children: [
             _buildHeader(context),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                children: [
-                  _buildSectionTitle('Sexta, 29 Março'),
-                  _buildTimelineItem(
-                    'Manutenção Concluída',
-                    'Troca de óleo e filtros realizada conforme agendamento.',
-                    '14:30',
-                    Icons.build_circle_outlined,
-                    Colors.blue,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildTimelineItem(
-                    'Vistoria Aprovada',
-                    'Seu check-in foi validado com sucesso pela central.',
-                    '09:15',
-                    Icons.verified_outlined,
-                    Colors.green,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  _buildSectionTitle('Quinta, 28 Março'),
-                  _buildTimelineItem(
-                    'Pagamento Confirmado',
-                    'Recebemos o pagamento da semana 12/03 a 19/03.',
-                    '18:45',
-                    Icons.account_balance_wallet_outlined,
-                    Colors.green,
-                    isFirst: false,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildTimelineItem(
-                    'Documento Atualizado',
-                    'Sua CNH Digital foi validada no sistema.',
-                    '11:00',
-                    Icons.assignment_ind_outlined,
-                    AppColors.primary,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  _buildSectionTitle('Segunda, 25 Março'),
-                  _buildTimelineItem(
-                    'Check-out Realizado',
-                    'Veículo entregue no pátio central.',
-                    '19:20',
-                    Icons.logout_outlined,
-                    Colors.orange,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildTimelineItem(
-                    'Ocorrência Reportada',
-                    'Pneu furado na Rodovia SP-280.',
-                    '10:30',
-                    Icons.report_problem_outlined,
-                    AppColors.error,
-                  ),
-                ],
-              ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _items.isEmpty
+                      ? const AppEmptyState(
+                          icon: Icons.history_toggle_off_outlined,
+                          title: 'Nenhuma atividade registrada',
+                          description:
+                              'Seu histórico de atividades aparecerá aqui conforme você utilizar o aplicativo.',
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _loadTimeline,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            itemCount: _items.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: AppSpacing.md),
+                            itemBuilder: (context, index) {
+                              final item = _items[index];
+                              final timeStr =
+                                  '${item.date.day.toString().padLeft(2, '0')}/${item.date.month.toString().padLeft(2, '0')} às ${item.date.hour.toString().padLeft(2, '0')}:${item.date.minute.toString().padLeft(2, '0')}';
+                              return _buildTimelineItem(
+                                item.title,
+                                item.description,
+                                timeStr,
+                                Icons.notifications_active_outlined,
+                                AppColors.primary,
+                              );
+                            },
+                          ),
+                        ),
             ),
           ],
         ),
@@ -110,28 +124,13 @@ class DriverActivityTimelineScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Text(
-        title.toUpperCase(),
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.onSurfaceVariant,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1,
-        ),
-      ),
-    );
-  }
-
   Widget _buildTimelineItem(
     String title,
     String description,
     String time,
     IconData icon,
-    Color iconColor, {
-    bool isFirst = false,
-  }) {
+    Color iconColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -157,10 +156,12 @@ class DriverActivityTimelineScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      title,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Text(

@@ -16,6 +16,9 @@ import '../../models/contract.dart';
 import '../../models/financial_entry.dart';
 import '../../models/timeline_item.dart';
 
+import '../../core/repositories/vehicle_repository.dart';
+import '../../models/vehicle.dart';
+
 class DriverHomeScreen extends StatefulWidget {
   const DriverHomeScreen({super.key});
 
@@ -29,9 +32,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   final ContractRepository _contractRepo = ContractRepository();
   final FinancialRepository _financialRepo = FinancialRepository();
   final TimelineRepository _timelineRepo = TimelineRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
 
   Driver? _driver;
   Contract? _activeContract;
+  Vehicle? _vehicle;
   List<FinancialEntry> _pendingDebts = [];
   List<TimelineItem> _timeline = [];
   bool _isLoading = true;
@@ -55,6 +60,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
         final driver = await _driverRepo.getDriverById(uid);
         final contract = await _contractRepo.getActiveContractByDriver(uid);
+        Vehicle? vehicle;
+        if (contract != null && contract.vehicleId.isNotEmpty) {
+          vehicle = await _vehicleRepo.getVehicleById(contract.vehicleId);
+        }
         final debts = await _financialRepo.getFinancialEntries(driverId: uid, status: 'pendente');
         final timeline = await _timelineRepo.getDriverTimeline(driverId: uid, page: 1, pageSize: 4);
 
@@ -62,6 +71,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           setState(() {
             _driver = driver;
             _activeContract = contract;
+            _vehicle = vehicle;
             _pendingDebts = debts;
             _timeline = timeline;
             _isLoading = false;
@@ -78,8 +88,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final double totalPending = _pendingDebts.fold(0.0, (acc, item) => acc + item.amount);
-    final String vehicleModel = _activeContract != null ? 'Veículo Sob Contrato' : 'Volkswagen Gol';
-    final String vehiclePlate = _activeContract != null ? 'CONTRATO ATIVO' : 'PLACA: ABC-1234';
 
     return SafeArea(
       child: RefreshIndicator(
@@ -94,7 +102,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               if (_isLoading) const SizedBox(height: AppSpacing.md),
               _buildHeader(context),
               const SizedBox(height: AppSpacing.xl),
-              _buildVehicleStatusCard(vehicleModel, vehiclePlate),
+              _buildVehicleStatusCard(),
               const SizedBox(height: AppSpacing.lg),
               _buildFinancialSummaryCard(context, totalPending),
               const SizedBox(height: AppSpacing.lg),
@@ -143,7 +151,15 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     );
   }
 
-  Widget _buildVehicleStatusCard(String model, String plate) {
+  Widget _buildVehicleStatusCard() {
+    final hasVehicle = _vehicle != null;
+    final modelName = hasVehicle ? '${_vehicle!.brand} ${_vehicle!.model}' : 'Nenhum Veículo Vinculado';
+    final plateStr = hasVehicle
+        ? 'PLACA: ${_vehicle!.plate}'
+        : (_activeContract != null
+            ? 'Contrato: ${_activeContract!.contractNumber}'
+            : 'Sem Contrato Ativo');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -164,29 +180,38 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'VEÍCULO EM POSSE',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                      letterSpacing: 1,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'VEÍCULO EM POSSE',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        letterSpacing: 1,
+                      ),
                     ),
-                  ),
-                  Text(model, style: AppTextStyles.headlineSmall),
-                  Text(
-                    plate,
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 4),
+                    Text(
+                      modelName,
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: hasVehicle ? AppColors.onSurface : AppColors.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      plateStr,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: hasVehicle ? AppColors.primary : AppColors.onSurfaceVariant.withAlpha(150),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const AppIcon(
+              AppIcon(
                 icon: Icons.directions_car_outlined,
-                color: AppColors.primary,
+                color: hasVehicle ? AppColors.primary : AppColors.onSurfaceVariant.withAlpha(120),
                 size: 48,
               ),
             ],
@@ -196,9 +221,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             children: [
               Expanded(
                 child: _buildMetricItem(
-                  'Próxima Revisão',
-                  '50.000 KM',
-                  Icons.build_circle_outlined,
+                  'Quilometragem',
+                  hasVehicle ? '${_vehicle!.currentKm} KM' : '--',
+                  Icons.speed_outlined,
                 ),
               ),
               Expanded(
@@ -288,7 +313,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'R\$ ${hasPending ? totalPending.toStringAsFixed(2) : "0,00"}',
+            'R\$ ${totalPending.toStringAsFixed(2)}',
             style: AppTextStyles.headlineMedium.copyWith(
               color: hasPending ? AppColors.error : AppColors.onSurface,
               fontWeight: FontWeight.bold,
@@ -301,20 +326,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                 child: AppButton(
                   label: 'Pagar com PIX',
                   variant: AppButtonVariant.primary,
-                  onPressed: () => context.push(
-                    AppRoutes.driverPixCheckout,
-                    extra: _pendingDebts.isNotEmpty
-                        ? _pendingDebts.first
-                        : FinancialEntry(
-                            id: 'temp',
-                            type: FinancialType.expense,
-                            category: 'aluguel',
-                            amount: totalPending > 0 ? totalPending : 350.0,
-                            date: DateTime.now(),
-                            description: 'Mensalidade de Locação de Veículo',
-                            isPaid: false,
-                          ),
-                  ),
+                  onPressed: () {
+                    if (_pendingDebts.isNotEmpty) {
+                      context.push(
+                        AppRoutes.driverPixCheckout,
+                        extra: _pendingDebts.first,
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Você não possui débitos pendentes no momento.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -429,19 +455,28 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         ),
         const SizedBox(height: AppSpacing.md),
         if (_timeline.isEmpty)
-          _buildTimelineItem(
-            'Check-in Realizado',
-            'Vistoria de entrada aprovada',
-            'Hoje, 08:30',
-            Icons.check_circle_outline,
-            AppColors.success,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Text(
+                'Nenhuma atividade recente registrada.',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ),
           )
         else
           ..._timeline.map(
             (t) => _buildTimelineItem(
               t.title,
               t.description,
-              '${t.date.day}/${t.date.month} às ${t.date.hour}:${t.date.minute.toString().padLeft(2, '0')}',
+              '${t.date.day.toString().padLeft(2, '0')}/${t.date.month.toString().padLeft(2, '0')} às ${t.date.hour.toString().padLeft(2, '0')}:${t.date.minute.toString().padLeft(2, '0')}',
               Icons.notifications_active_outlined,
               AppColors.primary,
             ),

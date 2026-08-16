@@ -6,6 +6,8 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/repositories/auth_repository.dart';
+import '../../core/config/supabase_config.dart';
 
 class DriverProfileSetupScreen extends StatefulWidget {
   const DriverProfileSetupScreen({super.key});
@@ -16,33 +18,80 @@ class DriverProfileSetupScreen extends StatefulWidget {
 }
 
 class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
-  final TextEditingController _nameController = TextEditingController(
-    text: 'João da Silva',
-  );
-  final TextEditingController _phoneController = TextEditingController(
-    text: '(11) 99999-9999',
-  );
+  final AuthRepository _authRepo = AuthRepository();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await _authRepo.getCurrentProfile();
+      if (mounted && profile != null) {
+        setState(() {
+          _nameController.text = profile['nome']?.toString() ?? '';
+          _phoneController.text = profile['telefone']?.toString() ?? '';
+          _isLoading = false;
+        });
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveAndFinish() async {
+    final uid = _authRepo.currentUserId;
+    if (uid != null) {
+      try {
+        final phone = _phoneController.text.trim();
+        if (phone.isNotEmpty) {
+          await SupabaseConfig.client.from(SupabaseConfig.tabelaPerfis).update({
+            'telefone': phone,
+            'atualizado_em': DateTime.now().toIso8601String(),
+          }).eq('id', uid);
+        }
+      } catch (_) {}
+    }
+
+    _showSuccessDialog();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: AppSpacing.xl),
-              _buildScoreCard(),
-              const SizedBox(height: AppSpacing.xl),
-              _buildProfileForm(),
-              const SizedBox(height: AppSpacing.xxl),
-              _buildActionArea(),
-            ],
-          ),
-        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildScoreCard(),
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildProfileForm(),
+                    const SizedBox(height: AppSpacing.xxl),
+                    _buildActionArea(),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -109,7 +158,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        '1.000',
+                        '100',
                         style: AppTextStyles.displayMedium.copyWith(
                           color: Colors.white,
                           fontSize: 40,
@@ -150,7 +199,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
-              widthFactor: 1.0, // Initial score is max
+              widthFactor: 1.0,
               child: Container(color: Colors.white),
             ),
           ),
@@ -199,7 +248,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
-                  'Sua CNH foi validada com sucesso via auditoria digital.',
+                  'Seus documentos foram enviados para auditoria digital.',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -255,10 +304,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
         AppButton(
           label: 'CONCLUIR CADASTRO',
           isFullWidth: true,
-          onPressed: () {
-            // Success action
-            _showSuccessDialog();
-          },
+          onPressed: _saveAndFinish,
         ),
         const SizedBox(height: AppSpacing.md),
         TextButton(

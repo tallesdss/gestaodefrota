@@ -4,7 +4,11 @@ import 'package:frota_app/core/theme/app_colors.dart';
 import 'package:frota_app/core/theme/app_text_styles.dart';
 import 'package:frota_app/core/theme/app_spacing.dart';
 import 'package:frota_app/core/widgets/app_icon.dart';
+import 'package:frota_app/core/widgets/app_empty_state.dart';
 import 'package:frota_app/core/routes/app_routes.dart';
+import 'package:frota_app/core/repositories/inspection_repository.dart';
+import 'package:frota_app/core/repositories/auth_repository.dart';
+import 'package:frota_app/models/inspection.dart';
 
 class InspectionHistoryScreen extends StatefulWidget {
   const InspectionHistoryScreen({super.key});
@@ -15,11 +19,60 @@ class InspectionHistoryScreen extends StatefulWidget {
 }
 
 class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
+  final InspectionRepository _inspectionRepo = InspectionRepository();
+  final AuthRepository _authRepo = AuthRepository();
+  final TextEditingController _searchController = TextEditingController();
+
+  List<Inspection> _inspections = [];
+  bool _isLoading = true;
   String _selectedFilter = 'Tudo';
-  final List<String> _filters = ['Tudo', 'Check-in', 'Check-out', 'Ocorrência'];
+  final List<String> _filters = ['Tudo', 'Check-in', 'Check-out'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInspections();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInspections() async {
+    setState(() => _isLoading = true);
+    try {
+      final uid = _authRepo.currentUserId;
+      final data = uid != null
+          ? await _inspectionRepo.getInspections(driverId: uid)
+          : <Inspection>[];
+      if (mounted) {
+        setState(() {
+          _inspections = data;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final searchTerm = _searchController.text.trim().toLowerCase();
+    final filtered = _inspections.where((insp) {
+      if (_selectedFilter == 'Check-in' && insp.type != InspectionType.checkin) return false;
+      if (_selectedFilter == 'Check-out' && insp.type != InspectionType.checkout) return false;
+
+      if (searchTerm.isNotEmpty) {
+        final matchesId = insp.id.toLowerCase().contains(searchTerm) ||
+            insp.vehicleId.toLowerCase().contains(searchTerm);
+        if (!matchesId) return false;
+      }
+      return true;
+    }).toList();
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -43,15 +96,26 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
         children: [
           _buildSearchAndFilters(),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              itemCount: 10,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(height: AppSpacing.lg),
-              itemBuilder: (context, index) {
-                return _buildHistoryCard(context, index);
-              },
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filtered.isEmpty
+                    ? const AppEmptyState(
+                        icon: Icons.assignment_outlined,
+                        title: 'Nenhuma vistoria encontrada',
+                        description: 'Suas vistorias realizadas aparecerão aqui.',
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadInspections,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: AppSpacing.lg),
+                          itemBuilder: (context, index) {
+                            return _buildHistoryCard(context, filtered[index]);
+                          },
+                        ),
+                      ),
           ),
         ],
       ),
@@ -70,8 +134,10 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
       child: Column(
         children: [
           TextField(
+            controller: _searchController,
+            onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Buscar por placa ou veículo...',
+              hintText: 'Buscar por ID ou veículo...',
               prefixIcon: const Icon(
                 Icons.search,
                 color: AppColors.onSurfaceVariant,
@@ -116,36 +182,23 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
     );
   }
 
-  Widget _buildHistoryCard(BuildContext context, int index) {
-    // Mock data logic
-    final isOccurrence = index == 2 || index == 5;
-    final isCheckIn = !isOccurrence && index % 2 == 0;
+  Widget _buildHistoryCard(BuildContext context, Inspection inspection) {
+    final isCheckIn = inspection.type == InspectionType.checkin;
+    final isCheckOut = inspection.type == InspectionType.checkout;
 
-    final type = isOccurrence
-        ? 'OCORRÊNCIA'
-        : (isCheckIn ? 'CHECK-IN' : 'CHECK-OUT');
-    final typeColor = isOccurrence
-        ? AppColors.error
-        : (isCheckIn ? AppColors.success : AppColors.primary);
-    final vehicle = index % 3 == 0
-        ? 'VW VIRTUS'
-        : (index % 3 == 1 ? 'HYUNDAI HB20' : 'TOYOTA COROLLA');
-    final plate = index % 3 == 0
-        ? 'BRA2E24'
-        : (index % 3 == 1 ? 'QWE9J12' : 'PLM4K88');
-    final date = '2${9 - index}/03/2026';
+    final type = isCheckIn ? 'CHECK-IN' : (isCheckOut ? 'CHECK-OUT' : 'VISTORIA');
+    final typeColor = isCheckIn ? AppColors.success : (isCheckOut ? AppColors.primary : AppColors.warning);
+
+    final dateStr =
+        '${inspection.dateTime.day.toString().padLeft(2, '0')}/${inspection.dateTime.month.toString().padLeft(2, '0')}/${inspection.dateTime.year}';
+    final timeStr =
+        '${inspection.dateTime.hour.toString().padLeft(2, '0')}:${inspection.dateTime.minute.toString().padLeft(2, '0')}';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isOccurrence
-              ? AppColors.error.withValues(alpha: 0.2)
-              : Colors.transparent,
-          width: 1,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,9 +219,7 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      isOccurrence
-                          ? Icons.report_problem_outlined
-                          : (isCheckIn ? Icons.login : Icons.logout),
+                      isCheckIn ? Icons.login : (isCheckOut ? Icons.logout : Icons.sync),
                       size: 14,
                       color: typeColor,
                     ),
@@ -185,10 +236,10 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                 ),
               ),
               Text(
-                'ID: #${1000 + index}',
+                'KM: ${inspection.kmAtInspection}',
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.onSurfaceVariant,
-                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -214,13 +265,13 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      vehicle,
+                      'Vistoria Digital',
                       style: AppTextStyles.titleMedium.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      plate,
+                      'ID: #${inspection.id.substring(0, inspection.id.length > 8 ? 8 : inspection.id.length)}',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -232,13 +283,13 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    date,
+                    dateStr,
                     style: AppTextStyles.bodySmall.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    '${08 + index}:20',
+                    timeStr,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -250,15 +301,44 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              _buildInfoChip(Icons.speed, '${12450 + (index * 100)} km'),
+              _buildInfoChip(
+                Icons.photo_library_outlined,
+                '${inspection.photos.length} fotos',
+              ),
               const SizedBox(width: AppSpacing.sm),
-              if (!isOccurrence)
-                _buildInfoChip(
-                  Icons.photo_library_outlined,
-                  '${index + 4} fotos',
-                ),
+              _buildInfoChip(
+                Icons.checklist_outlined,
+                '${inspection.checklist.length} itens',
+              ),
               const Spacer(),
-              _buildViewDetailsButton(context, index),
+              InkWell(
+                onTap: () => context.push(
+                  AppRoutes.driverInspectionDetail.replaceFirst(':id', inspection.id),
+                  extra: inspection,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'DETALHES',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 10,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -286,39 +366,6 @@ class _InspectionHistoryScreenState extends State<InspectionHistoryScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildViewDetailsButton(BuildContext context, int index) {
-    return InkWell(
-      onTap: () => context.push(
-        AppRoutes.driverInspectionDetail.replaceFirst(
-          ':id',
-          'insp_00${index + 1}',
-        ),
-      ),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'DETALHES',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 10,
-              color: AppColors.primary,
-            ),
-          ],
-        ),
       ),
     );
   }

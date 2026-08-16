@@ -11,6 +11,10 @@ import '../../core/repositories/auth_repository.dart';
 import '../../core/repositories/driver_repository.dart';
 import '../../models/driver.dart';
 
+import '../../core/repositories/contract_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/config/supabase_config.dart';
+
 class DriverProfileDetailScreen extends StatefulWidget {
   const DriverProfileDetailScreen({super.key});
 
@@ -22,20 +26,27 @@ class DriverProfileDetailScreen extends StatefulWidget {
 class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
   final AuthRepository _authRepo = AuthRepository();
   final DriverRepository _driverRepo = DriverRepository();
+  final ContractRepository _contractRepo = ContractRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
   bool _isEditing = false;
+  bool _isLoading = true;
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   Driver? _driver;
+  int _contractCount = 0;
+  int _mileage = 0;
+  int _daysActive = 0;
+  String _memberSince = 'Novo condutor';
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: 'Carlos Silva Motorista');
-    _emailController = TextEditingController(text: 'motorista@gestaodefrota.com');
-    _phoneController = TextEditingController(text: '(11) 99999-0003');
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
     _loadProfileData();
   }
 
@@ -45,15 +56,44 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
       try {
         final profile = await _authRepo.getCurrentProfile();
         final driver = await _driverRepo.getDriverById(uid);
-        if (mounted && profile != null) {
+        final contracts = await _contractRepo.getContracts(driverId: uid);
+        
+        int mileage = 0;
+        final activeContract = await _contractRepo.getActiveContractByDriver(uid);
+        if (activeContract != null && activeContract.vehicleId.isNotEmpty) {
+          final veh = await _vehicleRepo.getVehicleById(activeContract.vehicleId);
+          if (veh != null) {
+            mileage = veh.currentKm;
+          }
+        }
+
+        int days = 0;
+        String memberSince = 'Novo condutor';
+        if (profile != null && profile['criado_em'] != null) {
+          final createdAt = DateTime.tryParse(profile['criado_em'].toString()) ?? DateTime.now();
+          days = DateTime.now().difference(createdAt).inDays;
+          if (days < 1) days = 1;
+          memberSince = 'Condutor desde ${createdAt.day.toString().padLeft(2, '0')}/${createdAt.month.toString().padLeft(2, '0')}/${createdAt.year}';
+        }
+
+        if (mounted) {
           setState(() {
             _driver = driver;
-            _nameController.text = profile['nome']?.toString() ?? _nameController.text;
-            _emailController.text = profile['email']?.toString() ?? _emailController.text;
-            _phoneController.text = profile['telefone']?.toString() ?? _phoneController.text;
+            _contractCount = contracts.length;
+            _mileage = mileage;
+            _daysActive = days;
+            _memberSince = memberSince;
+            _nameController.text = profile?['nome']?.toString() ?? '';
+            _emailController.text = profile?['email']?.toString() ?? '';
+            _phoneController.text = profile?['telefone']?.toString() ?? '';
+            _isLoading = false;
           });
         }
-      } catch (_) {}
+      } catch (_) {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } else {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -65,40 +105,82 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
     super.dispose();
   }
 
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final uid = _authRepo.currentUserId;
+    if (uid == null) return;
+
+    try {
+      final name = _nameController.text.trim();
+      final phone = _phoneController.text.trim();
+
+      await SupabaseConfig.client.from(SupabaseConfig.tabelaPerfis).update({
+        'nome': name,
+        'telefone': phone,
+        'atualizado_em': DateTime.now().toIso8601String(),
+      }).eq('id', uid);
+
+      if (mounted) {
+        setState(() => _isEditing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Perfil atualizado com sucesso!'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao salvar perfil: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                _buildHeader(context),
-                const SizedBox(height: AppSpacing.xxl),
-                if (!_isEditing) ...[
-                  _buildStatsGrid(),
-                  const SizedBox(height: AppSpacing.xxl),
-                  _buildActionList(context),
-                ] else ...[
-                  _buildEditForm(),
-                ],
-                const SizedBox(height: AppSpacing.xxxl),
-                if (!_isEditing)
-                  _buildLogoutButton(context)
-                else
-                  _buildSaveCancelButtons(),
-              ],
-            ),
-          ),
-        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      _buildHeader(context),
+                      const SizedBox(height: AppSpacing.xxl),
+                      if (!_isEditing) ...[
+                        _buildStatsGrid(),
+                        const SizedBox(height: AppSpacing.xxl),
+                        _buildActionList(context),
+                      ] else ...[
+                        _buildEditForm(),
+                      ],
+                      const SizedBox(height: AppSpacing.xxxl),
+                      if (!_isEditing)
+                        _buildLogoutButton(context)
+                      else
+                        _buildSaveCancelButtons(),
+                    ],
+                  ),
+                ),
+              ),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
+    final photoUrl = _driver?.avatarUrl;
     return Column(
       children: [
         Stack(
@@ -108,10 +190,10 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.primary, width: 2),
               ),
-              child: const AppAvatar(
+              child: AppAvatar(
                 radius: 58,
-                name: 'João Silva',
-                imageUrl: 'https://i.pravatar.cc/300?u=joao',
+                name: _nameController.text.isNotEmpty ? _nameController.text : 'Motorista',
+                imageUrl: (photoUrl != null && photoUrl.isNotEmpty) ? photoUrl : null,
               ),
             ),
             if (_isEditing)
@@ -136,13 +218,13 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
         const SizedBox(height: AppSpacing.md),
         if (!_isEditing) ...[
           Text(
-            _nameController.text,
+            _nameController.text.isNotEmpty ? _nameController.text : 'Motorista',
             style: AppTextStyles.headlineMedium.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           Text(
-            'Condutor Parceiro desde 2023',
+            _memberSince,
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -193,16 +275,16 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
   Widget _buildStatsGrid() {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('KM RODADOS', '12.450', Icons.speed)),
+        Expanded(child: _buildStatCard('KM RODADOS', '$_mileage', Icons.speed)),
         const SizedBox(width: AppSpacing.md),
         Expanded(
-          child: _buildStatCard('CONTRATOS', '02', Icons.description_outlined),
+          child: _buildStatCard('CONTRATOS', '$_contractCount', Icons.description_outlined),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _buildStatCard(
             'DIAS ATIVO',
-            '342',
+            '$_daysActive',
             Icons.calendar_today_outlined,
           ),
         ),
@@ -401,16 +483,7 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                setState(() => _isEditing = false);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Perfil atualizado com sucesso!'),
-                  ),
-                );
-              }
-            },
+            onPressed: _saveProfile,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
