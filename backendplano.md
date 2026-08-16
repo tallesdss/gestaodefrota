@@ -770,14 +770,15 @@ USING (public.eh_gestor_ou_admin());
 ---
 
 ### 🔹 FASE 4: Implementação dos Repositórios Concretos Supabase
-- [ ] **4.1. `AuthRepository`:** Login, SignUp com metadados, Reset de senha e Logout.
-- [ ] **4.2. `VehicleRepository`:** CRUD de veículos com ordenação e filtros relacionais.
-- [ ] **4.3. `DriverRepository`:** Gestão de condutores, upload de CNH/comprovante para Storage e aprovação cadastral.
-- [ ] **4.4. `ContractRepository`:** Criação atômica de contrato via RPC `fn_criar_contrato_locacao`.
-- [ ] **4.5. `InspectionRepository`:** Gravação de vistoria com upload em cascata para `fotos_vistoria` e `itens_checklist_vistoria`.
-- [ ] **4.6. `FinancialRepository`:** Consultas na View `vw_extrato_completo_motorista`, geração de PIX e baixa de recebimentos.
-- [ ] **4.7. `MaintenanceRepository` & `WorkshopRepository`:** Cadastro de OS e inserção em lote de `itens_manutencao`.
-- [ ] **4.8. `ManagerRepository`:** Gestão de equipe e concessão de permissões na tabela associativa.
+- [x] **4.1. `AuthRepository`:** Login, SignUp com metadados, Reset de senha e Logout.
+- [x] **4.2. `VehicleRepository`:** CRUD de veículos com ordenação e filtros relacionais.
+- [x] **4.3. `DriverRepository`:** Gestão de condutores, upload de CNH/comprovante para Storage e aprovação cadastral.
+- [x] **4.4. `ContractRepository`:** Criação atômica de contrato via RPC `fn_criar_contrato_locacao`.
+- [x] **4.5. `InspectionRepository`:** Gravação de vistoria com upload em cascata para `fotos_vistoria` e `itens_checklist_vistoria`.
+- [x] **4.6. `FinancialRepository`:** Consultas na View `vw_extrato_completo_motorista`, geração de PIX e baixa de recebimentos.
+- [x] **4.7. `MaintenanceRepository` & `WorkshopRepository`:** Cadastro de OS e inserção em lote de `itens_manutencao`.
+- [x] **4.8. `ManagerRepository`:** Gestão de equipe e concessão de permissões na tabela associativa.
+
 
 ---
 
