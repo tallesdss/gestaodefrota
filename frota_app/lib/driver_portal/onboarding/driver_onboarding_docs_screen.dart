@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
@@ -18,8 +21,9 @@ class DriverOnboardingDocsScreen extends StatefulWidget {
 class _DriverOnboardingDocsScreenState
     extends State<DriverOnboardingDocsScreen> {
   int _currentStep = 0;
-  bool _cnhUploaded = false;
-  bool _residenceUploaded = false;
+  final ImagePicker _picker = ImagePicker();
+  XFile? _cnhFile;
+  XFile? _residenceFile;
   bool _analyzing = false;
 
   void _nextStep() {
@@ -36,11 +40,76 @@ class _DriverOnboardingDocsScreenState
     setState(() {
       _analyzing = true;
     });
-    // Simulating OCR/Analysis
-    await Future.delayed(const Duration(seconds: 3));
+    // Simulação do tempo de envio/análise
+    await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       context.push(AppRoutes.driverOnboardingContract);
     }
+  }
+
+  Future<void> _pickImage(bool isCnh) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                isCnh ? 'Documento da CNH' : 'Comprovante de Residência',
+                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
+                title: Text('Tirar Foto', style: AppTextStyles.bodyMedium),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final file = await _picker.pickImage(
+                    source: ImageSource.camera,
+                    imageQuality: 85,
+                  );
+                  if (file != null) {
+                    setState(() {
+                      if (isCnh) {
+                        _cnhFile = file;
+                      } else {
+                        _residenceFile = file;
+                      }
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+                title: Text('Escolher da Galeria', style: AppTextStyles.bodyMedium),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final file = await _picker.pickImage(
+                    source: ImageSource.gallery,
+                    imageQuality: 85,
+                  );
+                  if (file != null) {
+                    setState(() {
+                      if (isCnh) {
+                        _cnhFile = file;
+                      } else {
+                        _residenceFile = file;
+                      }
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -122,6 +191,9 @@ class _DriverOnboardingDocsScreenState
   }
 
   Widget _buildFormState() {
+    final hasFile = _currentStep == 0 ? _cnhFile != null : _residenceFile != null;
+    final currentFile = _currentStep == 0 ? _cnhFile : _residenceFile;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Column(
@@ -146,16 +218,8 @@ class _DriverOnboardingDocsScreenState
           const SizedBox(height: AppSpacing.xl),
           _buildUploadCard(
             title: _currentStep == 0 ? 'Frente da CNH' : 'Comprovante',
-            isUploaded: _currentStep == 0 ? _cnhUploaded : _residenceUploaded,
-            onTap: () {
-              setState(() {
-                if (_currentStep == 0) {
-                  _cnhUploaded = true;
-                } else {
-                  _residenceUploaded = true;
-                }
-              });
-            },
+            file: currentFile,
+            onTap: () => _pickImage(_currentStep == 0),
           ),
           const Spacer(),
           Padding(
@@ -163,9 +227,7 @@ class _DriverOnboardingDocsScreenState
             child: AppButton(
               label: _currentStep == 0 ? 'CONTINUAR' : 'ENVIAR PARA ANÁLISE',
               isFullWidth: true,
-              onPressed: (_currentStep == 0 ? _cnhUploaded : _residenceUploaded)
-                  ? _nextStep
-                  : null,
+              onPressed: hasFile ? _nextStep : null,
             ),
           ),
         ],
@@ -175,9 +237,11 @@ class _DriverOnboardingDocsScreenState
 
   Widget _buildUploadCard({
     required String title,
-    required bool isUploaded,
+    required XFile? file,
     required VoidCallback onTap,
   }) {
+    final isUploaded = file != null;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -185,7 +249,11 @@ class _DriverOnboardingDocsScreenState
         height: 240,
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isUploaded ? AppColors.success : Colors.transparent,
+            width: 2,
+          ),
           boxShadow: [
             BoxShadow(
               color: AppColors.onSurface.withValues(alpha: 0.06),
@@ -194,33 +262,56 @@ class _DriverOnboardingDocsScreenState
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isUploaded)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: isUploaded
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (kIsWeb)
+                      Image.network(file.path, fit: BoxFit.cover)
+                    else
+                      Image.file(File(file.path), fit: BoxFit.cover),
+                    Container(
+                      color: Colors.black.withValues(alpha: 0.3),
+                    ),
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Toque para alterar', style: AppTextStyles.labelSmall),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const AppIcon(icon: Icons.camera_alt_outlined, size: 48),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      title,
+                      style: AppTextStyles.labelLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Toque para abrir a câmera ou galeria',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.check, color: Colors.white, size: 32),
-              )
-            else
-              const AppIcon(icon: Icons.camera_alt_outlined, size: 48),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              isUploaded ? 'Documento Capturado' : title,
-              style: AppTextStyles.labelLarge,
-            ),
-            if (!isUploaded)
-              Text(
-                'Toque para abrir a câmera',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-          ],
         ),
       ),
     );
@@ -252,7 +343,7 @@ class _DriverOnboardingDocsScreenState
             Text('Validando Documentos...', style: AppTextStyles.headlineSmall),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Nossa IA está analisando a nitidez e a validade dos seus dados.',
+              'Os documentos foram anexados com sucesso e estão prontos para envio.',
               textAlign: TextAlign.center,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.onSurfaceVariant,

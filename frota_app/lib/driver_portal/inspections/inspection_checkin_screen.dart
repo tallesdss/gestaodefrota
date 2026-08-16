@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:frota_app/core/theme/app_colors.dart';
 import 'package:frota_app/core/theme/app_text_styles.dart';
 import 'package:frota_app/core/theme/app_spacing.dart';
@@ -18,16 +21,89 @@ class InspectionCheckInScreen extends StatefulWidget {
 class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
   int _currentStep = 0;
   final int _totalSteps = 4; // Intro, External, Internal, Verification
+  final ImagePicker _picker = ImagePicker();
 
-  // Mocking photo states
-  final Map<String, bool> _photosCaptured = {
-    'Frente': false,
-    'Traseira': false,
-    'Lateral Direita': false,
-    'Lateral Esquerda': false,
-    'Painel': false,
-    'Placa': false,
+  // Armazena os arquivos de fotos reais capturados
+  final Map<String, XFile?> _photosCaptured = {
+    'Frente': null,
+    'Traseira': null,
+    'Lateral Direita': null,
+    'Lateral Esquerda': null,
+    'Painel': null,
+    'Hodômetro': null,
+    'Bancos Dianteiros': null,
+    'Placa': null,
   };
+
+  final TextEditingController _kmController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+  String _selectedFuelLevel = 'Cheio';
+  bool _hasNewDamage = false;
+
+  final Map<String, bool> _checklist = {
+    'Pneus em bom estado': true,
+    'Nível de combustível registrado': true,
+    'Sem luzes de alerta no painel': true,
+    'Limpadores funcionando': true,
+    'Ar-condicionado gelando': true,
+  };
+
+  Future<void> _pickPhoto(String item) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Capturar Foto - $item',
+                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
+                title: Text('Tirar Foto com a Câmera', style: AppTextStyles.bodyMedium),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final photo = await _picker.pickImage(
+                    source: ImageSource.camera,
+                    imageQuality: 80,
+                  );
+                  if (photo != null) {
+                    setState(() {
+                      _photosCaptured[item] = photo;
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+                title: Text('Escolher da Galeria', style: AppTextStyles.bodyMedium),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final photo = await _picker.pickImage(
+                    source: ImageSource.gallery,
+                    imageQuality: 80,
+                  );
+                  if (photo != null) {
+                    setState(() {
+                      _photosCaptured[item] = photo;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +242,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
           _buildInfoItem(Icons.light_mode_outlined, 'Boa iluminação'),
           _buildInfoItem(
             Icons.qr_code_scanner_outlined,
-            'Foco nítido na placa',
+            'Foco nítido na placa e hodômetro',
           ),
           _buildInfoItem(
             Icons.verified_user_outlined,
@@ -203,53 +279,111 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 1,
+        childAspectRatio: 0.95,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        final isCaptured = _photosCaptured[item] ?? false;
+        final photoFile = _photosCaptured[item];
+        final isCaptured = photoFile != null;
 
         return GestureDetector(
-          onTap: () {
-            setState(() {
-              _photosCaptured[item] = true;
-            });
-          },
+          onTap: () => _pickPhoto(item),
           child: Container(
             decoration: BoxDecoration(
               color: isCaptured
-                  ? AppColors.successContainer.withValues(alpha: 0.1)
+                  ? AppColors.surfaceContainerLowest
                   : AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isCaptured ? AppColors.success : Colors.transparent,
                 width: 2,
               ),
+              boxShadow: isCaptured
+                  ? [
+                      BoxShadow(
+                        color: AppColors.onSurface.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ]
+                  : null,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (isCaptured)
-                  const Icon(
-                    Icons.check_circle,
-                    color: AppColors.success,
-                    size: 40,
-                  )
-                else
-                  AppIcon(
-                    icon: Icons.add_a_photo_outlined,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  item.toUpperCase(),
-                  style: AppTextStyles.labelSmall.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isCaptured ? AppColors.success : AppColors.onSurface,
-                  ),
-                ),
-              ],
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: isCaptured
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (kIsWeb)
+                          Image.network(photoFile.path, fit: BoxFit.cover)
+                        else
+                          Image.file(File(photoFile.path), fit: BoxFit.cover),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.7),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.success,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.check, size: 16, color: Colors.white),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 10,
+                          left: 10,
+                          right: 10,
+                          child: Text(
+                            item.toUpperCase(),
+                            style: AppTextStyles.labelSmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const AppIcon(
+                          icon: Icons.add_a_photo_outlined,
+                          color: AppColors.primary,
+                          size: 32,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          item.toUpperCase(),
+                          style: AppTextStyles.labelSmall.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Toque para capturar',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            fontSize: 10,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         );
@@ -261,16 +395,83 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
-        _buildVerificationCheck('Pneus em bom estado'),
-        _buildVerificationCheck('Nível de combustível registrado'),
-        _buildVerificationCheck('Sem luzes de alerta no painel'),
-        _buildVerificationCheck('Limpadores funcionando'),
-        _buildVerificationCheck('Ar-condicionado gelando'),
-        const SizedBox(height: AppSpacing.xl),
+        Text(
+          'CHECKLIST DO VEÍCULO',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.onSurfaceVariant,
+            letterSpacing: 1.2,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ..._checklist.keys.map((key) => CheckboxListTile(
+              value: _checklist[key] ?? false,
+              onChanged: (val) => setState(() => _checklist[key] = val ?? false),
+              title: Text(key, style: AppTextStyles.bodyMedium),
+              activeColor: AppColors.primary,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+            )),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          'DADOS DA VISTORIA',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.onSurfaceVariant,
+            letterSpacing: 1.2,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         TextField(
+          controller: _kmController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: 'KM Atual do Hodômetro',
+            hintText: 'Ex: 45200',
+            filled: true,
+            fillColor: AppColors.surfaceContainerLow,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            prefixIcon: const Icon(Icons.speed, color: AppColors.primary),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        DropdownButtonFormField<String>(
+          initialValue: _selectedFuelLevel,
+          decoration: InputDecoration(
+            labelText: 'Nível de Combustível',
+            filled: true,
+            fillColor: AppColors.surfaceContainerLow,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            prefixIcon: const Icon(Icons.local_gas_station, color: AppColors.primary),
+          ),
+          items: ['Vazio', '1/4', '1/2', '3/4', 'Cheio']
+              .map((level) => DropdownMenuItem(value: level, child: Text(level)))
+              .toList(),
+          onChanged: (val) {
+            if (val != null) setState(() => _selectedFuelLevel = val);
+          },
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SwitchListTile(
+          value: _hasNewDamage,
+          onChanged: (val) => setState(() => _hasNewDamage = val),
+          title: Text('Identificou alguma avaria nova?', style: AppTextStyles.bodyMedium),
+          activeThumbColor: AppColors.primary,
+          contentPadding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        TextField(
+          controller: _notesController,
           maxLines: 3,
           decoration: InputDecoration(
-            hintText: 'Observações adicionais...',
+            labelText: 'Observações Adicionais',
+            hintText: 'Descreva detalhes mecânicos ou avarias encontradas...',
             filled: true,
             fillColor: AppColors.surfaceContainerLow,
             border: OutlineInputBorder(
@@ -280,22 +481,6 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildVerificationCheck(String label) {
-    bool checked = false;
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return CheckboxListTile(
-          value: checked,
-          onChanged: (val) => setState(() => checked = val!),
-          title: Text(label, style: AppTextStyles.bodyMedium),
-          activeColor: AppColors.primary,
-          contentPadding: EdgeInsets.zero,
-          controlAffinity: ListTileControlAffinity.leading,
-        );
-      },
     );
   }
 
@@ -362,7 +547,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Os dados foram registrados com sucesso e já estão no sistema.',
+              'As fotos e o checklist foram registrados e estão prontos para envio.',
               style: AppTextStyles.bodyMedium,
               textAlign: TextAlign.center,
             ),

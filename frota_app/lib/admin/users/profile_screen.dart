@@ -4,6 +4,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_avatar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -45,11 +46,10 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   Stack(
                     children: [
-                      const CircleAvatar(
+                      const AppAvatar(
                         radius: 50,
-                        backgroundImage: NetworkImage(
-                          'https://i.pravatar.cc/150?img=12',
-                        ),
+                        name: 'Carlos Silva',
+                        imageUrl: 'https://i.pravatar.cc/150?img=12',
                       ),
                       Positioned(
                         bottom: 0,

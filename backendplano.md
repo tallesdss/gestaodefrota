@@ -1,262 +1,278 @@
 # 🏛️ Plano de Arquitetura e Migração Backend — Supabase (Gestão de Frota Premium)
 
+> **Backend Oficial Exclusivo:** `Supabase (PostgreSQL + Auth + Storage + Realtime)`  
 > **Projeto Supabase Ativo:** `Gestaodefrota`  
 > **Project Reference ID:** `rwksrejrmjqnuspqnokp`  
 > **Região:** `South America (São Paulo) - sa-east-1`  
+> **Padrão de Nomenclatura:** Tabelas, colunas, enums e coleções em **Português** (`snake_case`)  
 > **Integração MCP:** Ativa via [`.agents/mcp_config.json`](file:///c:/gestaodefrota/.agents/mcp_config.json)
 
 ---
 
 ## 🎯 1. Visão Geral e Estratégia de Backend
 
-O backend é estruturado no **Supabase (PostgreSQL + Auth + Storage + Realtime + Edge Functions)** para suportar a arquitetura multi-perfil (RBAC) do sistema:
+O backend é estruturado exclusivamente no **Supabase** para suportar a arquitetura multi-perfil (RBAC) do sistema:
 - 👑 **Administrador:** Acesso irrestrito a todas as tabelas, configurações master e auditoria global.
 - 🏢 **Gestor:** Acesso operacional (equipe, baixas financeiras, vistorias) com filtros por permissão.
 - 🚗 **Motorista:** Acesso restrito exclusivamente aos seus dados pessoais, veículo em posse, vistorias, faturas e pagamentos via PIX.
 
 ---
 
-## 🗄️ 2. Mapeamento das Tabelas e Schema Relacional
+## 🗄️ 2. Mapeamento das Tabelas e Schema Relacional (Em Português)
 
-### 2.1. Autenticação e Perfis (`auth` & `public.profiles`)
-Mapeia a conta do usuário do Supabase Auth com seu perfil de sistema e RBAC.
-* **`profiles`**
-  * `id` (UUID, PK, references `auth.users.id` on delete cascade)
-  * `name` (TEXT)
-  * `email` (TEXT, UNIQUE)
-  * `phone` (TEXT)
-  * `avatar_url` (TEXT)
-  * `role` (ENUM: `'admin'`, `'gestor'`, `'driver'`)
-  * `created_at` (TIMESTAMPTZ)
-  * `updated_at` (TIMESTAMPTZ)
+### 2.1. Autenticação e Perfis (`auth.users` & `public.perfis`)
+Mapeia a conta de autenticação com o perfil e nível de acesso no sistema.
+* **`perfis`**
+  * `id` (UUID, PK, referencia `auth.users.id` em cascata)
+  * `nome` (TEXT NOT NULL)
+  * `email` (TEXT, UNIQUE, NOT NULL)
+  * `telefone` (TEXT)
+  * `foto_url` (TEXT)
+  * `cargo` (ENUM `tipo_perfil_enum`: `'admin'`, `'gestor'`, `'motorista'`)
+  * `criado_em` (TIMESTAMPTZ DEFAULT now())
+  * `atualizado_em` (TIMESTAMPTZ DEFAULT now())
 
 ---
 
-### 2.2. Módulo de Veículos (`public.vehicles`)
-Armazena a frota, dados de documentação, seguros e controle financeiro de parcelas.
-* **`vehicles`**
-  * `id` (UUID, PK)
-  * `plate` (VARCHAR(10), UNIQUE, NOT NULL)
-  * `brand` (VARCHAR(50), NOT NULL)
-  * `model` (VARCHAR(50), NOT NULL)
-  * `year` (INT NOT NULL)
-  * `color` (VARCHAR(30))
+### 2.2. Módulo de Veículos (`public.veiculos`)
+Armazena os veículos da frota, dados de documentação, seguro e controle de financiamento.
+* **`veiculos`**
+  * `id` (UUID, PK DEFAULT gen_random_uuid())
+  * `placa` (VARCHAR(10), UNIQUE, NOT NULL)
+  * `marca` (VARCHAR(50), NOT NULL)
+  * `modelo` (VARCHAR(50), NOT NULL)
+  * `ano` (INT NOT NULL)
+  * `cor` (VARCHAR(30))
   * `renavam` (VARCHAR(30))
-  * `chassis` (VARCHAR(30))
-  * `current_km` (INT NOT NULL DEFAULT 0)
-  * `status` (ENUM: `'available'`, `'rented'`, `'maintenance'`, `'inactive'`)
+  * `chassi` (VARCHAR(30))
+  * `km_atual` (INT NOT NULL DEFAULT 0)
+  * `status` (ENUM `status_veiculo_enum`: `'disponivel'`, `'alugado'`, `'manutencao'`, `'inativo'`)
   * `crlv_url` (TEXT)
-  * `insurance_policy_number` (TEXT)
-  * `insurance_expiration` (DATE)
-  * `ipva_status` (ENUM: `'paid'`, `'pending'`, `'overdue'`)
-  * `ipva_amount` (NUMERIC(10,2))
-  * `ipva_due_date` (DATE)
-  * `financing_total_installments` (INT)
-  * `financing_paid_installments` (INT)
-  * `financing_installment_value` (NUMERIC(10,2))
-  * `created_at` (TIMESTAMPTZ)
-  * `updated_at` (TIMESTAMPTZ)
+  * `numero_apolice_seguro` (TEXT)
+  * `vencimento_seguro` (DATE)
+  * `status_ipva` (ENUM `status_ipva_enum`: `'pago'`, `'pendente'`, `'atrasado'`)
+  * `valor_ipva` (NUMERIC(10,2))
+  * `vencimento_ipva` (DATE)
+  * `financiamento_total_parcelas` (INT)
+  * `financiamento_parcelas_pagas` (INT)
+  * `financiamento_valor_parcela` (NUMERIC(10,2))
+  * `criado_em` (TIMESTAMPTZ DEFAULT now())
+  * `atualizado_em` (TIMESTAMPTZ DEFAULT now())
 
 ---
 
-### 2.3. Módulo de Motoristas (`public.drivers`)
+### 2.3. Módulo de Motoristas (`public.motoristas`)
 Dados complementares do condutor, pontuação de confiança e auditoria cadastral.
-* **`drivers`**
-  * `id` (UUID, PK, references `public.profiles.id`)
+* **`motoristas`**
+  * `id` (UUID, PK, referencia `public.perfis.id` em cascata)
   * `cpf` (VARCHAR(14), UNIQUE, NOT NULL)
-  * `cnh_number` (VARCHAR(20), UNIQUE, NOT NULL)
-  * `cnh_category` (VARCHAR(5) NOT NULL)
-  * `cnh_expiration` (DATE NOT NULL)
-  * `cnh_front_url` (TEXT)
-  * `cnh_back_url` (TEXT)
-  * `proof_of_residence_url` (TEXT)
-  * `address_street` (TEXT)
-  * `address_city` (TEXT)
-  * `address_state` (VARCHAR(2))
-  * `address_zip` (VARCHAR(10))
-  * `status` (ENUM: `'pending_approval'`, `'active'`, `'blocked'`, `'inactive'`)
-  * `trust_score` (INT DEFAULT 100)
-  * `total_lifetime_value` (NUMERIC(12,2) DEFAULT 0.00)
-  * `outstanding_balance` (NUMERIC(10,2) DEFAULT 0.00)
-  * `created_at` (TIMESTAMPTZ)
-  * `updated_at` (TIMESTAMPTZ)
+  * `numero_cnh` (VARCHAR(20), UNIQUE, NOT NULL)
+  * `categoria_cnh` (VARCHAR(5) NOT NULL)
+  * `validade_cnh` (DATE NOT NULL)
+  * `cnh_frente_url` (TEXT)
+  * `cnh_verso_url` (TEXT)
+  * `comprovante_residencia_url` (TEXT)
+  * `endereco_rua` (TEXT)
+  * `endereco_cidade` (TEXT)
+  * `endereco_estado` (VARCHAR(2))
+  * `endereco_cep` (VARCHAR(10))
+  * `status` (ENUM `status_motorista_enum`: `'pendente_aprovacao'`, `'ativo'`, `'bloqueado'`, `'inativo'`)
+  * `pontuacao_confianca` (INT DEFAULT 100)
+  * `valor_total_gerado` (NUMERIC(12,2) DEFAULT 0.00)
+  * `saldo_devedor` (NUMERIC(10,2) DEFAULT 0.00)
+  * `criado_em` (TIMESTAMPTZ DEFAULT now())
+  * `atualizado_em` (TIMESTAMPTZ DEFAULT now())
 
 ---
 
-### 2.4. Módulo de Contratos de Locação (`public.contracts`)
+### 2.4. Módulo de Contratos de Locação (`public.contratos`)
 Vínculo ativo/histórico entre Veículo e Motorista.
-* **`contracts`**
-  * `id` (UUID, PK)
-  * `contract_number` (VARCHAR(50), UNIQUE)
-  * `driver_id` (UUID, references `public.drivers.id`)
-  * `vehicle_id` (UUID, references `public.vehicles.id`)
-  * `start_date` (DATE NOT NULL)
-  * `end_date` (DATE)
-  * `rental_amount` (NUMERIC(10,2) NOT NULL)
-  * `deposit_amount` (NUMERIC(10,2) DEFAULT 0.00)
-  * `billing_frequency` (ENUM: `'weekly'`, `'biweekly'`, `'monthly'`)
-  * `due_day` (INT)
-  * `status` (ENUM: `'active'`, `'completed'`, `'cancelled'`, `'breached'`)
-  * `digital_signature_url` (TEXT)
-  * `signed_at` (TIMESTAMPTZ)
-  * `created_at` (TIMESTAMPTZ)
+* **`contratos`**
+  * `id` (UUID, PK DEFAULT gen_random_uuid())
+  * `numero_contrato` (VARCHAR(50), UNIQUE)
+  * `motorista_id` (UUID, referencia `public.motoristas.id`)
+  * `veiculo_id` (UUID, referencia `public.veiculos.id`)
+  * `data_inicio` (DATE NOT NULL)
+  * `data_fim` (DATE)
+  * `valor_locacao` (NUMERIC(10,2) NOT NULL)
+  * `valor_caucao` (NUMERIC(10,2) DEFAULT 0.00)
+  * `frequencia_cobranca` (ENUM `frequencia_cobranca_enum`: `'semanal'`, `'quinzenal'`, `'mensal'`)
+  * `dia_vencimento` (INT)
+  * `status` (ENUM `status_contrato_enum`: `'ativo'`, `'concluido'`, `'cancelado'`, `'inadimplente'`)
+  * `assinatura_digital_url` (TEXT)
+  * `assinado_em` (TIMESTAMPTZ)
+  * `criado_em` (TIMESTAMPTZ DEFAULT now())
+  * `atualizado_em` (TIMESTAMPTZ DEFAULT now())
 
 ---
 
-### 2.5. Módulo de Vistorias e Check-ins (`public.inspections`)
+### 2.5. Módulo de Vistorias e Check-ins (`public.vistorias`)
 Auditoria visual 360º para entrega e devolução de veículos.
-* **`inspections`**
-  * `id` (UUID, PK)
-  * `contract_id` (UUID, references `public.contracts.id`)
-  * `vehicle_id` (UUID, references `public.vehicles.id`)
-  * `driver_id` (UUID, references `public.drivers.id`)
-  * `inspector_id` (UUID, references `public.profiles.id`)
-  * `type` (ENUM: `'check_in'`, `'check_out'`, `'routine'`)
-  * `odometer_km` (INT NOT NULL)
-  * `fuel_level` (ENUM: `'empty'`, `'quarter'`, `'half'`, `'three_quarters'`, `'full'`)
-  * `front_photo_url` (TEXT)
-  * `back_photo_url` (TEXT)
-  * `left_side_photo_url` (TEXT)
-  * `right_side_photo_url` (TEXT)
-  * `dashboard_photo_url` (TEXT)
-  * `tires_photo_url` (TEXT)
-  * `damages_json` (JSONB)
-  * `status` (ENUM: `'pending_review'`, `'approved'`, `'rejected'`)
-  * `notes` (TEXT)
-  * `created_at` (TIMESTAMPTZ)
+* **`vistorias`**
+  * `id` (UUID, PK DEFAULT gen_random_uuid())
+  * `contrato_id` (UUID, referencia `public.contratos.id`)
+  * `veiculo_id` (UUID, referencia `public.veiculos.id`)
+  * `motorista_id` (UUID, referencia `public.motoristas.id`)
+  * `vistoriador_id` (UUID, referencia `public.perfis.id`)
+  * `tipo` (ENUM `tipo_vistoria_enum`: `'check_in'`, `'check_out'`, `'rotina'`)
+  * `odometro_km` (INT NOT NULL)
+  * `nivel_combustivel` (ENUM `nivel_combustivel_enum`: `'vazio'`, `'um_quarto'`, `'meio'`, `'tres_quartos'`, `'cheio'`)
+  * `foto_frente_url` (TEXT)
+  * `foto_traseira_url` (TEXT)
+  * `foto_lateral_esquerda_url` (TEXT)
+  * `foto_lateral_direita_url` (TEXT)
+  * `foto_painel_url` (TEXT)
+  * `foto_pneus_url` (TEXT)
+  * `danos_json` (JSONB)
+  * `status` (ENUM `status_vistoria_enum`: `'pendente_revisao'`, `'aprovado'`, `'rejeitado'`)
+  * `observacoes` (TEXT)
+  * `criado_em` (TIMESTAMPTZ DEFAULT now())
 
 ---
 
-### 2.6. Módulo Financeiro & Caixa (`public.financial_entries` & `public.expense_categories`)
+### 2.6. Módulo Financeiro & Caixa (`public.lancamentos_financeiros` & `public.categorias_despesa`)
 Controle de receitas (aluguéis, taxas) e despesas (IPVA, seguros, manutenções, salários).
-* **`expense_categories`**
-  * `id` (UUID, PK)
-  * `name` (VARCHAR(100) NOT NULL)
-  * `type` (ENUM: `'expense'`, `'income'`)
-  * `parent_id` (UUID, references `public.expense_categories.id`)
-  * `is_active` (BOOLEAN DEFAULT TRUE)
+* **`categorias_despesa`**
+  * `id` (UUID, PK DEFAULT gen_random_uuid())
+  * `nome` (VARCHAR(100) NOT NULL)
+  * `tipo` (ENUM `tipo_categoria_enum`: `'despesa'`, `'receita'`)
+  * `categoria_pai_id` (UUID, referencia `public.categorias_despesa.id`)
+  * `ativo` (BOOLEAN DEFAULT TRUE)
 
-* **`financial_entries`**
-  * `id` (UUID, PK)
-  * `contract_id` (UUID, references `public.contracts.id`, nullable)
-  * `driver_id` (UUID, references `public.drivers.id`, nullable)
-  * `vehicle_id` (UUID, references `public.vehicles.id`, nullable)
-  * `category_id` (UUID, references `public.expense_categories.id`)
-  * `type` (ENUM: `'income'`, `'expense'`)
-  * `title` (VARCHAR(150) NOT NULL)
-  * `amount` (NUMERIC(12,2) NOT NULL)
-  * `due_date` (DATE NOT NULL)
-  * `payment_date` (DATE)
-  * `status` (ENUM: `'pending'`, `'paid'`, `'overdue'`, `'cancelled'`)
-  * `payment_method` (ENUM: `'pix'`, `'boleto'`, `'transfer'`, `'cash'`, `'credit_card'`)
-  * `pix_qr_code` (TEXT)
-  * `receipt_url` (TEXT)
-  * `created_by` (UUID, references `public.profiles.id`)
-  * `created_at` (TIMESTAMPTZ)
+* **`lancamentos_financeiros`**
+  * `id` (UUID, PK DEFAULT gen_random_uuid())
+  * `contrato_id` (UUID, referencia `public.contratos.id`, nullable)
+  * `motorista_id` (UUID, referencia `public.motoristas.id`, nullable)
+  * `veiculo_id` (UUID, referencia `public.veiculos.id`, nullable)
+  * `categoria_id` (UUID, referencia `public.categorias_despesa.id`)
+  * `tipo` (ENUM `tipo_lancamento_enum`: `'receita'`, `'despesa'`)
+  * `titulo` (VARCHAR(150) NOT NULL)
+  * `valor` (NUMERIC(12,2) NOT NULL)
+  * `data_vencimento` (DATE NOT NULL)
+  * `data_pagamento` (DATE)
+  * `status` (ENUM `status_financeiro_enum`: `'pendente'`, `'pago'`, `'atrasado'`, `'cancelado'`)
+  * `metodo_pagamento` (ENUM `metodo_pagamento_enum`: `'pix'`, `'boleto'`, `'transferencia'`, `'dinheiro'`, `'cartao_credito'`)
+  * `pix_copia_cola` (TEXT)
+  * `pix_qr_code_url` (TEXT)
+  * `comprovante_url` (TEXT)
+  * `criado_por` (UUID, referencia `public.perfis.id`)
+  * `criado_em` (TIMESTAMPTZ DEFAULT now())
 
 ---
 
-### 2.7. Oficinas e Manutenção (`public.workshops` & `public.maintenance_entries`)
-* **`workshops`**
-  * `id` (UUID, PK)
+### 2.7. Oficinas e Manutenção (`public.oficinas` & `public.manutencoes`)
+* **`oficinas`**
+  * `id` (UUID, PK DEFAULT gen_random_uuid())
   * `cnpj` (VARCHAR(18), UNIQUE)
-  * `trading_name` (VARCHAR(150) NOT NULL)
-  * `corporate_name` (VARCHAR(150))
-  * `phone` (VARCHAR(20))
+  * `nome_fantasia` (VARCHAR(150) NOT NULL)
+  * `razao_social` (VARCHAR(150))
+  * `telefone` (VARCHAR(20))
   * `email` (VARCHAR(100))
-  * `address` (TEXT)
-  * `bank_details_json` (JSONB)
-  * `rating` (NUMERIC(2,1) DEFAULT 5.0)
-  * `status` (ENUM: `'active'`, `'suspended'`, `'inactive'`)
+  * `endereco` (TEXT)
+  * `dados_bancarios_json` (JSONB)
+  * `avaliacao` (NUMERIC(2,1) DEFAULT 5.0)
+  * `status` (ENUM `status_oficina_enum`: `'ativo'`, `'suspenso'`, `'inativo'`)
 
-* **`maintenance_entries`**
-  * `id` (UUID, PK)
-  * `vehicle_id` (UUID, references `public.vehicles.id`)
-  * `workshop_id` (UUID, references `public.workshops.id`)
-  * `category_id` (UUID, references `public.expense_categories.id`)
-  * `description` (TEXT NOT NULL)
-  * `total_cost` (NUMERIC(10,2) NOT NULL)
-  * `parts_cost` (NUMERIC(10,2) DEFAULT 0.00)
-  * `labor_cost` (NUMERIC(10,2) DEFAULT 0.00)
-  * `service_date` (DATE NOT NULL)
-  * `odometer_km` (INT NOT NULL)
-  * `invoice_nfe_url` (TEXT)
-  * `receipt_url` (TEXT)
-  * `parts_list_json` (JSONB)
-  * `status` (ENUM: `'scheduled'`, `'in_progress'`, `'completed'`, `'cancelled'`)
-  * `created_at` (TIMESTAMPTZ)
-
----
-
-### 2.8. Gestores e Salários (`public.managers`)
-* **`managers`**
-  * `id` (UUID, PK, references `public.profiles.id`)
-  * `base_salary` (NUMERIC(10,2) NOT NULL DEFAULT 0.00)
-  * `commission_percentage` (NUMERIC(4,2) DEFAULT 0.00)
-  * `permissions_json` (JSONB)
-  * `is_active` (BOOLEAN DEFAULT TRUE)
+* **`manutencoes`**
+  * `id` (UUID, PK DEFAULT gen_random_uuid())
+  * `veiculo_id` (UUID, referencia `public.veiculos.id`)
+  * `oficina_id` (UUID, referencia `public.oficinas.id`)
+  * `categoria_id` (UUID, referencia `public.categorias_despesa.id`)
+  * `descricao` (TEXT NOT NULL)
+  * `custo_total` (NUMERIC(10,2) NOT NULL)
+  * `custo_pecas` (NUMERIC(10,2) DEFAULT 0.00)
+  * `custo_mao_de_obra` (NUMERIC(10,2) DEFAULT 0.00)
+  * `data_servico` (DATE NOT NULL)
+  * `odometro_km` (INT NOT NULL)
+  * `nota_fiscal_nfe_url` (TEXT)
+  * `comprovante_url` (TEXT)
+  * `lista_pecas_json` (JSONB)
+  * `status` (ENUM `status_manutencao_enum`: `'agendado'`, `'em_andamento'`, `'concluido'`, `'cancelado'`)
+  * `criado_em` (TIMESTAMPTZ DEFAULT now())
 
 ---
 
-## 📦 3. Supabase Storage Buckets
+### 2.8. Gestores e Salários (`public.gestores`)
+* **`gestores`**
+  * `id` (UUID, PK, referencia `public.perfis.id` em cascata)
+  * `salario_base` (NUMERIC(10,2) NOT NULL DEFAULT 0.00)
+  * `percentual_comissao` (NUMERIC(4,2) DEFAULT 0.00)
+  * `permissoes_json` (JSONB)
+  * `ativo` (BOOLEAN DEFAULT TRUE)
 
-1. `driver-documents`: CNHs e comprovantes de residência (Acesso privado com RLS).
-2. `inspection-photos`: Imagens de vistorias 360º e laudos de entrada/saída.
-3. `vehicle-documents`: CRLVs digitais, apólices de seguro e notas fiscais.
-4. `workshop-invoices`: NFes e recibos de serviços mecânicos.
-5. `payment-receipts`: Comprovantes de transferências e PIX enviados pelos condutores.
+---
+
+### 2.9. Histórico de Atividades (`public.historico_atividades`)
+* **`historico_atividades`**
+  * `id` (UUID, PK DEFAULT gen_random_uuid())
+  * `motorista_id` (UUID, referencia `public.motoristas.id`)
+  * `veiculo_id` (UUID, referencia `public.veiculos.id`, nullable)
+  * `tipo_evento` (VARCHAR(50) NOT NULL)
+  * `titulo` (VARCHAR(150) NOT NULL)
+  * `descricao` (TEXT)
+  * `criado_em` (TIMESTAMPTZ DEFAULT now())
+
+---
+
+## 📦 3. Supabase Storage Buckets (Em Português)
+
+1. `documentos-motoristas`: CNHs e comprovantes de residência (Acesso privado com RLS).
+2. `fotos-vistorias`: Imagens de vistorias 360º e laudos de entrada/saída.
+3. `documentos-veiculos`: CRLVs digitais, apólices de seguro e notas fiscais.
+4. `notas-fiscais-oficinas`: NFes e recibos de serviços mecânicos.
+5. `comprovantes-pagamento`: Comprovantes de transferências e PIX enviados pelos condutores.
 
 ---
 
 ## 🔐 4. Políticas de Segurança (Row Level Security - RLS)
 
-* **Admin Master:** Permissão total (`ALL`) em todas as tabelas baseado no `profile.role = 'admin'`.
-* **Gestores:** Permissão de leitura e escrita operacional (`SELECT`, `INSERT`, `UPDATE`) em motoristas, vistorias e financeiro conforme permissões do `managers.permissions_json`.
+* **Admin Master:** Permissão total (`ALL`) em todas as tabelas baseado em `perfis.cargo = 'admin'`.
+* **Gestores:** Permissão de leitura e escrita operacional (`SELECT`, `INSERT`, `UPDATE`) em motoristas, vistorias e financeiro conforme permissões do `gestores.permissoes_json`.
 * **Motoristas:**
-  * `profiles` / `drivers`: `SELECT` e `UPDATE` restrito ao seu próprio `auth.uid()`.
-  * `contracts`: `SELECT` onde `driver_id = auth.uid()`.
-  * `inspections`: `SELECT` onde `driver_id = auth.uid()`, `INSERT` para check-in/out próprios.
-  * `financial_entries`: `SELECT` onde `driver_id = auth.uid()`.
+  * `perfis` / `motoristas`: `SELECT` e `UPDATE` restrito ao seu próprio `auth.uid()`.
+  * `contratos`: `SELECT` onde `motorista_id = auth.uid()`.
+  * `vistorias`: `SELECT` onde `motorista_id = auth.uid()`, `INSERT` para check-in/out próprios.
+  * `lancamentos_financeiros`: `SELECT` onde `motorista_id = auth.uid()`.
 
 ---
 
 ## 📋 5. Checklist Sequencial de Execução: Migração de Mock para Backend Real
 
 > [!IMPORTANT]
-> A execução deve seguir a ordem estrita das fases abaixo para garantir integridade referencial, segurança e zero quebras na interface do aplicativo.
+> A execução segue a ordem estrita das fases abaixo para garantir integridade referencial, conformidade com a nomenclatura em português e zero quebras na interface.
 
 ---
 
 ### 🔹 FASE 1: Infraestrutura & Banco de Dados (Supabase)
-- [ ] **1.1. Script de Migração SQL Master:**
-  - [ ] Criar tipos ENUM (`user_role`, `vehicle_status`, `driver_status`, `contract_status`, `inspection_type`, `inspection_status`, `financial_type`, `financial_status`, `payment_method_enum`, `workshop_status`, `maintenance_status`).
+- [ ] **1.1. Script de Migração SQL Master (em Português):**
+  - [ ] Criar tipos ENUM (`tipo_perfil_enum`, `status_veiculo_enum`, `status_motorista_enum`, `status_contrato_enum`, `tipo_vistoria_enum`, `status_vistoria_enum`, `tipo_lancamento_enum`, `status_financeiro_enum`, `metodo_pagamento_enum`, `status_oficina_enum`, `status_manutencao_enum`, `frequencia_cobranca_enum`, `nivel_combustivel_enum`, `status_ipva_enum`).
   - [ ] Criar tabelas com chaves primárias UUID, chaves estrangeiras e constraints:
-    - [ ] `profiles`
-    - [ ] `vehicles`
-    - [ ] `drivers`
-    - [ ] `contracts`
-    - [ ] `inspections`
-    - [ ] `expense_categories`
-    - [ ] `financial_entries`
-    - [ ] `workshops`
-    - [ ] `maintenance_entries`
-    - [ ] `managers`
-    - [ ] `timeline_items`
-  - [ ] Criar triggers automáticos de `updated_at` em todas as tabelas.
-  - [ ] Criar trigger `handle_new_user()` para popular `public.profiles` automaticamente a cada novo registro no `auth.users`.
+    - [ ] `perfis`
+    - [ ] `veiculos`
+    - [ ] `motoristas`
+    - [ ] `contratos`
+    - [ ] `vistorias`
+    - [ ] `categorias_despesa`
+    - [ ] `lancamentos_financeiros`
+    - [ ] `oficinas`
+    - [ ] `manutencoes`
+    - [ ] `gestores`
+    - [ ] `historico_atividades`
+  - [ ] Criar triggers automáticos de `atualizado_em` em todas as tabelas.
+  - [ ] Criar trigger `handle_new_user()` para popular `public.perfis` automaticamente a cada novo registro no `auth.users`.
 - [ ] **1.2. Políticas de Segurança (Row Level Security - RLS):**
   - [ ] Ativar RLS em todas as tabelas (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY`).
-  - [ ] Criar helper function `auth.is_admin()` para otimização de regras de admin.
-  - [ ] Criar policies para `profiles`, `vehicles`, `drivers`, `contracts`, `inspections`, `financial_entries`, `workshops`, `maintenance_entries`, `managers`.
-- [ ] **1.3. Configuração dos Buckets de Storage:**
-  - [ ] Criar bucket `driver-documents` (privado) + RLS policies de upload/download.
-  - [ ] Criar bucket `inspection-photos` (privado/autenticado) + RLS policies.
-  - [ ] Criar bucket `vehicle-documents` (autenticado) + RLS policies.
-  - [ ] Criar bucket `workshop-invoices` (autenticado) + RLS policies.
-  - [ ] Criar bucket `payment-receipts` (privado) + RLS policies.
-- [ ] **1.4. Execução do Schema & Seed Inicial:**
+  - [ ] Criar função auxiliar `auth.eh_admin()` para otimização de regras de admin.
+  - [ ] Criar policies para `perfis`, `veiculos`, `motoristas`, `contratos`, `vistorias`, `lancamentos_financeiros`, `oficinas`, `manutencoes`, `gestores`.
+- [ ] **1.3. Configuração dos Buckets de Storage (em Português):**
+  - [ ] Criar bucket `documentos-motoristas` (privado) + RLS policies de upload/download.
+  - [ ] Criar bucket `fotos-vistorias` (autenticado) + RLS policies.
+  - [ ] Criar bucket `documentos-veiculos` (autenticado) + RLS policies.
+  - [ ] Criar bucket `notas-fiscais-oficinas` (autenticado) + RLS policies.
+  - [ ] Criar bucket `comprovantes-pagamento` (privado) + RLS policies.
+- [ ] **1.4. Execução do Schema & Seed Inicial no Supabase:**
   - [ ] Executar migration no projeto Supabase `Gestaodefrota` (`rwksrejrmjqnuspqnokp`).
-  - [ ] Inserir dados base de categorias de despesas no `expense_categories` (conforme plano de contas).
+  - [ ] Inserir dados base de categorias de despesas no `categorias_despesa` (conforme plano de contas).
   - [ ] Criar primeiro usuário Administrador Master no Supabase Auth.
 
 ---
@@ -273,18 +289,18 @@ Controle de receitas (aluguéis, taxas) e despesas (IPVA, seguros, manutenções
 
 ---
 
-### 🔹 FASE 3: Mapeamento de Modelos (Mappers & Serialization)
-- [ ] **3.1. Atualizar Modelos com `fromMap` e `toMap` compatíveis com o PostgreSQL:**
-  - [ ] `lib/models/vehicle.dart` (mapear campos snake_case <-> camelCase e enums).
-  - [ ] `lib/models/driver.dart` (mapear campos de CNH, endereço e score).
-  - [ ] `lib/models/contract.dart` (mapear relacionamentos e periodicidade).
-  - [ ] `lib/models/inspection.dart` (mapear URLs das fotos e JSON de danos).
-  - [ ] `lib/models/financial_entry.dart` (mapear valores numéricos, datas e método de pagamento).
-  - [ ] `lib/models/expense_category.dart` (mapear hierarquia de categorias).
-  - [ ] `lib/models/workshop.dart` (mapear CNPJ, dados bancários e status).
-  - [ ] `lib/models/maintenance_entry.dart` (mapear lista de peças e NFes).
-  - [ ] `lib/models/manager.dart` (mapear salário base e JSON de permissões).
-  - [ ] `lib/models/timeline_item.dart` (mapear histórico de eventos).
+### 🔹 FASE 3: Mapeamento de Modelos (Mappers & Serialization em Português)
+- [ ] **3.1. Atualizar Modelos com `fromMap` e `toMap` mapeando as tabelas e colunas em português:**
+  - [ ] `lib/models/vehicle.dart` (mapear com a tabela `veiculos`: `placa`, `marca`, `modelo`, `ano`, `status`, `km_atual`, etc.).
+  - [ ] `lib/models/driver.dart` (mapear com a tabela `motoristas`: `cpf`, `numero_cnh`, `categoria_cnh`, `pontuacao_confianca`, etc.).
+  - [ ] `lib/models/contract.dart` (mapear com a tabela `contratos`: `numero_contrato`, `motorista_id`, `veiculo_id`, `valor_locacao`, etc.).
+  - [ ] `lib/models/inspection.dart` (mapear com a tabela `vistorias`: `tipo`, `odometro_km`, `nivel_combustivel`, `danos_json`, fotos).
+  - [ ] `lib/models/financial_entry.dart` (mapear com a tabela `lancamentos_financeiros`: `titulo`, `valor`, `data_vencimento`, `status`, `pix_copia_cola`).
+  - [ ] `lib/models/expense_category.dart` (mapear com a tabela `categorias_despesa`: `nome`, `tipo`, `categoria_pai_id`).
+  - [ ] `lib/models/workshop.dart` (mapear com a tabela `oficinas`: `cnpj`, `nome_fantasia`, `razao_social`, `avaliacao`).
+  - [ ] `lib/models/maintenance_entry.dart` (mapear com a tabela `manutencoes`: `veiculo_id`, `oficina_id`, `custo_total`, `lista_pecas_json`).
+  - [ ] `lib/models/manager.dart` (mapear com a tabela `gestores`: `salario_base`, `percentual_comissao`, `permissoes_json`).
+  - [ ] `lib/models/timeline_item.dart` (mapear com a tabela `historico_atividades`: `tipo_evento`, `titulo`, `descricao`).
 
 ---
 
@@ -293,43 +309,43 @@ Controle de receitas (aluguéis, taxas) e despesas (IPVA, seguros, manutenções
   - [ ] Login com Email e Senha (`signInWithPassword`).
   - [ ] Cadastro de Motorista / Gestor (`signUp`).
   - [ ] Recuperação de Senha (`resetPasswordForEmail`).
-  - [ ] Obter Sessão e Perfil Atual (`getCurrentProfile`).
+  - [ ] Obter Sessão e Perfil Atual (`obterPerfilAtual`).
   - [ ] Logout (`signOut`).
 - [ ] **4.2. Criar `VehicleRepository` (`lib/core/repositories/vehicle_repository.dart`):**
-  - [ ] Listar veículos com filtros de status e busca (`getVehicles`).
-  - [ ] Obter detalhes por ID (`getVehicleById`).
-  - [ ] Cadastrar novo veículo (`createVehicle`).
-  - [ ] Atualizar dados do veículo / KM / IPVA / Financiamento (`updateVehicle`).
-  - [ ] Inativar veículo (`deleteVehicle`).
+  - [ ] Listar veículos com filtros de status e busca (`obterVeiculos`).
+  - [ ] Obter detalhes por ID (`obterVeiculoPorId`).
+  - [ ] Cadastrar novo veículo (`criarVeiculo`).
+  - [ ] Atualizar dados do veículo / KM / IPVA / Financiamento (`atualizarVeiculo`).
+  - [ ] Inativar veículo (`deletarVeiculo`).
 - [ ] **4.3. Criar `DriverRepository` (`lib/core/repositories/driver_repository.dart`):**
-  - [ ] Listar motoristas com status e busca (`getDrivers`).
-  - [ ] Obter perfil 360 do motorista (`getDriverById`).
+  - [ ] Listar motoristas com status e busca (`obterMotoristas`).
+  - [ ] Obter perfil 360 do motorista (`obterMotoristaPorId`).
   - [ ] Atualizar status cadastral (Aprovar/Bloquear).
-  - [ ] Atualizar Trust Score e saldo devedor.
-  - [ ] Upload de CNH e Comprovante de Residência no Storage do Supabase.
+  - [ ] Atualizar pontuação de confiança e saldo devedor.
+  - [ ] Upload de CNH e comprovante de residência no bucket `documentos-motoristas`.
 - [ ] **4.4. Criar `ContractRepository` (`lib/core/repositories/contract_repository.dart`):**
   - [ ] Criar novo contrato vinculando veículo e motorista.
   - [ ] Listar contratos ativos e histórico.
   - [ ] Finalizar ou rescindir contrato.
 - [ ] **4.5. Criar `InspectionRepository` (`lib/core/repositories/inspection_repository.dart`):**
-  - [ ] Upload de fotos da vistoria 360º no bucket `inspection-photos`.
+  - [ ] Upload de fotos da vistoria 360º no bucket `fotos-vistorias`.
   - [ ] Salvar vistoria de Check-in ou Check-out com odômetro e nível de combustível.
   - [ ] Listar vistorias por motorista ou veículo.
   - [ ] Aprovar / Rejeitar laudo de vistoria (Admin/Gestor).
 - [ ] **4.6. Criar `FinancialRepository` (`lib/core/repositories/financial_repository.dart`):**
-  - [ ] Listar entradas financeiras com filtros de período e status.
+  - [ ] Listar lançamentos financeiros com filtros de período e status.
   - [ ] Registrar entrada / saída manual (Função de Caixa).
   - [ ] Realizar baixa manual de recebimento.
   - [ ] Gerar cobrança / QR Code PIX para faturas de motorista.
-  - [ ] Upload e visualização de comprovantes de pagamento.
+  - [ ] Upload e visualização de comprovantes de pagamento no bucket `comprovantes-pagamento`.
 - [ ] **4.7. Criar `WorkshopRepository` & `MaintenanceRepository`:**
-  - [ ] CRUD completo de oficinas credenciadas.
-  - [ ] Registrar nova manutenção com upload de NFe e lista de peças.
+  - [ ] CRUD completo de oficinas credenciadas na tabela `oficinas`.
+  - [ ] Registrar nova manutenção com upload de NFe no bucket `notas-fiscais-oficinas`.
   - [ ] Listar manutenções por veículo e por oficina.
 - [ ] **4.8. Criar `ManagerRepository`:**
-  - [ ] Listar gestores e suas permissões.
+  - [ ] Listar gestores e suas permissões a partir da tabela `gestores`.
   - [ ] Configurar salários e comissões.
-  - [ ] Atualizar permissões operacionais.
+  - [ ] Atualizar permissões operacionais no `permissoes_json`.
 
 ---
 
@@ -337,10 +353,10 @@ Controle de receitas (aluguéis, taxas) e despesas (IPVA, seguros, manutenções
 - [ ] **5.1. Tela de Login (`/auth`):**
   - [ ] Conectar formulário ao `AuthRepository.signInWithPassword`.
   - [ ] Tratamento de erros de credenciais inválidas.
-  - [ ] Redirecionamento automático com base na role (`admin` -> `/admin`, `gestor` -> `/gestor`, `driver` -> `/driver`).
+  - [ ] Redirecionamento automático com base no cargo (`admin` -> `/admin`, `gestor` -> `/gestor`, `motorista` -> `/driver`).
 - [ ] **5.2. Fluxo de Auto-Cadastro do Motorista:**
-  - [ ] Criar usuário no Supabase Auth + registro inicial em `profiles` e `drivers`.
-  - [ ] Upload de CNH e comprovante direto para o bucket `driver-documents`.
+  - [ ] Criar usuário no Supabase Auth + registro inicial em `perfis` e `motoristas`.
+  - [ ] Upload de CNH e comprovante direto para o bucket `documentos-motoristas`.
   - [ ] Redirecionar para tela de "Aguardando Aprovação".
 - [ ] **5.3. Guard de Rotas (`app_routes.dart`):**
   - [ ] Proteger rotas `/admin/*`, `/gestor/*` e `/driver/*` validando a sessão ativa e permissões.
@@ -350,13 +366,13 @@ Controle de receitas (aluguéis, taxas) e despesas (IPVA, seguros, manutenções
 ### 🔹 FASE 6: Migração do Painel Master (Admin & Gestor)
 - [ ] **6.1. Dashboard Principal:**
   - [ ] Conectar cards de KPIs (Veículos Ativos, Taxa de Ocupação, Receita Mensal, Despesas) a queries agregadas do Supabase.
-  - [ ] Conectar gráficos de Receita vs Despesa com `financial_entries`.
+  - [ ] Conectar gráficos de Receita vs Despesa com `lancamentos_financeiros`.
   - [ ] Painel de alertas de CNH e IPVA com queries filtradas por data de vencimento.
 - [ ] **6.2. Módulo de Frota:**
-  - [ ] Substituir `mockVehicles` por `VehicleRepository.getVehicles()`.
+  - [ ] Substituir `mockVehicles` por `VehicleRepository.obterVeiculos()`.
   - [ ] Conectar tela de criação e edição de veículos ao backend.
 - [ ] **6.3. Módulo de Motoristas & Auditoria:**
-  - [ ] Substituir `mockDrivers` por `DriverRepository.getDrivers()`.
+  - [ ] Substituir `mockDrivers` por `DriverRepository.obterMotoristas()`.
   - [ ] Tela de auditoria de documentos conectada aos links seguros do Storage.
   - [ ] Visualização 360 do motorista carregando histórico real de contratos, vistorias e débitos.
 - [ ] **6.4. Módulo de Vistorias:**
@@ -377,15 +393,15 @@ Controle de receitas (aluguéis, taxas) e despesas (IPVA, seguros, manutenções
   - [ ] Carregar dados reais do veículo em posse a partir do contrato ativo.
   - [ ] Exibir status real de manutenção preventiva e KM do ativo.
 - [ ] **7.2. Vistorias 360º:**
-  - [ ] Fluxo de Check-in e Check-out tirando fotos pela câmera e enviando para o bucket `inspection-photos`.
-  - [ ] Registro do odômetro e nível de combustível no `inspections`.
+  - [ ] Fluxo de Check-in e Check-out tirando fotos pela câmera e enviando para o bucket `fotos-vistorias`.
+  - [ ] Registro do odômetro e nível de combustível na tabela `vistorias`.
 - [ ] **7.3. Extrato Financeiro & PIX:**
   - [ ] Listagem de faturas e mensalidades reais daquele motorista.
   - [ ] Geração dinâmica de PIX Copia e Cola.
-  - [ ] Upload de comprovante de pagamento para `payment-receipts`.
+  - [ ] Upload de comprovante de pagamento para `comprovantes-pagamento`.
 - [ ] **7.4. Perfil & Documentos:**
   - [ ] Visualização do CRLV e Apólice de Seguro a partir dos links do veículo ativo.
-  - [ ] Exibição do Trust Score atualizado do banco.
+  - [ ] Exibição da pontuação de confiança atualizada do banco.
 
 ---
 
@@ -402,6 +418,6 @@ Controle de receitas (aluguéis, taxas) e despesas (IPVA, seguros, manutenções
   - [ ] Remover pasta `lib/mock/` e classe `MockRepository`.
   - [ ] Garantir que 100% dos imports apontem para os novos repositórios Supabase.
 - [ ] **9.2. Testes de Integração & RLS:**
-  - [ ] Testar fluxo completo de login e operações para cada role (Admin, Gestor, Driver).
+  - [ ] Testar fluxo completo de login e operações para cada cargo (`admin`, `gestor`, `motorista`).
   - [ ] Validar que Motoristas não conseguem acessar dados de terceiros via RLS.
   - [ ] Validar integridade dos uploads e visualização de imagens do Storage.

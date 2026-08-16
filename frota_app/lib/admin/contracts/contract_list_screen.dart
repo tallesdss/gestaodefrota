@@ -175,6 +175,9 @@ class _ContractListScreenState extends State<ContractListScreen> {
         return 'EXPIRADO';
       case ContractStatus.cancelled:
         return 'CANCELADO';
+      case ContractStatus.concluded:
+      default:
+        return 'CONCLUÍDO';
     }
   }
 
@@ -186,6 +189,9 @@ class _ContractListScreenState extends State<ContractListScreen> {
         return BadgeType.warning;
       case ContractStatus.cancelled:
         return BadgeType.error;
+      case ContractStatus.concluded:
+      default:
+        return BadgeType.neutral;
     }
   }
 }

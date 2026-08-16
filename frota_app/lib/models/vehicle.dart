@@ -1,4 +1,4 @@
-enum VehicleStatus { available, rented, maintenance, sold }
+enum VehicleStatus { available, rented, maintenance, inactive, sold }
 
 enum ContractType { uber, prefecture }
 
@@ -25,13 +25,15 @@ class VehicleUsage {
 
   factory VehicleUsage.fromMap(Map<String, dynamic> map) {
     return VehicleUsage(
-      driverId: map['driverId'],
-      driverName: map['driverName'],
-      startDate: DateTime.parse(map['startDate']),
-      endDate: map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
-      startKm: map['startKm'],
-      endKm: map['endKm'],
-      purpose: map['purpose'],
+      driverId: map['driverId'] ?? map['motorista_id'] ?? '',
+      driverName: map['driverName'] ?? map['motorista_nome'] ?? '',
+      startDate: DateTime.tryParse(map['startDate'] ?? map['data_inicio'] ?? '') ?? DateTime.now(),
+      endDate: map['endDate'] != null || map['data_fim'] != null
+          ? DateTime.tryParse(map['endDate'] ?? map['data_fim'] ?? '')
+          : null,
+      startKm: (map['startKm'] ?? map['km_inicial'] ?? 0) as int,
+      endKm: map['endKm'] ?? map['km_final'],
+      purpose: map['purpose'] ?? map['motivo'] ?? '',
     );
   }
 
@@ -56,8 +58,8 @@ class RentalValueHistory {
 
   factory RentalValueHistory.fromMap(Map<String, dynamic> map) {
     return RentalValueHistory(
-      value: map['value'].toDouble(),
-      date: DateTime.parse(map['date']),
+      value: (map['value'] ?? map['valor'] ?? 0.0).toDouble(),
+      date: DateTime.tryParse(map['date'] ?? map['data'] ?? '') ?? DateTime.now(),
     );
   }
 
@@ -89,6 +91,7 @@ class Vehicle {
 
   // Financing fields
   final int? financingInstallmentsPaid;
+  final int? financingTotalInstallments;
   final double? financingInstallmentValue;
   final int? financingDueDay;
 
@@ -126,6 +129,7 @@ class Vehicle {
     this.insuranceValue,
     this.licensingValue,
     this.financingInstallmentsPaid,
+    this.financingTotalInstallments,
     this.financingInstallmentValue,
     this.financingDueDay,
     this.rentalValue,
@@ -144,34 +148,55 @@ class Vehicle {
   });
 
   factory Vehicle.fromMap(Map<String, dynamic> map) {
+    VehicleStatus parseStatus(dynamic val) {
+      if (val == null) return VehicleStatus.available;
+      final s = val.toString().toLowerCase();
+      if (s == 'disponivel' || s == 'available') return VehicleStatus.available;
+      if (s == 'alugado' || s == 'rented') return VehicleStatus.rented;
+      if (s == 'manutencao' || s == 'maintenance') return VehicleStatus.maintenance;
+      if (s == 'inativo' || s == 'inactive') return VehicleStatus.inactive;
+      if (s == 'sold') return VehicleStatus.sold;
+      return VehicleStatus.available;
+    }
+
+    DateTime parseDate(dynamic val) {
+      if (val == null) return DateTime.now().add(const Duration(days: 365));
+      if (val is DateTime) return val;
+      return DateTime.tryParse(val.toString()) ?? DateTime.now().add(const Duration(days: 365));
+    }
+
     return Vehicle(
-      id: map['id'],
-      plate: map['plate'],
-      brand: map['brand'],
-      model: map['model'],
-      year: map['year'],
-      color: map['color'],
-      status: VehicleStatus.values.firstWhere((e) => e.name == map['status']),
-      currentKm: map['currentKm'],
-      fuelLevel: map['fuelLevel'].toDouble(),
-      contractType: ContractType.values.firstWhere(
-        (e) => e.name == map['contractType'],
-      ),
-      imageUrl: map['imageUrl'],
-      ipvaExpiry: DateTime.parse(map['ipvaExpiry']),
-      insuranceExpiry: DateTime.parse(map['insuranceExpiry']),
-      licensingExpiry: DateTime.parse(map['licensingExpiry']),
-      ipvaValue: map['ipvaValue']?.toDouble(),
-      insuranceValue: map['insuranceValue']?.toDouble(),
-      licensingValue: map['licensingValue']?.toDouble(),
-      financingInstallmentsPaid: map['financingInstallmentsPaid'],
-      financingInstallmentValue: map['financingInstallmentValue']?.toDouble(),
-      financingDueDay: map['financingDueDay'],
-      rentalValue: map['rentalValue']?.toDouble(),
-      currentDriverId: map['currentDriverId'],
-      currentDriverName: map['currentDriverName'],
+      id: (map['id'] ?? '').toString(),
+      plate: map['placa'] ?? map['plate'] ?? '',
+      brand: map['marca'] ?? map['brand'] ?? '',
+      model: map['modelo'] ?? map['model'] ?? '',
+      year: (map['ano'] ?? map['year'] ?? 2024) as int,
+      color: map['cor'] ?? map['color'] ?? 'Prata',
+      status: parseStatus(map['status']),
+      currentKm: (map['km_atual'] ?? map['currentKm'] ?? 0) as int,
+      fuelLevel: (map['nivel_combustivel'] ?? map['fuelLevel'] ?? 1.0).toDouble(),
+      contractType: map['contractType'] != null
+          ? ContractType.values.firstWhere(
+              (e) => e.name == map['contractType'],
+              orElse: () => ContractType.uber,
+            )
+          : ContractType.uber,
+      imageUrl: map['crlv_url'] ?? map['imageUrl'] ?? '',
+      ipvaExpiry: parseDate(map['vencimento_ipva'] ?? map['ipvaExpiry']),
+      insuranceExpiry: parseDate(map['vencimento_seguro'] ?? map['insuranceExpiry']),
+      licensingExpiry: parseDate(map['vencimento_licenciamento'] ?? map['licensingExpiry']),
+      ipvaValue: (map['valor_ipva'] ?? map['ipvaValue'])?.toDouble(),
+      insuranceValue: (map['valor_seguro'] ?? map['insuranceValue'])?.toDouble(),
+      licensingValue: (map['valor_licenciamento'] ?? map['licensingValue'])?.toDouble(),
+      financingInstallmentsPaid: map['financiamento_parcelas_pagas'] ?? map['financingInstallmentsPaid'],
+      financingTotalInstallments: map['financiamento_total_parcelas'] ?? map['financingTotalInstallments'],
+      financingInstallmentValue: (map['financiamento_valor_parcela'] ?? map['financingInstallmentValue'])?.toDouble(),
+      financingDueDay: map['financiamento_dia_vencimento'] ?? map['financingDueDay'],
+      rentalValue: (map['valor_locacao'] ?? map['rentalValue'])?.toDouble(),
+      currentDriverId: map['motorista_atual_id'] ?? map['currentDriverId'],
+      currentDriverName: map['motorista_atual_nome'] ?? map['currentDriverName'],
       lastKmUpdateDate: map['lastKmUpdateDate'] != null
-          ? DateTime.parse(map['lastKmUpdateDate'])
+          ? DateTime.tryParse(map['lastKmUpdateDate'])
           : null,
       lastKmValue: map['lastKmValue'],
       usageHistory: (map['usageHistory'] as List? ?? [])
@@ -181,11 +206,14 @@ class Vehicle {
           .map((e) => RentalValueHistory.fromMap(e))
           .toList(),
       rentalType: map['rentalType'] != null
-          ? RentalType.values.firstWhere((e) => e.name == map['rentalType'])
+          ? RentalType.values.firstWhere(
+              (e) => e.name == map['rentalType'],
+              orElse: () => RentalType.weekly,
+            )
           : null,
       rentalDueDay: map['rentalDueDay'],
-      purchaseValue: map['purchaseValue']?.toDouble(),
-      fipeValue: map['fipeValue']?.toDouble(),
+      purchaseValue: (map['purchaseValue'] ?? map['valor_compra'])?.toDouble(),
+      fipeValue: (map['fipeValue'] ?? map['valor_fipe'])?.toDouble(),
       isEncumbered: map['isEncumbered'] ?? false,
       encumberedBank: map['encumberedBank'],
     );
@@ -211,6 +239,7 @@ class Vehicle {
       'insuranceValue': insuranceValue,
       'licensingValue': licensingValue,
       'financingInstallmentsPaid': financingInstallmentsPaid,
+      'financingTotalInstallments': financingTotalInstallments,
       'financingInstallmentValue': financingInstallmentValue,
       'financingDueDay': financingDueDay,
       'rentalValue': rentalValue,
@@ -226,6 +255,32 @@ class Vehicle {
       'fipeValue': fipeValue,
       'isEncumbered': isEncumbered,
       'encumberedBank': encumberedBank,
+    };
+  }
+
+  Map<String, dynamic> toDatabaseMap() {
+    return {
+      'id': id,
+      'placa': plate,
+      'marca': brand,
+      'modelo': model,
+      'ano': year,
+      'cor': color,
+      'status': status == VehicleStatus.available
+          ? 'disponivel'
+          : (status == VehicleStatus.rented
+              ? 'alugado'
+              : (status == VehicleStatus.maintenance
+                  ? 'manutencao'
+                  : 'inativo')),
+      'km_atual': currentKm,
+      'crlv_url': imageUrl,
+      'valor_ipva': ipvaValue,
+      'vencimento_ipva': ipvaExpiry.toIso8601String().split('T')[0],
+      'vencimento_seguro': insuranceExpiry.toIso8601String().split('T')[0],
+      'financiamento_parcelas_pagas': financingInstallmentsPaid,
+      'financiamento_total_parcelas': financingTotalInstallments,
+      'financiamento_valor_parcela': financingInstallmentValue,
     };
   }
 
@@ -248,13 +303,14 @@ class Vehicle {
     double? insuranceValue,
     double? licensingValue,
     int? financingInstallmentsPaid,
+    int? financingTotalInstallments,
     double? financingInstallmentValue,
     int? financingDueDay,
+    double? rentalValue,
     String? currentDriverId,
     String? currentDriverName,
     DateTime? lastKmUpdateDate,
     int? lastKmValue,
-    double? rentalValue,
     List<VehicleUsage>? usageHistory,
     List<RentalValueHistory>? rentalHistory,
     RentalType? rentalType,
@@ -284,14 +340,16 @@ class Vehicle {
       licensingValue: licensingValue ?? this.licensingValue,
       financingInstallmentsPaid:
           financingInstallmentsPaid ?? this.financingInstallmentsPaid,
+      financingTotalInstallments:
+          financingTotalInstallments ?? this.financingTotalInstallments,
       financingInstallmentValue:
           financingInstallmentValue ?? this.financingInstallmentValue,
       financingDueDay: financingDueDay ?? this.financingDueDay,
+      rentalValue: rentalValue ?? this.rentalValue,
       currentDriverId: currentDriverId ?? this.currentDriverId,
       currentDriverName: currentDriverName ?? this.currentDriverName,
       lastKmUpdateDate: lastKmUpdateDate ?? this.lastKmUpdateDate,
       lastKmValue: lastKmValue ?? this.lastKmValue,
-      rentalValue: rentalValue ?? this.rentalValue,
       usageHistory: usageHistory ?? this.usageHistory,
       rentalHistory: rentalHistory ?? this.rentalHistory,
       rentalType: rentalType ?? this.rentalType,

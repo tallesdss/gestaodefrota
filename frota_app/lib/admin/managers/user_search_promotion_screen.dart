@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/widgets/app_avatar.dart';
 import '../../models/manager.dart';
 
 class UserSearchPromotionScreen extends StatefulWidget {
@@ -203,9 +204,10 @@ class _UserSearchPromotionScreenState extends State<UserSearchPromotionScreen> {
                           ),
                           child: Row(
                             children: [
-                              CircleAvatar(
+                              AppAvatar(
                                 radius: 25,
-                                backgroundImage: NetworkImage(user['avatar']!),
+                                name: user['name'],
+                                imageUrl: user['avatar'],
                               ),
                               const SizedBox(width: AppSpacing.md),
                               Expanded(

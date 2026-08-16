@@ -4,7 +4,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_empty_state.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/repositories/mock_repository.dart';
 import '../../models/financial_entry.dart';
 
 class FinancialStatementScreen extends StatefulWidget {
@@ -16,89 +18,127 @@ class FinancialStatementScreen extends StatefulWidget {
 }
 
 class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
-  final List<FinancialEntry> mockEntries = [
-    FinancialEntry(
-      id: '1',
-      type: FinancialType.expense,
-      category: 'Aluguel',
-      amount: 550.00,
-      date: DateTime.now().add(const Duration(days: 2)),
-      description: 'Semana 12/03 a 19/03',
-      isPaid: false,
-      isLate: false,
-    ),
-    FinancialEntry(
-      id: '2',
-      type: FinancialType.expense,
-      category: 'Multa',
-      amount: 195.23,
-      date: DateTime.now().subtract(const Duration(days: 5)),
-      description: 'Excesso de velocidade - Av. Brasil',
-      isPaid: false,
-      isLate: true,
-    ),
-    FinancialEntry(
-      id: '3',
-      type: FinancialType.expense,
-      category: 'Aluguel',
-      amount: 550.00,
-      date: DateTime.now().subtract(const Duration(days: 7)),
-      description: 'Semana 05/03 a 12/03',
-      isPaid: true,
-      isLate: false,
-    ),
-    FinancialEntry(
-      id: '4',
-      type: FinancialType.income,
-      category: 'Crédito',
-      amount: 50.00,
-      date: DateTime.now().subtract(const Duration(days: 10)),
-      description: 'Bônus Indicação',
-      isPaid: true,
-      isLate: false,
-    ),
-    FinancialEntry(
-      id: '5',
-      type: FinancialType.expense,
-      category: 'Aluguel',
-      amount: 550.00,
-      date: DateTime.now().subtract(const Duration(days: 14)),
-      description: 'Semana 26/02 a 05/03',
-      isPaid: true,
-      isLate: false,
-    ),
-  ];
+  final MockRepository _repository = MockRepository();
+  List<FinancialEntry> _entries = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+  String _selectedFilter = 'Todos';
 
-  String selectedFilter = 'Todos';
+  @override
+  void initState() {
+    super.initState();
+    _loadEntries();
+  }
+
+  Future<void> _loadEntries() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final data = await _repository.getFinancialEntries();
+      if (mounted) {
+        setState(() {
+          _entries = data;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Não foi possível carregar o extrato financeiro.';
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filteredEntries = mockEntries.where((e) {
-      if (selectedFilter == 'Todos') return true;
-      if (selectedFilter == 'Pendentes') return !e.isPaid;
-      if (selectedFilter == 'Pagos') return e.isPaid;
+    final filteredEntries = _entries.where((e) {
+      if (_selectedFilter == 'Todos') return true;
+      if (_selectedFilter == 'Pendentes') return !e.isPaid;
+      if (_selectedFilter == 'Pagos') return e.isPaid;
       return true;
     }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildAppBar(context),
-            _buildFinancialSummary(),
-            _buildFilters(),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                itemCount: filteredEntries.length,
-                itemBuilder: (context, index) {
-                  return _buildTransactionCard(filteredEntries[index]);
-                },
-              ),
-            ),
-          ],
+        child: RefreshIndicator(
+          onRefresh: _loadEntries,
+          color: AppColors.primary,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: _buildAppBar(context)),
+              SliverToBoxAdapter(child: _buildFinancialSummary()),
+              SliverToBoxAdapter(child: _buildFilters()),
+              if (_isLoading)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  ),
+                )
+              else if (_errorMessage != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            _errorMessage!,
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          ElevatedButton(
+                            onPressed: _loadEntries,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Tentar Novamente'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              else if (filteredEntries.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: AppEmptyState(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Nenhum lançamento',
+                    description: 'Não encontramos registros para o filtro "$_selectedFilter".',
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildTransactionCard(filteredEntries[index]),
+                      childCount: filteredEntries.length,
+                    ),
+                  ),
+                ),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
+            ],
+          ),
         ),
       ),
     );
@@ -134,13 +174,21 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   }
 
   Widget _buildFinancialSummary() {
-    double totalPending = mockEntries
+    double totalPending = _entries
         .where((e) => !e.isPaid)
         .fold(
-          0,
+          0.0,
           (sum, e) =>
               sum + (e.type == FinancialType.expense ? e.amount : -e.amount),
         );
+
+    double totalPaid = _entries
+        .where((e) => e.isPaid && e.type == FinancialType.expense)
+        .fold(0.0, (sum, e) => sum + e.amount);
+
+    double totalCredits = _entries
+        .where((e) => e.isPaid && e.type == FinancialType.income)
+        .fold(0.0, (sum, e) => sum + e.amount);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -174,11 +222,13 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'R\$ ${totalPending.toStringAsFixed(2).replaceAll('.', ',')}',
-                style: AppTextStyles.displayMedium.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
+              Flexible(
+                child: Text(
+                  'R\$ ${totalPending.toStringAsFixed(2).replaceAll('.', ',')}',
+                  style: AppTextStyles.displayMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               const AppIcon(
@@ -193,13 +243,13 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
             children: [
               _buildSummaryItem(
                 'PAGO',
-                'R\$ 1.650,00',
+                'R\$ ${totalPaid.toStringAsFixed(2).replaceAll('.', ',')}',
                 Colors.white.withValues(alpha: 0.8),
               ),
               const SizedBox(width: AppSpacing.xxl),
               _buildSummaryItem(
                 'CRÉDITOS',
-                'R\$ 50,00',
+                'R\$ ${totalCredits.toStringAsFixed(2).replaceAll('.', ',')}',
                 Colors.white.withValues(alpha: 0.8),
               ),
             ],
@@ -242,7 +292,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
         itemCount: filters.length,
         itemBuilder: (context, index) {
           final filter = filters[index];
-          final isSelected = selectedFilter == filter;
+          final isSelected = _selectedFilter == filter;
           return Padding(
             padding: const EdgeInsets.only(right: AppSpacing.md),
             child: ChoiceChip(
@@ -251,7 +301,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
               onSelected: (selected) {
                 if (selected) {
                   setState(() {
-                    selectedFilter = filter;
+                    _selectedFilter = filter;
                   });
                 }
               },

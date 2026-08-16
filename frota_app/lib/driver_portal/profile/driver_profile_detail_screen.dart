@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/widgets/app_avatar.dart';
 import '../../core/routes/app_routes.dart';
 
 class DriverProfileDetailScreen extends StatefulWidget {
@@ -77,16 +78,14 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
         Stack(
           children: [
             Container(
-              width: 120,
-              height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.surfaceContainerHigh,
-                image: const DecorationImage(
-                  image: NetworkImage('https://i.pravatar.cc/300?u=joao'),
-                  fit: BoxFit.cover,
-                ),
                 border: Border.all(color: AppColors.primary, width: 2),
+              ),
+              child: const AppAvatar(
+                radius: 58,
+                name: 'João Silva',
+                imageUrl: 'https://i.pravatar.cc/300?u=joao',
               ),
             ),
             if (_isEditing)

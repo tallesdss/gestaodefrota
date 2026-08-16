@@ -65,14 +65,13 @@ class MaintenancePart {
   });
 
   double get total => quantity * unitPrice;
-  // Proxy for simple value if needed
   double get value => total;
 
   factory MaintenancePart.fromMap(Map<String, dynamic> map) {
     return MaintenancePart(
-      name: map['name'],
-      quantity: map['quantity'] ?? 1,
-      unitPrice: (map['unitPrice'] ?? map['value'] ?? 0.0).toDouble(),
+      name: map['nome'] ?? map['name'] ?? '',
+      quantity: (map['quantidade'] ?? map['quantity'] ?? 1) as int,
+      unitPrice: (map['valor_unitario'] ?? map['unitPrice'] ?? map['value'] ?? 0.0).toDouble(),
     );
   }
 
@@ -117,30 +116,35 @@ class MaintenanceEntry {
   });
 
   factory MaintenanceEntry.fromMap(Map<String, dynamic> map) {
+    MaintenanceStatus parseStatus(dynamic val) {
+      if (val == null) return MaintenanceStatus.pending;
+      final s = val.toString().toLowerCase();
+      if (s == 'pago' || s == 'paid' || s == 'concluido') return MaintenanceStatus.paid;
+      if (s == 'cancelado' || s == 'cancelled') return MaintenanceStatus.cancelled;
+      return MaintenanceStatus.pending;
+    }
+
     return MaintenanceEntry(
-      id: map['id'],
-      vehicleId: map['vehicleId'],
-      driverId: map['driverId'],
-      driverName: map['driverName'],
+      id: (map['id'] ?? '').toString(),
+      vehicleId: map['veiculo_id'] ?? map['vehicleId'] ?? '',
+      driverId: map['motorista_id'] ?? map['driverId'],
+      driverName: map['motorista_nome'] ?? map['driverName'],
       type: MaintenanceType.values.firstWhere(
-        (e) => e.name == (map['type'] ?? 'oilChange'),
+        (e) => e.name == (map['tipo'] ?? map['type'] ?? 'oilChange'),
         orElse: () => MaintenanceType.oilChange,
       ),
-      description: map['description'] ?? '',
-      date: DateTime.parse(map['date'] ?? DateTime.now().toIso8601String()),
-      kmAtMaintenance: map['kmAtMaintenance'] ?? 0,
-      cost: (map['cost'] ?? 0.0).toDouble(),
-      workshop: map['workshop'] ?? '',
-      workshopId: map['workshopId'],
-      status: MaintenanceStatus.values.firstWhere(
-        (e) => e.name == (map['status'] ?? 'pending'),
-        orElse: () => MaintenanceStatus.pending,
-      ),
-      parts: (map['parts'] as List? ?? [])
-          .map((p) => MaintenancePart.fromMap(p))
+      description: map['descricao'] ?? map['description'] ?? '',
+      date: DateTime.tryParse(map['data_servico'] ?? map['date'] ?? '') ?? DateTime.now(),
+      kmAtMaintenance: (map['odometro_km'] ?? map['kmAtMaintenance'] ?? 0) as int,
+      cost: (map['custo_total'] ?? map['cost'] ?? 0.0).toDouble(),
+      workshop: map['oficina_nome'] ?? map['workshop'] ?? '',
+      workshopId: map['oficina_id'] ?? map['workshopId'],
+      status: parseStatus(map['status']),
+      parts: (map['lista_pecas_json'] ?? map['parts'] as List? ?? [])
+          .map((p) => MaintenancePart.fromMap(p is Map<String, dynamic> ? p : {}))
           .toList(),
-      invoiceNumber: map['invoiceNumber'],
-      invoiceUrl: map['invoiceUrl'],
+      invoiceNumber: map['numero_nfe'] ?? map['invoiceNumber'],
+      invoiceUrl: map['nota_fiscal_nfe_url'] ?? map['invoiceUrl'],
     );
   }
 
@@ -161,6 +165,21 @@ class MaintenanceEntry {
       'parts': parts.map((p) => p.toMap()).toList(),
       'invoiceNumber': invoiceNumber,
       'invoiceUrl': invoiceUrl,
+    };
+  }
+
+  Map<String, dynamic> toDatabaseMap() {
+    return {
+      'id': id,
+      'veiculo_id': vehicleId,
+      'oficina_id': workshopId,
+      'descricao': description,
+      'custo_total': cost,
+      'data_servico': date.toIso8601String().split('T')[0],
+      'odometro_km': kmAtMaintenance,
+      'nota_fiscal_nfe_url': invoiceUrl,
+      'status': status == MaintenanceStatus.paid ? 'concluido' : 'agendado',
+      'lista_pecas_json': parts.map((p) => p.toMap()).toList(),
     };
   }
 }

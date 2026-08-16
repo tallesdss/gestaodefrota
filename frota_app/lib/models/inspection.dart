@@ -10,7 +10,7 @@ class InspectionPhoto {
 
   factory InspectionPhoto.fromMap(Map<String, dynamic> map) {
     return InspectionPhoto(
-      url: map['url'],
+      url: map['url'] ?? '',
       title: map['title'] ?? 'Foto da Vistoria',
     );
   }
@@ -28,8 +28,8 @@ class ChecklistItem {
 
   factory ChecklistItem.fromMap(Map<String, dynamic> map) {
     return ChecklistItem(
-      title: map['title'],
-      isChecked: map['isChecked'] ?? false,
+      title: map['title'] ?? '',
+      isChecked: map['isChecked'] ?? map['checado'] ?? false,
     );
   }
 
@@ -79,33 +79,59 @@ class Inspection {
   });
 
   factory Inspection.fromMap(Map<String, dynamic> map) {
-    return Inspection(
-      id: map['id'],
-      vehicleId: map['vehicleId'],
-      driverId: map['driverId'],
-      type: InspectionType.values.firstWhere((e) => e.name == map['type']),
-      status: map['status'] != null
-          ? InspectionStatus.values.firstWhere((e) => e.name == map['status'])
-          : InspectionStatus.pending,
-      dateTime: DateTime.parse(map['dateTime']),
-      kmAtInspection: map['kmAtInspection'],
-      fuelLevel: map['fuelLevel'].toDouble(),
-      photos: (map['photos'] as List)
+    InspectionType parseType(dynamic val) {
+      if (val == null) return InspectionType.checkin;
+      final s = val.toString().toLowerCase();
+      if (s == 'checkout' || s == 'check_out') return InspectionType.checkout;
+      return InspectionType.checkin;
+    }
+
+    InspectionStatus parseStatus(dynamic val) {
+      if (val == null) return InspectionStatus.pending;
+      final s = val.toString().toLowerCase();
+      if (s == 'aprovado' || s == 'approved') return InspectionStatus.approved;
+      if (s == 'rejeitado' || s == 'rejected') return InspectionStatus.rejected;
+      return InspectionStatus.pending;
+    }
+
+    List<InspectionPhoto> photosList = [];
+    if (map['photos'] is List) {
+      photosList = (map['photos'] as List)
           .map(
             (p) => p is String
                 ? InspectionPhoto(url: p, title: 'Foto')
                 : InspectionPhoto.fromMap(p as Map<String, dynamic>),
           )
-          .toList(),
+          .toList();
+    } else {
+      // Direct columns from Supabase vistorias table
+      if (map['foto_frente_url'] != null) photosList.add(InspectionPhoto(url: map['foto_frente_url'], title: 'Frente'));
+      if (map['foto_traseira_url'] != null) photosList.add(InspectionPhoto(url: map['foto_traseira_url'], title: 'Traseira'));
+      if (map['foto_lateral_esquerda_url'] != null) photosList.add(InspectionPhoto(url: map['foto_lateral_esquerda_url'], title: 'Lateral Esquerda'));
+      if (map['foto_lateral_direita_url'] != null) photosList.add(InspectionPhoto(url: map['foto_lateral_direita_url'], title: 'Lateral Direita'));
+      if (map['foto_painel_url'] != null) photosList.add(InspectionPhoto(url: map['foto_painel_url'], title: 'Painel'));
+      if (map['foto_pneus_url'] != null) photosList.add(InspectionPhoto(url: map['foto_pneus_url'], title: 'Pneus'));
+    }
+
+    return Inspection(
+      id: (map['id'] ?? '').toString(),
+      vehicleId: map['veiculo_id'] ?? map['vehicleId'] ?? '',
+      driverId: map['motorista_id'] ?? map['driverId'] ?? '',
+      type: parseType(map['tipo'] ?? map['type']),
+      status: parseStatus(map['status']),
+      dateTime: DateTime.tryParse(map['criado_em'] ?? map['dateTime'] ?? '') ?? DateTime.now(),
+      kmAtInspection: (map['odometro_km'] ?? map['kmAtInspection'] ?? 0) as int,
+      fuelLevel: (map['fuelLevel'] ?? 1.0).toDouble(),
+      photos: photosList,
       checklist: map['checklist'] != null
           ? (map['checklist'] as List)
                 .map((c) => ChecklistItem.fromMap(c))
                 .toList()
           : [],
-      notes: map['notes'],
-      hasNewDamage: map['hasNewDamage'] as bool,
+      notes: map['observacoes'] ?? map['notes'] ?? '',
+      hasNewDamage: (map['hasNewDamage'] ?? (map['danos_json'] != null)) as bool? ?? false,
       reviewReason: map['reviewReason'],
-      reviewerId: map['reviewerId'],
+      reviewerId: map['vistoriador_id'] ?? map['reviewerId'],
     );
   }
 
@@ -125,6 +151,21 @@ class Inspection {
       'hasNewDamage': hasNewDamage,
       'reviewReason': reviewReason,
       'reviewerId': reviewerId,
+    };
+  }
+
+  Map<String, dynamic> toDatabaseMap() {
+    return {
+      'id': id,
+      'veiculo_id': vehicleId,
+      'motorista_id': driverId,
+      'tipo': type == InspectionType.checkin ? 'check_in' : 'check_out',
+      'status': status == InspectionStatus.approved
+          ? 'aprovado'
+          : (status == InspectionStatus.rejected ? 'rejeitado' : 'pendente_revisao'),
+      'odometro_km': kmAtInspection,
+      'observacoes': notes,
+      'danos_json': {'hasNewDamage': hasNewDamage},
     };
   }
 

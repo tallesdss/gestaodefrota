@@ -5,6 +5,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/widgets/app_dialogs.dart';
+import '../../core/widgets/app_avatar.dart';
 
 class AdminHeader extends StatelessWidget {
   const AdminHeader({super.key});
@@ -170,10 +171,10 @@ class _UserSection extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(width: AppSpacing.md),
-            const CircleAvatar(
+            const AppAvatar(
               radius: 20,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'),
+              name: 'Carlos Silva',
+              imageUrl: 'https://i.pravatar.cc/150?img=12',
             ),
           ],
         ),

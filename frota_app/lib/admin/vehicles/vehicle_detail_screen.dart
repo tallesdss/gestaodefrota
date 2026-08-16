@@ -2262,6 +2262,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         return BadgeType.neutral;
       case VehicleStatus.maintenance:
         return BadgeType.error;
+      case VehicleStatus.inactive:
       case VehicleStatus.sold:
         return BadgeType.neutral;
     }

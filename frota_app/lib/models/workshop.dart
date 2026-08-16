@@ -1,6 +1,7 @@
 class Workshop {
   final String id;
   final String name;
+  final String? corporateName;
   final String cnpj;
   final String phone;
   final String email;
@@ -15,6 +16,7 @@ class Workshop {
   Workshop({
     required this.id,
     required this.name,
+    this.corporateName,
     required this.cnpj,
     required this.phone,
     required this.email,
@@ -32,18 +34,21 @@ class Workshop {
 
   factory Workshop.fromMap(Map<String, dynamic> map) {
     return Workshop(
-      id: map['id'],
-      name: map['name'],
-      cnpj: map['cnpj'],
-      phone: map['phone'],
-      email: map['email'],
-      address: map['address'],
-      isAccredited: map['isAccredited'],
-      rating: map['rating']?.toDouble() ?? 5.0,
-      totalSpent: map['totalSpent']?.toDouble() ?? 0.0,
-      pendingPayment: map['pendingPayment']?.toDouble() ?? 0.0,
+      id: (map['id'] ?? '').toString(),
+      name: map['nome_fantasia'] ?? map['name'] ?? '',
+      corporateName: map['razao_social'] ?? map['corporateName'],
+      cnpj: map['cnpj'] ?? '',
+      phone: map['telefone'] ?? map['phone'] ?? '',
+      email: map['email'] ?? '',
+      address: map['endereco'] ?? map['address'] ?? '',
+      isAccredited: map['isAccredited'] ?? (map['status'] == 'ativo' || map['status'] == 'active'),
+      rating: (map['avaliacao'] ?? map['rating'] ?? 5.0).toDouble(),
+      totalSpent: (map['totalSpent'] ?? 0.0).toDouble(),
+      pendingPayment: (map['pendingPayment'] ?? 0.0).toDouble(),
       specializedServices: List<String>.from(map['specializedServices'] ?? []),
-      bankInfo: map['bankInfo'],
+      bankInfo: map['dados_bancarios_json'] != null
+          ? map['dados_bancarios_json'].toString()
+          : map['bankInfo'],
     );
   }
 
@@ -51,6 +56,7 @@ class Workshop {
     return {
       'id': id,
       'name': name,
+      'corporateName': corporateName,
       'cnpj': cnpj,
       'phone': phone,
       'email': email,
@@ -61,6 +67,20 @@ class Workshop {
       'pendingPayment': pendingPayment,
       'specializedServices': specializedServices,
       'bankInfo': bankInfo,
+    };
+  }
+
+  Map<String, dynamic> toDatabaseMap() {
+    return {
+      'id': id,
+      'nome_fantasia': name,
+      'razao_social': corporateName,
+      'cnpj': cnpj,
+      'telefone': phone,
+      'email': email,
+      'endereco': address,
+      'avaliacao': rating,
+      'status': isAccredited ? 'ativo' : 'inativo',
     };
   }
 }
@@ -81,6 +101,28 @@ class WorkshopParts {
     required this.date,
     required this.vehiclePlate,
   });
+
+  factory WorkshopParts.fromMap(Map<String, dynamic> map) {
+    return WorkshopParts(
+      id: (map['id'] ?? '').toString(),
+      workshopId: map['oficina_id'] ?? map['workshopId'] ?? '',
+      name: map['nome'] ?? map['name'] ?? '',
+      price: (map['valor'] ?? map['price'] ?? 0.0).toDouble(),
+      date: DateTime.tryParse(map['data'] ?? map['date'] ?? '') ?? DateTime.now(),
+      vehiclePlate: map['placa_veiculo'] ?? map['vehiclePlate'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'workshopId': workshopId,
+      'name': name,
+      'price': price,
+      'date': date.toIso8601String(),
+      'vehiclePlate': vehiclePlate,
+    };
+  }
 }
 
 class WorkshopDocument {
@@ -103,4 +145,30 @@ class WorkshopDocument {
     this.status = 'Paid',
     this.imageUrl,
   });
+
+  factory WorkshopDocument.fromMap(Map<String, dynamic> map) {
+    return WorkshopDocument(
+      id: (map['id'] ?? '').toString(),
+      workshopId: map['oficina_id'] ?? map['workshopId'] ?? '',
+      title: map['titulo'] ?? map['title'] ?? 'NFe',
+      type: map['tipo'] ?? map['type'] ?? 'NFe',
+      date: DateTime.tryParse(map['data'] ?? map['date'] ?? '') ?? DateTime.now(),
+      value: (map['valor'] ?? map['value'] ?? 0.0).toDouble(),
+      status: map['status'] ?? 'Paid',
+      imageUrl: map['nota_fiscal_nfe_url'] ?? map['imageUrl'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'workshopId': workshopId,
+      'title': title,
+      'type': type,
+      'date': date.toIso8601String(),
+      'value': value,
+      'status': status,
+      'imageUrl': imageUrl,
+    };
+  }
 }
