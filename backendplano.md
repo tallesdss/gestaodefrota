@@ -812,7 +812,7 @@ USING (public.eh_gestor_ou_admin());
 ### 🔹 FASE 7: Migração do Portal do Motorista (Driver Portal)
 - [x] **7.1. Home do Motorista:** Conectar contrato ativo e dados do veículo em posse.
 - [x] **7.2. Vistoria 360 Digital:** Conectar fluxo de fotos com upload direto para o bucket `fotos-vistorias`.
-- [x] **7.3. Extrato Financeiro & PIX:** Conectar listagem de débitos, comprovantes e PIX Copia e Cola.
+- [x] **7.3. Extrato Financeiro & PIX (Frontend / UI Pronta):** Conectar listagem de faturas e tela de PIX (QR Code e Copia e Cola no frontend, com integração com gateway bancário reservada para etapa futura).
 - [x] **7.4. Perfil & Documentação:** Conectar visualização de CNH, CRLV e pontuação de confiança.
 
 
