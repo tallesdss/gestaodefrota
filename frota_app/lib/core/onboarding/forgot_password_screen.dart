@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
+import '../repositories/auth_repository.dart';
 import 'widgets/auth_layout.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -41,8 +42,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     super.dispose();
   }
 
-  void _handleSubmit() {
-    if (_emailController.text.isEmpty) {
+  Future<void> _handleSubmit() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -59,6 +61,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       );
       return;
     }
+
+    try {
+      await AuthRepository().resetPassword(email);
+    } catch (_) {}
 
     setState(() => _emailSent = true);
     _animController.reset();

@@ -783,9 +783,10 @@ USING (public.eh_gestor_ou_admin());
 ---
 
 ### 🔹 FASE 5: Autenticação Real & Controle de Acesso (RBAC)
-- [ ] Conectar formulário de Login (`/auth`) ao Supabase Auth com roteamento por cargo.
-- [ ] Implementar fluxo de auto-cadastro do motorista com envio seguro de documentos.
-- [ ] Configurar Guards de Rota para `/admin/*`, `/gestor/*` e `/driver/*`.
+- [x] Conectar formulário de Login (`/auth`) ao Supabase Auth com roteamento por cargo.
+- [x] Implementar fluxo de auto-cadastro do motorista com envio seguro de documentos.
+- [x] Configurar Guards de Rota para `/admin/*`, `/gestor/*` e `/driver/*`.
+
 
 ---
 

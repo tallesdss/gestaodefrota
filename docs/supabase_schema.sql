@@ -480,21 +480,80 @@ FOR EACH ROW EXECUTE FUNCTION public.fn_recalcular_totais_motorista();
 
 -- 11.4. Trigger Automático no Cadastro do Supabase Auth
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public, auth
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_cargo public.tipo_perfil_enum;
+    v_nome TEXT;
+    v_tel TEXT;
 BEGIN
+    -- Obter nome
+    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'nome' IS NOT NULL THEN
+        v_nome := NEW.raw_user_meta_data->>'nome';
+    ELSE
+        v_nome := 'Usuário ' || SUBSTRING(NEW.id::text, 1, 8);
+    END IF;
+
+    -- Obter telefone
+    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'telefone' IS NOT NULL THEN
+        v_tel := NEW.raw_user_meta_data->>'telefone';
+    ELSE
+        v_tel := NULL;
+    END IF;
+
+    -- Obter cargo
+    v_cargo := 'motorista'::public.tipo_perfil_enum;
+    IF NEW.raw_user_meta_data IS NOT NULL AND NEW.raw_user_meta_data->>'cargo' IS NOT NULL THEN
+        BEGIN
+            v_cargo := (NEW.raw_user_meta_data->>'cargo')::public.tipo_perfil_enum;
+        EXCEPTION WHEN OTHERS THEN
+            v_cargo := 'motorista'::public.tipo_perfil_enum;
+        END;
+    END IF;
+
+    -- Inserir em public.perfis
     INSERT INTO public.perfis (id, nome, email, telefone, cargo)
     VALUES (
         NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'nome', 'Usuário ' || SUBSTRING(NEW.id::text, 1, 8)),
+        v_nome,
         COALESCE(NEW.email, NEW.id::text || '@temporario.com'),
-        NEW.raw_user_meta_data->>'telefone',
-        COALESCE((NEW.raw_user_meta_data->>'cargo')::tipo_perfil_enum, 'motorista')
+        v_tel,
+        v_cargo
     )
     ON CONFLICT (id) DO UPDATE 
-    SET nome = EXCLUDED.nome, email = EXCLUDED.email, atualizado_em = now();
+    SET nome = EXCLUDED.nome,
+        email = EXCLUDED.email,
+        telefone = EXCLUDED.telefone,
+        cargo = EXCLUDED.cargo,
+        atualizado_em = now();
+
+    -- Se for motorista, criar registro correspondente em public.motoristas se não existir
+    IF v_cargo = 'motorista'::public.tipo_perfil_enum THEN
+        INSERT INTO public.motoristas (
+            id, cpf, numero_cnh, categoria_cnh, validade_cnh, status
+        ) VALUES (
+            NEW.id,
+            COALESCE(NEW.raw_user_meta_data->>'cpf', '00000000000'),
+            COALESCE(NEW.raw_user_meta_data->>'numero_cnh', '00000000000'),
+            COALESCE(NEW.raw_user_meta_data->>'categoria_cnh', 'B'),
+            CURRENT_DATE + INTERVAL '5 years',
+            'ativo'::public.status_motorista_enum
+        )
+        ON CONFLICT (id) DO NOTHING;
+    END IF;
+
+    -- Se for gestor, criar registro correspondente em public.gestores se não existir
+    IF v_cargo = 'gestor'::public.tipo_perfil_enum THEN
+        INSERT INTO public.gestores (id, salario_base, percentual_comissao, ativo)
+        VALUES (NEW.id, 0.00, 0.00, true)
+        ON CONFLICT (id) DO NOTHING;
+    END IF;
+
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created

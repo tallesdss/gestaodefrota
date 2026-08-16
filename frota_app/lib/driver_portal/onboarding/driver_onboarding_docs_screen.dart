@@ -10,6 +10,9 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/routes/app_routes.dart';
 
+import '../../core/repositories/driver_repository.dart';
+import '../../core/config/supabase_config.dart';
+
 class DriverOnboardingDocsScreen extends StatefulWidget {
   const DriverOnboardingDocsScreen({super.key});
 
@@ -22,6 +25,7 @@ class _DriverOnboardingDocsScreenState
     extends State<DriverOnboardingDocsScreen> {
   int _currentStep = 0;
   final ImagePicker _picker = ImagePicker();
+  final DriverRepository _driverRepo = DriverRepository();
   XFile? _cnhFile;
   XFile? _residenceFile;
   bool _analyzing = false;
@@ -40,8 +44,31 @@ class _DriverOnboardingDocsScreenState
     setState(() {
       _analyzing = true;
     });
-    // Simulação do tempo de envio/análise
-    await Future.delayed(const Duration(seconds: 2));
+
+    try {
+      final driverId = SupabaseConfig.currentUserId;
+      if (driverId != null) {
+        if (_cnhFile != null) {
+          final bytes = await _cnhFile!.readAsBytes();
+          await _driverRepo.uploadDriverDocument(
+            driverId: driverId,
+            docType: 'cnh_frente',
+            bytes: bytes,
+            fileName: 'cnh_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          );
+        }
+        if (_residenceFile != null) {
+          final bytes = await _residenceFile!.readAsBytes();
+          await _driverRepo.uploadDriverDocument(
+            driverId: driverId,
+            docType: 'comprovante_residencia',
+            bytes: bytes,
+            fileName: 'comprovante_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          );
+        }
+      }
+    } catch (_) {}
+
     if (mounted) {
       context.push(AppRoutes.driverOnboardingContract);
     }

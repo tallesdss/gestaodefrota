@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_colors.dart';
 import '../routes/app_routes.dart';
+import '../repositories/auth_repository.dart';
 import 'widgets/auth_layout.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -18,9 +20,11 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _authRepo = AuthRepository();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _acceptTerms = false;
+  bool _isLoading = false;
   late AnimationController _animController;
   late Animation<double> _fadeIn;
   late Animation<Offset> _slideUp;
@@ -48,6 +52,88 @@ class _RegisterScreenState extends State<RegisterScreen>
     _confirmPasswordController.dispose();
     _animController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showErrorSnackBar('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showErrorSnackBar('As senhas digitadas não coincidem.');
+      return;
+    }
+
+    if (password.length < 6) {
+      _showErrorSnackBar('A senha deve conter no mínimo 6 caracteres.');
+      return;
+    }
+
+    if (!_acceptTerms) {
+      _showErrorSnackBar('Você precisa concordar com os Termos de Serviço.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final res = await _authRepo.signUp(
+        email: email,
+        password: password,
+        nome: name,
+        cargo: 'motorista',
+      );
+
+      if (!mounted) return;
+
+      if (res.user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Conta criada com sucesso! Complete seu cadastro de motorista.',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white),
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+
+        context.go(AppRoutes.driverOnboardingDocs);
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      _showErrorSnackBar(e.message);
+    } catch (e) {
+      if (!mounted) return;
+      _showErrorSnackBar('Erro ao cadastrar: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: Colors.white),
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override
@@ -91,7 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Junte-se à nossa plataforma de gestão de frota de elite.',
+                'Junte-se à nossa plataforma de gestão de frotas e mobilidade.',
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w400,
@@ -101,65 +187,158 @@ class _RegisterScreenState extends State<RegisterScreen>
               ),
               const SizedBox(height: 36),
 
-              // ── Name ──
+              // ── Full Name ──
               AuthInputField(
-                label: 'Nome Completo',
-                hint: 'Seu nome aqui',
+                label: 'NOME COMPLETO',
+                hint: 'Ex: Carlos Silva',
                 controller: _nameController,
-                keyboardType: TextInputType.name,
               ),
               const SizedBox(height: 20),
 
               // ── Email ──
               AuthInputField(
-                label: 'E-mail Corporativo',
-                hint: 'exemplo@fleetcommand.com',
+                label: 'E-MAIL',
+                hint: 'exemplo@email.com',
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 20),
 
               // ── Password ──
-              AuthInputField(
-                label: 'Senha de Acesso',
-                hint: '••••••••',
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: AppColors.onSurfaceVariant,
-                    size: 20,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'SENHA',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurfaceVariant,
+                      letterSpacing: 1.8,
+                    ),
                   ),
-                  onPressed: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '••••••••',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 15,
+                        color: AppColors.onSurfaceVariant.withAlpha(128),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: AppColors.onSurfaceVariant,
+                          size: 20,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.surfaceContainerLow,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 16,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: AppColors.primary.withAlpha(102),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
               // ── Confirm Password ──
-              AuthInputField(
-                label: 'Confirmar Senha',
-                hint: '••••••••',
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirm,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirm
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: AppColors.onSurfaceVariant,
-                    size: 20,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'CONFIRMAR SENHA',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurfaceVariant,
+                      letterSpacing: 1.8,
+                    ),
                   ),
-                  onPressed: () =>
-                      setState(() => _obscureConfirm = !_obscureConfirm),
-                ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _confirmPasswordController,
+                    obscureText: _obscureConfirm,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '••••••••',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 15,
+                        color: AppColors.onSurfaceVariant.withAlpha(128),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: AppColors.onSurfaceVariant,
+                          size: 20,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscureConfirm = !_obscureConfirm,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.surfaceContainerLow,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 16,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: AppColors.primary.withAlpha(102),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
-              // ── Terms Checkbox ──
+              // ── Terms ──
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -182,21 +361,20 @@ class _RegisterScreenState extends State<RegisterScreen>
                     child: RichText(
                       text: TextSpan(
                         style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
                           color: AppColors.onSurfaceVariant,
-                          height: 1.5,
+                          height: 1.4,
                         ),
-                        children: [
-                          const TextSpan(text: 'Li e aceito os '),
+                        children: const [
+                          TextSpan(text: 'Concordo com os '),
                           TextSpan(
-                            text: 'Termos de Uso',
+                            text: 'Termos de Serviço',
                             style: TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const TextSpan(text: ' e a '),
+                          TextSpan(text: ' e '),
                           TextSpan(
                             text: 'Política de Privacidade',
                             style: TextStyle(
@@ -213,16 +391,14 @@ class _RegisterScreenState extends State<RegisterScreen>
               const SizedBox(height: 28),
 
               // ── Submit ──
-              AuthPrimaryButton(
-                label: 'Criar Conta',
-                trailingIcon: Icons.arrow_forward_rounded,
-                onPressed: () => context.go(AppRoutes.root),
-              ),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : AuthPrimaryButton(
+                      label: 'Criar Conta',
+                      trailingIcon: Icons.arrow_forward_rounded,
+                      onPressed: _handleRegister,
+                    ),
               const SizedBox(height: 36),
-
-              // ── Social Login ──
-              const AuthSocialButtons(),
-              const SizedBox(height: 40),
 
               // ── Footer ──
               Center(
