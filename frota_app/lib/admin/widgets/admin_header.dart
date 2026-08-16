@@ -7,6 +7,8 @@ import '../../core/routes/app_routes.dart';
 import '../../core/widgets/app_dialogs.dart';
 import '../../core/widgets/app_avatar.dart';
 
+import '../../core/services/realtime_service.dart';
+
 class AdminHeader extends StatelessWidget {
   const AdminHeader({super.key});
 
@@ -86,14 +88,23 @@ class AdminHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.xl),
-          // Notifications
-          IconButton(
-            onPressed: () => context.go(AppRoutes.adminNotifications),
-            tooltip: 'Notificações',
-            icon: const Icon(
-              Icons.notifications_none_outlined,
-              color: AppColors.onSurfaceVariant,
-            ),
+          // Notifications with Realtime badge
+          ValueListenableBuilder<int>(
+            valueListenable: RealtimeService().unreadCountNotifier,
+            builder: (context, count, _) {
+              return Badge(
+                isLabelVisible: count > 0,
+                label: Text('$count'),
+                child: IconButton(
+                  onPressed: () => context.go(AppRoutes.adminNotifications),
+                  tooltip: 'Notificações ($count novas)',
+                  icon: const Icon(
+                    Icons.notifications_none_outlined,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              );
+            },
           ),
           // Settings
           IconButton(

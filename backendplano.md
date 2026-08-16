@@ -825,8 +825,10 @@ USING (public.eh_gestor_ou_admin());
 
 ---
 
-### 🔹 FASE 8: Realtime & Notificações
-- [ ] Inscrever listeners do Supabase Realtime para vistorias, pagamentos e atualizações de frota.
+### 🔹 FASE 8: Realtime & Notificações (In-App)
+- [x] Inscrever listeners do Supabase Realtime para vistorias, pagamentos e atualizações de frota.
+- [x] Conectar central de notificações do Admin e do Motorista com contadores não lidos e badges in-app (sem push externo).
+
 
 ---
 

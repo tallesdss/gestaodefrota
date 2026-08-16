@@ -3,65 +3,26 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_icon.dart';
+import '../../core/services/realtime_service.dart';
 
-enum NotificationType { info, warning, danger }
-
-class NotificationItem {
-  final String title;
-  final String description;
-  final DateTime date;
-  final NotificationType type;
-  final bool isRead;
-
-  NotificationItem({
-    required this.title,
-    required this.description,
-    required this.date,
-    required this.type,
-    this.isRead = false,
-  });
-}
-
-class DriverNotificationsScreen extends StatelessWidget {
+class DriverNotificationsScreen extends StatefulWidget {
   const DriverNotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final notifications = [
-      NotificationItem(
-        title: 'VENCIMENTO DE MENSALIDADE',
-        description:
-            'Sua parcela da semana 12/03 vence em 2 dias. Evite multas e juros realizando o pagamento via PIX.',
-        date: DateTime.now(),
-        type: NotificationType.danger,
-        isRead: false,
-      ),
-      NotificationItem(
-        title: 'VISTORIA APROVADA',
-        description:
-            'A vistoria do veículo ABC-1234 realizada em 25/03 foi aprovada sem ressalvas pela auditoria.',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        type: NotificationType.info,
-        isRead: true,
-      ),
-      NotificationItem(
-        title: 'ALERTA DE MANUTENÇÃO',
-        description:
-            'Faltam 500km para a próxima troca de óleo. Agende pelo suporte técnico.',
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        type: NotificationType.warning,
-        isRead: true,
-      ),
-      NotificationItem(
-        title: 'MENSAGEM DA GESTÃO',
-        description:
-            'Lembramos que o uso de rastreador é obrigatório. Mantenha o equipamento sempre ligado.',
-        date: DateTime.now().subtract(const Duration(days: 4)),
-        type: NotificationType.info,
-        isRead: true,
-      ),
-    ];
+  State<DriverNotificationsScreen> createState() => _DriverNotificationsScreenState();
+}
 
+class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
+  final RealtimeService _realtimeService = RealtimeService();
+
+  @override
+  void initState() {
+    super.initState();
+    _realtimeService.initialize();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
@@ -70,13 +31,24 @@ class DriverNotificationsScreen extends StatelessWidget {
           children: [
             _buildHeader(context),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                itemCount: notifications.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSpacing.md),
-                itemBuilder: (context, index) =>
-                    _buildNotificationCard(notifications[index]),
+              child: ValueListenableBuilder<List<AppNotification>>(
+                valueListenable: _realtimeService.notificationsNotifier,
+                builder: (context, notifications, _) {
+                  if (notifications.isEmpty) {
+                    return const Center(
+                      child: Text('Nenhuma notificação no momento.'),
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    itemCount: notifications.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: AppSpacing.md),
+                    itemBuilder: (context, index) =>
+                        _buildNotificationCard(notifications[index]),
+                  );
+                },
               ),
             ),
           ],
@@ -91,50 +63,59 @@ class DriverNotificationsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.arrow_back_ios,
-              color: AppColors.onSurface,
-              size: 20,
-            ),
-            padding: EdgeInsets.zero,
-            alignment: Alignment.centerLeft,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: AppColors.onSurface,
+                  size: 20,
+                ),
+                padding: EdgeInsets.zero,
+                alignment: Alignment.centerLeft,
+              ),
+              TextButton(
+                onPressed: () => _realtimeService.markAllAsRead(),
+                child: const Text('Limpar Não Lidas'),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'NOTIFICAÇÕES',
+            'AVISOS & NOTIFICAÇÕES',
             style: AppTextStyles.labelMedium.copyWith(
               color: AppColors.primary,
               letterSpacing: 2,
             ),
           ),
-          Text('Central de Alertas', style: AppTextStyles.headlineMedium),
+          Text('Mensagens da Gestão', style: AppTextStyles.headlineMedium),
         ],
       ),
     );
   }
 
-  Widget _buildNotificationCard(NotificationItem item) {
-    Color iconColor;
-    IconData iconData;
-    Color bgColor;
+  Widget _buildNotificationCard(AppNotification item) {
+    Color typeColor;
+    IconData typeIcon;
 
     switch (item.type) {
-      case NotificationType.danger:
-        iconColor = AppColors.error;
-        iconData = Icons.error_outline;
-        bgColor = AppColors.error.withValues(alpha: 0.1);
+      case AppNotificationType.danger:
+        typeColor = AppColors.error;
+        typeIcon = Icons.priority_high;
         break;
-      case NotificationType.warning:
-        iconColor = const Color(0xFFFFB300);
-        iconData = Icons.warning_amber_rounded;
-        bgColor = const Color(0xFFFFB300).withValues(alpha: 0.1);
+      case AppNotificationType.warning:
+        typeColor = AppColors.warning;
+        typeIcon = Icons.warning_amber_rounded;
         break;
-      case NotificationType.info:
-        iconColor = AppColors.primary;
-        iconData = Icons.info_outline;
-        bgColor = AppColors.primary.withValues(alpha: 0.1);
+      case AppNotificationType.success:
+        typeColor = AppColors.success;
+        typeIcon = Icons.check_circle_outline;
+        break;
+      case AppNotificationType.info:
+        typeColor = AppColors.primary;
+        typeIcon = Icons.info_outline;
         break;
     }
 
@@ -143,72 +124,61 @@ class DriverNotificationsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: item.isRead
             ? AppColors.surfaceContainerLowest
-            : AppColors.surfaceContainerLow,
+            : typeColor.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: item.isRead
+              ? AppColors.outlineVariant.withValues(alpha: 0.2)
+              : typeColor.withValues(alpha: 0.4),
+          width: item.isRead ? 1 : 1.5,
+        ),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
-            child: AppIcon(icon: iconData, color: iconColor, size: 24),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      item.title,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: iconColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (!item.isRead)
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                  ],
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: typeColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  item.description,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  _formatDate(item.date),
+                child: AppIcon(icon: typeIcon, color: typeColor, size: 16),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  item.title,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                    color: typeColor,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
                   ),
                 ),
-              ],
+              ),
+              if (!item.isRead)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: typeColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(item.message, style: AppTextStyles.bodyMedium),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            '${item.timestamp.hour.toString().padLeft(2, '0')}:${item.timestamp.minute.toString().padLeft(2, '0')}',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ),
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    if (date.day == now.day &&
-        date.month == now.month &&
-        date.year == now.year) {
-      return 'Hoje';
-    }
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
   }
 }
