@@ -1,0 +1,12 @@
+# Environment & Agent configs
+.agents/
+.env
+*.env
+*.env.*
+*.log
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
