@@ -7,6 +7,7 @@ import '../../core/repositories/mock_repository.dart';
 import '../../models/contract.dart';
 import '../../models/vehicle.dart';
 import '../../models/driver.dart';
+import '../../core/repositories/contract_repository.dart';
 
 class ContractFormScreen extends StatefulWidget {
   final Contract? contract;
@@ -111,20 +112,32 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: _buildTextField(
-                              _weeklyValueController,
-                              'Valor Semanal',
-                              Icons.payments_outlined,
+                            child: TextFormField(
+                              controller: _weeklyValueController,
                               keyboardType: TextInputType.number,
+                              decoration: _inputDecoration('Valor Semanal (R\$)', Icons.payments_outlined),
+                              onChanged: (val) {
+                                final w = double.tryParse(val.replaceAll(',', '.')) ?? 0.0;
+                                if (w > 0) {
+                                  _monthlyValueController.text = (w * 4.33).toStringAsFixed(2);
+                                }
+                              },
+                              validator: (val) => val == null || val.isEmpty ? 'Obrigatório' : null,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
-                            child: _buildTextField(
-                              _monthlyValueController,
-                              'Valor Mensal',
-                              Icons.account_balance_wallet_outlined,
+                            child: TextFormField(
+                              controller: _monthlyValueController,
                               keyboardType: TextInputType.number,
+                              decoration: _inputDecoration('Valor Mensal (R\$)', Icons.account_balance_wallet_outlined),
+                              onChanged: (val) {
+                                final m = double.tryParse(val.replaceAll(',', '.')) ?? 0.0;
+                                if (m > 0) {
+                                  _weeklyValueController.text = (m / 4.33).toStringAsFixed(2);
+                                }
+                              },
+                              validator: (val) => val == null || val.isEmpty ? 'Obrigatório' : null,
                             ),
                           ),
                         ],
@@ -188,11 +201,59 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             if (_formKey.currentState!.validate() &&
                                 _selectedVehicleId != null &&
                                 _selectedDriverId != null) {
-                              Navigator.pop(context);
+                              try {
+                                final weekly = double.tryParse(_weeklyValueController.text.replaceAll(',', '.')) ?? 0.0;
+                                final monthly = double.tryParse(_monthlyValueController.text.replaceAll(',', '.')) ?? (weekly * 4.33);
+
+                                final contract = Contract(
+                                  id: widget.contract?.id ?? '',
+                                  driverId: _selectedDriverId!,
+                                  vehicleId: _selectedVehicleId!,
+                                  weeklyValue: weekly,
+                                  monthlyValue: monthly,
+                                  startDate: _startDate,
+                                  endDate: _endDate,
+                                  status: _selectedStatus,
+                                  depositPaid: _depositPaid,
+                                  type: _selectedType,
+                                );
+
+                                if (widget.contract != null && widget.contract!.id.isNotEmpty) {
+                                  await ContractRepository().updateContract(contract);
+                                } else {
+                                  await ContractRepository().createContractWithDeposit(
+                                    driverId: _selectedDriverId!,
+                                    vehicleId: _selectedVehicleId!,
+                                    contractNumber: 'CTR-${DateTime.now().millisecondsSinceEpoch}',
+                                    startDate: _startDate,
+                                    rentalValue: weekly,
+                                    depositValue: _depositPaid ? weekly * 2 : 0.0,
+                                    frequency: 'semanal',
+                                    dueDay: 5,
+                                  );
+                                }
+
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Contrato salvo com sucesso no Supabase!'),
+                                    backgroundColor: AppColors.success,
+                                  ),
+                                );
+                                Navigator.pop(context, true);
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Erro ao salvar contrato: ${e.toString()}'),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              }
                             } else if (_selectedVehicleId == null ||
                                 _selectedDriverId == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -261,20 +322,6 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
       }).toList(),
       onChanged: (val) => setState(() => _selectedDriverId = val),
       decoration: _inputDecoration('Motorista', Icons.person_outline),
-    );
-  }
-
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    IconData icon, {
-    TextInputType? keyboardType,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      decoration: _inputDecoration(label, icon),
-      validator: (val) => val == null || val.isEmpty ? 'Obrigatório' : null,
     );
   }
 

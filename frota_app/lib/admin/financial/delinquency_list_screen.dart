@@ -41,18 +41,31 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
           0.0,
           (sum, item) => sum + item.amount,
         );
+        // O atraso real conta a partir da fatura não paga mais antiga
+        final oldestUnpaidDate = unpaidEntries
+            .map((e) => e.date)
+            .reduce((a, b) => a.isBefore(b) ? a : b);
+
+        final daysDelayed = DateTime.now().difference(oldestUnpaidDate).inDays;
+
+        // Multa padrão de 2% + Juros de 1% a.m. (0.033% ao dia)
+        final fineAmount = totalDebt * 0.02;
+        final interestAmount = totalDebt * (0.01 / 30) * (daysDelayed > 0 ? daysDelayed : 0);
+        final correctedDebt = totalDebt + fineAmount + interestAmount;
+
         result.add({
           'driver': driver,
           'totalDebt': totalDebt,
+          'correctedDebt': correctedDebt,
           'unpaidCount': unpaidEntries.length,
-          'lastUnpaidDate': unpaidEntries
-              .map((e) => e.date)
-              .reduce((a, b) => a.isAfter(b) ? a : b),
+          'oldestUnpaidDate': oldestUnpaidDate,
+          'lastUnpaidDate': oldestUnpaidDate,
+          'daysDelayed': daysDelayed > 0 ? daysDelayed : 0,
         });
       }
     }
 
-    // Sort by largest debt
+    // Ordenar pelo maior débito
     result.sort(
       (a, b) => (b['totalDebt'] as double).compareTo(a['totalDebt'] as double),
     );

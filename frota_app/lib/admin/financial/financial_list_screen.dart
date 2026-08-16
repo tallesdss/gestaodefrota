@@ -363,6 +363,17 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
   }
 
   Widget _buildKpiGrid() {
+    final totalIncome = _entries
+        .where((e) => e.type == FinancialType.income)
+        .fold(0.0, (sum, e) => sum + e.amount);
+
+    final totalExpense = _entries
+        .where((e) => e.type == FinancialType.expense)
+        .fold(0.0, (sum, e) => sum + e.amount);
+
+    final netProfit = totalIncome - totalExpense;
+    final margin = totalIncome > 0 ? (netProfit / totalIncome * 100) : 0.0;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return Row(
@@ -370,8 +381,8 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             Expanded(
               child: _buildKpiCard(
                 'Receita Total',
-                'R\$ 145.280,00',
-                '+12% vs mês anterior',
+                'R\$ ${totalIncome.toStringAsFixed(2).replaceAll('.', ',')}',
+                '${_entries.where((e) => e.type == FinancialType.income).length} lançamentos',
                 AppColors.primary,
                 Icons.trending_up,
               ),
@@ -380,8 +391,8 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             Expanded(
               child: _buildKpiCard(
                 'Despesas',
-                'R\$ 42.150,00',
-                '-4% vs mês anterior',
+                'R\$ ${totalExpense.toStringAsFixed(2).replaceAll('.', ',')}',
+                '${_entries.where((e) => e.type == FinancialType.expense).length} despesas',
                 AppColors.error,
                 Icons.trending_down,
               ),
@@ -390,9 +401,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             Expanded(
               child: _buildKpiCard(
                 'Lucro Líquido',
-                'R\$ 103.130,00',
-                'Margem de 71%',
-                Colors.orange[800]!,
+                'R\$ ${netProfit.toStringAsFixed(2).replaceAll('.', ',')}',
+                'Margem de ${margin.toStringAsFixed(1)}%',
+                netProfit >= 0 ? AppColors.success : AppColors.error,
                 Icons.payments_outlined,
               ),
             ),
@@ -462,6 +473,17 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
   }
 
   Widget _buildProfitRanking() {
+    final Map<String, double> incomeByVehicle = {};
+    for (final e in _entries.where((e) => e.type == FinancialType.income)) {
+      final key = e.description.isNotEmpty ? e.description : 'Geral';
+      incomeByVehicle[key] = (incomeByVehicle[key] ?? 0.0) + e.amount;
+    }
+
+    final sorted = incomeByVehicle.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final top3 = sorted.take(3).toList();
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
@@ -496,29 +518,27 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _buildRankingItem(
-            '01',
-            'Toyota Corolla',
-            'ABC-1234',
-            'R\$ 8.420',
-            AppColors.primary,
-          ),
-          const SizedBox(height: 16),
-          _buildRankingItem(
-            '02',
-            'Jeep Compass',
-            'GHI-5544',
-            'R\$ 7.150',
-            AppColors.primary,
-          ),
-          const SizedBox(height: 16),
-          _buildRankingItem(
-            '03',
-            'Honda Civic',
-            'LMN-4422',
-            'R\$ 6.980',
-            AppColors.primary,
-          ),
+          if (top3.isEmpty)
+            Text(
+              'Nenhum lançamento registrado.',
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+            )
+          else
+            ...top3.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              final rank = '0${index + 1}';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildRankingItem(
+                  rank,
+                  item.key,
+                  'FROTA ATIVA',
+                  'R\$ ${item.value.toStringAsFixed(2).replaceAll('.', ',')}',
+                  AppColors.primary,
+                ),
+              );
+            }),
         ],
       ),
     );

@@ -2,12 +2,55 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/repositories/financial_repository.dart';
+import '../../models/financial_entry.dart';
 
-class FinancialReportScreen extends StatelessWidget {
+class FinancialReportScreen extends StatefulWidget {
   const FinancialReportScreen({super.key});
 
   @override
+  State<FinancialReportScreen> createState() => _FinancialReportScreenState();
+}
+
+class _FinancialReportScreenState extends State<FinancialReportScreen> {
+  final FinancialRepository _financialRepo = FinancialRepository();
+  List<FinancialEntry> _entries = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReportData();
+  }
+
+  Future<void> _loadReportData() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await _financialRepo.getFinancialEntries();
+      if (mounted) {
+        setState(() {
+          _entries = data;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final totalIncome = _entries
+        .where((e) => e.type == FinancialType.income)
+        .fold(0.0, (sum, e) => sum + e.amount);
+
+    final totalExpense = _entries
+        .where((e) => e.type == FinancialType.expense)
+        .fold(0.0, (sum, e) => sum + e.amount);
+
+    final netProfit = totalIncome - totalExpense;
+    final margin = totalIncome > 0 ? (netProfit / totalIncome * 100) : 0.0;
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -22,104 +65,76 @@ class FinancialReportScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Period Selector
-            _buildPeriodSelector(),
-            const SizedBox(height: AppSpacing.xl),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadReportData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Summary Cards
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryCard(
+                            'LUCRO LÍQUIDO',
+                            'R\$ ${netProfit.toStringAsFixed(2).replaceAll('.', ',')}',
+                            'Margem ${margin.toStringAsFixed(1)}%',
+                            netProfit >= 0 ? AppColors.success : AppColors.error,
+                            Icons.trending_up,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _buildSummaryCard(
+                            'TOTAL ENTRADAS',
+                            'R\$ ${totalIncome.toStringAsFixed(2).replaceAll('.', ',')}',
+                            '${_entries.where((e) => e.type == FinancialType.income).length} lançamentos',
+                            AppColors.primary,
+                            Icons.account_balance_wallet_outlined,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _buildSummaryCard(
+                            'TOTAL SAÍDAS',
+                            'R\$ ${totalExpense.toStringAsFixed(2).replaceAll('.', ',')}',
+                            '${_entries.where((e) => e.type == FinancialType.expense).length} despesas',
+                            AppColors.error,
+                            Icons.payments_outlined,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
 
-            // Summary Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    'LUCRO LÍQUIDO',
-                    r'R$ 32.730,00',
-                    '+12.5%',
-                    AppColors.success,
-                    Icons.trending_up,
-                  ),
+                    // Main Content Row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 2, child: _buildCategoryBreakdown()),
+                        const SizedBox(width: AppSpacing.xl),
+                        Expanded(flex: 1, child: _buildStatusBreakdown()),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Recent Transactions Table
+                    _buildRecentTransactions(),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: _buildSummaryCard(
-                    'TOTAL ENTRADAS',
-                    r'R$ 45.230,00',
-                    '+8.2%',
-                    AppColors.primary,
-                    Icons.account_balance_wallet_outlined,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: _buildSummaryCard(
-                    'TOTAL SAÍDAS',
-                    r'R$ 12.500,00',
-                    '-2.1%',
-                    AppColors.error,
-                    Icons.payments_outlined,
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Main Content Row
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Revenue Breakdown Chart (Simulated)
-                Expanded(flex: 2, child: _buildChartSection()),
-                const SizedBox(width: AppSpacing.xl),
-                // Expense Breakdown
-                Expanded(flex: 1, child: _buildExpenseBreakdown()),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Recent Transactions Table
-            _buildRecentTransactions(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPeriodSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppColors.surfaceContainerLow),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            'Março 2024',
-            style: AppTextStyles.bodySmall.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Icon(Icons.arrow_drop_down),
-        ],
-      ),
     );
   }
 
   Widget _buildSummaryCard(
-    String title,
+    String label,
     String value,
-    String change,
+    String trend,
     Color color,
     IconData icon,
   ) {
@@ -130,8 +145,8 @@ class FinancialReportScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.04),
-            blurRadius: 24,
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
@@ -142,44 +157,29 @@ class FinancialReportScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.xs),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  change,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+              Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  letterSpacing: 1.2,
                 ),
               ),
+              Icon(icon, color: color, size: 20),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            title,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.onSurfaceVariant,
-              letterSpacing: 1.1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
             value,
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.onSurface,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            trend,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.onSurfaceVariant,
             ),
           ),
         ],
@@ -187,231 +187,153 @@ class FinancialReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChartSection() {
+  Widget _buildCategoryBreakdown() {
+    final Map<String, double> byCategory = {};
+    for (final e in _entries) {
+      byCategory[e.category] = (byCategory[e.category] ?? 0.0) + e.amount;
+    }
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceContainerLow),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'FLUXO MENSAL',
+            'DISTRIBUIÇÃO POR CATEGORIA',
             style: AppTextStyles.labelMedium.copyWith(
-              fontWeight: FontWeight.bold,
+              color: AppColors.onSurfaceVariant,
               letterSpacing: 1.2,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          SizedBox(
-            height: 200,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildBar('Jan', 0.6, AppColors.outlineVariant),
-                _buildBar('Fev', 0.8, AppColors.outlineVariant),
-                _buildBar('Mar', 1.0, AppColors.primary),
-                _buildBar('Abr', 0.7, AppColors.outlineVariant),
-                _buildBar('Mai', 0.5, AppColors.outlineVariant),
-                _buildBar('Jun', 0.9, AppColors.outlineVariant),
-              ],
-            ),
-          ),
+          const SizedBox(height: AppSpacing.lg),
+          if (byCategory.isEmpty)
+            const Text('Nenhum dado disponível.')
+          else
+            ...byCategory.entries.map((item) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(item.key, style: AppTextStyles.bodyMedium),
+                    Text(
+                      'R\$ ${item.value.toStringAsFixed(2).replaceAll('.', ',')}',
+                      style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
   }
 
-  Widget _buildBar(String label, double heightFactor, Color color) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 40,
-          height: 160 * heightFactor,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [color, color.withValues(alpha: 0.7)],
+  Widget _buildStatusBreakdown() {
+    final paidCount = _entries.where((e) => e.isPaid).length;
+    final pendingCount = _entries.where((e) => !e.isPaid).length;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'STATUS DE COBRANÇAS',
+            style: AppTextStyles.labelMedium.copyWith(
+              color: AppColors.onSurfaceVariant,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildStatusRow('Liquidados (Pagos)', paidCount, AppColors.success),
+          const SizedBox(height: 12),
+          _buildStatusRow('Pendentes / Abertos', pendingCount, AppColors.warning),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusRow(String label, int count, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Text(label, style: AppTextStyles.bodyMedium),
+          ],
+        ),
+        Text(
+          '$count',
+          style: AppTextStyles.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(label, style: AppTextStyles.bodySmall),
       ],
-    );
-  }
-
-  Widget _buildExpenseBreakdown() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceContainerLow),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'DESPESAS POR TIPO',
-            style: AppTextStyles.labelMedium.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Row(
-            children: [
-              const Expanded(
-                flex: 70,
-                child: Divider(thickness: 8, color: Colors.purple),
-              ),
-              const SizedBox(width: 4),
-              const Expanded(
-                flex: 20,
-                child: Divider(thickness: 8, color: AppColors.success),
-              ),
-              const SizedBox(width: 4),
-              const Expanded(
-                flex: 10,
-                child: Divider(thickness: 8, color: AppColors.accent),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          _buildExpenseItem('Salários', '70%', Colors.purple),
-          _buildExpenseItem('Manutenção', '20%', AppColors.success),
-          _buildExpenseItem('Outros', '10%', AppColors.accent),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExpenseItem(String label, String value, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(label, style: AppTextStyles.bodySmall),
-            ],
-          ),
-          Text(
-            value,
-            style: AppTextStyles.bodySmall.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildRecentTransactions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'TRANSAÇÕES RECENTES',
-          style: AppTextStyles.labelMedium.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.surfaceContainerLow),
-          ),
-          child: Column(
-            children: [
-              _buildTransactionRow(
-                'Entrada de Caixa',
-                'Mar 28',
-                '+ R\$ 2.500',
-                AppColors.success,
-              ),
-              const Divider(height: 1),
-              _buildTransactionRow(
-                'Pagamento Salário - João',
-                'Mar 25',
-                '- R\$ 3.200',
-                AppColors.error,
-              ),
-              const Divider(height: 1),
-              _buildTransactionRow(
-                'Manutenção Veículo ABC-1234',
-                'Mar 22',
-                '- R\$ 450',
-                AppColors.error,
-              ),
-              const Divider(height: 1),
-              _buildTransactionRow(
-                'Aporte Capital',
-                'Mar 15',
-                '+ R\$ 10.000',
-                AppColors.success,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTransactionRow(
-    String label,
-    String date,
-    String value,
-    Color color,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                date,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
           Text(
-            value,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: color,
+            'ÚLTIMOS LANÇAMENTOS CONSOLIDADOS',
+            style: AppTextStyles.labelMedium.copyWith(
+              color: AppColors.onSurfaceVariant,
+              letterSpacing: 1.2,
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: AppSpacing.lg),
+          if (_entries.isEmpty)
+            const Text('Nenhum lançamento no histórico.')
+          else
+            ..._entries.take(5).map((e) {
+              final isIncome = e.type == FinancialType.income;
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                  color: isIncome ? AppColors.success : AppColors.error,
+                ),
+                title: Text(e.description, style: AppTextStyles.titleMedium),
+                subtitle: Text(
+                  '${e.category} • ${e.date.day}/${e.date.month}/${e.date.year}',
+                  style: AppTextStyles.bodySmall,
+                ),
+                trailing: Text(
+                  '${isIncome ? "+" : "-"} R\$ ${e.amount.toStringAsFixed(2)}',
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isIncome ? AppColors.success : AppColors.error,
+                  ),
+                ),
+              );
+            }),
         ],
       ),
     );

@@ -168,4 +168,38 @@ class ContractRepository {
         .update({'status': 'cancelado'})
         .eq('id', contractId);
   }
+
+  /// Atualizar contrato
+  Future<void> updateContract(Contract contract) async {
+    final payload = contract.toDatabaseMap();
+    await _client
+        .from(SupabaseConfig.tabelaContratos)
+        .update(payload)
+        .eq('id', contract.id);
+  }
+
+  /// Alias conveniente para criação de contrato com caução
+  Future<String> createContractWithDeposit({
+    required String driverId,
+    required String vehicleId,
+    required String contractNumber,
+    required DateTime startDate,
+    required double rentalValue,
+    required double depositValue,
+    required String frequency,
+    required int dueDay,
+    String? operatorId,
+  }) async {
+    return createContractAtomic(
+      motoristaId: driverId,
+      veiculoId: vehicleId,
+      numeroContrato: contractNumber,
+      dataInicio: startDate,
+      valorLocacao: rentalValue,
+      valorCaucao: depositValue,
+      frequencia: frequency,
+      diaVencimento: dueDay,
+      operadorId: operatorId,
+    );
+  }
 }
