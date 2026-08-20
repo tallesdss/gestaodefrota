@@ -5,7 +5,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/inspection_repository.dart';
 import '../../models/inspection.dart';
 import '../../models/vehicle.dart';
 import '../../core/widgets/status_badge.dart';
@@ -22,7 +23,8 @@ class VehicleInspectionHistoryScreen extends StatefulWidget {
 
 class _VehicleInspectionHistoryScreenState
     extends State<VehicleInspectionHistoryScreen> {
-  final MockRepository _repository = MockRepository();
+  final VehicleRepository _vehicleRepository = VehicleRepository();
+  final InspectionRepository _inspectionRepository = InspectionRepository();
   Vehicle? _vehicle;
   List<Inspection> _inspections = [];
   bool _isLoading = true;
@@ -34,13 +36,27 @@ class _VehicleInspectionHistoryScreenState
   }
 
   Future<void> _loadData() async {
-    final v = await _repository.getVehicleById(widget.vehicleId);
-    final list = await _repository.getInspectionsByVehicle(widget.vehicleId);
-    setState(() {
-      _vehicle = v;
-      _inspections = list;
-      _isLoading = false;
-    });
+    setState(() => _isLoading = true);
+    try {
+      final v = await _vehicleRepository.getVehicleById(widget.vehicleId);
+      final list = await _inspectionRepository.getInspections(
+        vehicleId: widget.vehicleId,
+      );
+      if (mounted) {
+        setState(() {
+          _vehicle = v;
+          _inspections = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _vehicle = null;
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -73,9 +89,22 @@ class _VehicleInspectionHistoryScreenState
       ),
       body: _inspections.isEmpty
           ? Center(
-              child: Text(
-                'Nenhuma vistoria registrada',
-                style: AppTextStyles.bodyMedium,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.fact_check_outlined,
+                    size: 64,
+                    color: AppColors.outlineVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nenhuma vistoria registrada para este veículo',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             )
           : ListView.separated(
@@ -200,6 +229,12 @@ class _VehicleInspectionHistoryScreenState
                                         width: 50,
                                         height: 50,
                                         fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          width: 50,
+                                          height: 50,
+                                          color: AppColors.surfaceContainerHigh,
+                                          child: const Icon(Icons.broken_image, size: 20),
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 2),

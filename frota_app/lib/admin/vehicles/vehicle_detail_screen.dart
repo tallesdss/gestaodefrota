@@ -4,11 +4,18 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/financial_repository.dart';
+import '../../core/repositories/maintenance_repository.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../../core/repositories/contract_repository.dart';
+import '../../core/repositories/inspection_repository.dart';
 import '../../models/vehicle.dart';
 import '../../models/financial_entry.dart';
 import '../../models/driver.dart';
 import '../../models/maintenance_entry.dart';
+import '../../models/inspection.dart';
+import '../../models/contract.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/widgets/app_dialogs.dart';
@@ -24,10 +31,17 @@ class VehicleDetailScreen extends StatefulWidget {
 }
 
 class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
-  final MockRepository _repository = MockRepository();
+  final VehicleRepository _vehicleRepository = VehicleRepository();
+  final FinancialRepository _financialRepository = FinancialRepository();
+  final MaintenanceRepository _maintenanceRepository = MaintenanceRepository();
+  final DriverRepository _driverRepository = DriverRepository();
+  final ContractRepository _contractRepository = ContractRepository();
+  final InspectionRepository _inspectionRepository = InspectionRepository();
+
   Vehicle? _vehicle;
   List<FinancialEntry> _financials = [];
   List<MaintenanceEntry> _maintenances = [];
+  List<Inspection> _inspections = [];
   bool _isLoading = true;
 
   // Financial Overview States
@@ -42,18 +56,68 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   Future<void> _fetchData() async {
+    setState(() => _isLoading = true);
     try {
-      final v = await _repository.getVehicleById(widget.vehicleId);
-      final f = await _repository.getFinancialEntriesByVehicle(
-        widget.vehicleId,
-      );
-      final m = await _repository.getMaintenancesByVehicle(widget.vehicleId);
-      setState(() {
-        _vehicle = v;
-        _financials = f;
-        _maintenances = m;
-        _isLoading = false;
-      });
+      final v = await _vehicleRepository.getVehicleById(widget.vehicleId);
+
+      List<FinancialEntry> f = [];
+      try {
+        f = await _financialRepository.getFinancialEntries(
+          vehicleId: widget.vehicleId,
+        );
+      } catch (_) {}
+
+      List<MaintenanceEntry> m = [];
+      try {
+        m = await _maintenanceRepository.getMaintenances(
+          vehicleId: widget.vehicleId,
+        );
+      } catch (_) {}
+
+      List<Inspection> ins = [];
+      try {
+        ins = await _inspectionRepository.getInspections(
+          vehicleId: widget.vehicleId,
+        );
+      } catch (_) {}
+
+      List<Contract> contracts = [];
+      try {
+        contracts = await _contractRepository.getContracts(
+          vehicleId: widget.vehicleId,
+        );
+      } catch (_) {}
+
+      Vehicle? finalVehicle = v;
+      if (finalVehicle != null &&
+          finalVehicle.usageHistory.isEmpty &&
+          contracts.isNotEmpty) {
+        final currentKm = finalVehicle.currentKm;
+        final usages = contracts
+            .map(
+              (c) => VehicleUsage(
+                driverId: c.driverId,
+                driverName: c.driverName ?? 'Motorista',
+                startDate: c.startDate,
+                endDate: c.endDate,
+                startKm: currentKm,
+                endKm: null,
+                purpose: 'Contrato ${c.contractNumber ?? ""}',
+              ),
+            )
+            .toList();
+        finalVehicle = finalVehicle.copyWith(usageHistory: usages);
+      }
+
+      if (mounted) {
+        setState(() {
+          _vehicle = finalVehicle;
+          _financials = f;
+          _maintenances = m;
+          _inspections = ins;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -280,12 +344,24 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     width: 120,
                     height: 80,
                     decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(12),
-                      image: DecorationImage(
-                        image: NetworkImage(_vehicle!.imageUrl),
-                        fit: BoxFit.cover,
-                      ),
+                      image: _vehicle!.imageUrl.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(_vehicle!.imageUrl),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
+                    child: _vehicle!.imageUrl.isEmpty
+                        ? const Center(
+                            child: Icon(
+                              Icons.directions_car,
+                              size: 40,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          )
+                        : null,
                   ),
                   Positioned(
                     bottom: 4,
@@ -456,7 +532,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   Widget _buildCurrentDriverCard(DateFormat dateFormat, DateFormat timeFormat) {
-    if (_vehicle!.currentDriverName == null) {
+    if (_vehicle!.currentDriverName == null ||
+        _vehicle!.currentDriverName!.isEmpty ||
+        _vehicle!.currentDriverName == 'Nenhum') {
       return Container(
         padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
@@ -472,9 +550,20 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       );
     }
 
+    final usageList = _vehicle!.usageHistory
+        .where((h) => h.driverId == _vehicle!.currentDriverId)
+        .toList();
+    final vincDate = usageList.isNotEmpty
+        ? dateFormat.format(usageList.first.startDate)
+        : dateFormat.format(DateTime.now());
+
     return InkWell(
-      onTap: () =>
-          context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}'),
+      onTap: () {
+        if (_vehicle!.currentDriverId != null &&
+            _vehicle!.currentDriverId!.isNotEmpty) {
+          context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}');
+        }
+      },
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -503,7 +592,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                         ),
                       ),
                       Text(
-                        'Vinculado em: ${dateFormat.format(_vehicle!.usageHistory.firstWhere((h) => h.driverId == _vehicle!.currentDriverId).startDate)}',
+                        'Vinculado em: $vincDate',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -921,67 +1010,70 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   Widget _buildInspectionHistoryPreview(DateFormat dateFormat) {
-    // Hardcoded preview for now, consistent with DriverProfile
-    final inspections = [
-      {
-        'type': 'CHECK-IN',
-        'date': '12/03/2026',
-        'km': '15.420',
-        'status': 'APROVADO',
-      },
-    ];
+    if (_inspections.isEmpty) {
+      return _buildEmptyCard('Nenhuma vistoria registrada');
+    }
+
+    final previewList = _inspections.take(3).toList();
 
     return Column(
-      children: inspections
+      children: previewList
           .map(
-            (i) => Container(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLowest,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    i['type'] == 'CHECK-IN'
-                        ? Icons.login_rounded
-                        : Icons.logout_rounded,
-                    color: i['type'] == 'CHECK-IN'
-                        ? AppColors.success
-                        : AppColors.secondary,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            (i) {
+              final isCheckin = i.type == InspectionType.checkin;
+              return Container(
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isCheckin
+                          ? Icons.login_rounded
+                          : Icons.logout_rounded,
+                      color: isCheckin
+                          ? AppColors.success
+                          : AppColors.secondary,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isCheckin ? 'CHECK-IN' : 'CHECK-OUT',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text('KM: ${i.kmAtInspection}', style: AppTextStyles.bodySmall),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
+                        Text(dateFormat.format(i.dateTime), style: AppTextStyles.labelSmall),
                         Text(
-                          i['type']!,
+                          i.status.name.toUpperCase(),
                           style: AppTextStyles.labelSmall.copyWith(
+                            color: i.status == InspectionStatus.approved
+                                ? AppColors.success
+                                : (i.status == InspectionStatus.rejected
+                                    ? AppColors.error
+                                    : AppColors.warning),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text('KM: ${i['km']}', style: AppTextStyles.bodySmall),
                       ],
                     ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(i['date']!, style: AppTextStyles.labelSmall),
-                      Text(
-                        i['status']!,
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.success,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              );
+            },
           )
           .toList(),
     );
@@ -1744,7 +1836,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   }
 
   void _showDriverModal() async {
-    final List<Driver> drivers = await _repository.getDrivers();
+    List<Driver> drivers = [];
+    try {
+      drivers = await _driverRepository.getDrivers();
+    } catch (_) {}
     if (!mounted) return;
 
     AppDialogs.showBottomSheet(
@@ -1763,15 +1858,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       label: 'Em Manutenção',
                       icon: Icons.build_outlined,
                       variant: AppButtonVariant.outline,
-                      onPressed: () {
+                      onPressed: () async {
+                        final updated = _vehicle!.copyWith(
+                          status: VehicleStatus.maintenance,
+                          currentDriverId: '',
+                          currentDriverName: 'Nenhum',
+                        );
                         setState(() {
-                          _vehicle = _vehicle!.copyWith(
-                            status: VehicleStatus.maintenance,
-                            currentDriverId: '',
-                            currentDriverName: 'Nenhum',
-                          );
+                          _vehicle = updated;
                         });
                         Navigator.pop(context);
+                        try {
+                          await _vehicleRepository.updateVehicle(updated);
+                        } catch (_) {}
                       },
                     ),
                   ),
@@ -1781,15 +1880,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       label: 'Tornar Livre',
                       icon: Icons.check_circle_outline,
                       variant: AppButtonVariant.outline,
-                      onPressed: () {
+                      onPressed: () async {
+                        final updated = _vehicle!.copyWith(
+                          status: VehicleStatus.available,
+                          currentDriverId: '',
+                          currentDriverName: 'Nenhum',
+                        );
                         setState(() {
-                          _vehicle = _vehicle!.copyWith(
-                            status: VehicleStatus.available,
-                            currentDriverId: '',
-                            currentDriverName: 'Nenhum',
-                          );
+                          _vehicle = updated;
                         });
                         Navigator.pop(context);
+                        try {
+                          await _vehicleRepository.updateVehicle(updated);
+                        } catch (_) {}
                       },
                     ),
                   ),
@@ -1806,79 +1909,112 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               ),
             ),
             Expanded(
-              child: ListView.separated(
-                itemCount: drivers.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final driver = drivers[index];
-                  final isCurrent = driver.id == _vehicle!.currentDriverId;
-                  return Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isCurrent
-                          ? AppColors.primaryContainer.withValues(alpha: 0.1)
-                          : AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(12),
-                      border: isCurrent
-                          ? Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                            )
-                          : null,
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: AppColors.surfaceContainerLow,
-                          child: const Icon(
-                            Icons.person_outline,
-                            size: 20,
-                            color: AppColors.onSurfaceVariant,
-                          ),
+              child: drivers.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Nenhum motorista cadastrado',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: drivers.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final driver = drivers[index];
+                        final isCurrent =
+                            driver.id == _vehicle!.currentDriverId;
+                        final displayName = driver.name.isNotEmpty
+                            ? driver.name
+                            : driver.email;
+
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isCurrent
+                                ? AppColors.primaryContainer
+                                    .withValues(alpha: 0.1)
+                                : AppColors.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(12),
+                            border: isCurrent
+                                ? Border.all(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.3),
+                                  )
+                                : null,
+                          ),
+                          child: Row(
                             children: [
-                              Text(
-                                driver.name,
-                                style: AppTextStyles.labelLarge.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'CPF: ${driver.cpf}',
-                                style: AppTextStyles.labelSmall.copyWith(
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: AppColors.surfaceContainerLow,
+                                child: const Icon(
+                                  Icons.person_outline,
+                                  size: 20,
                                   color: AppColors.onSurfaceVariant,
                                 ),
                               ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      displayName,
+                                      style:
+                                          AppTextStyles.labelLarge.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (driver.cpf.isNotEmpty)
+                                      Text(
+                                        'CPF: ${driver.cpf}',
+                                        style: AppTextStyles.labelSmall
+                                            .copyWith(
+                                          color: AppColors.onSurfaceVariant,
+                                        ),
+                                      )
+                                    else if (driver.email.isNotEmpty)
+                                      Text(
+                                        driver.email,
+                                        style: AppTextStyles.labelSmall
+                                            .copyWith(
+                                          color: AppColors.onSurfaceVariant,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              AppButton(
+                                label: isCurrent ? 'Atual' : 'Selecionar',
+                                onPressed: isCurrent
+                                    ? null
+                                    : () async {
+                                        final updated = _vehicle!.copyWith(
+                                          currentDriverId: driver.id,
+                                          currentDriverName: displayName,
+                                          status: VehicleStatus.rented,
+                                        );
+                                        setState(() {
+                                          _vehicle = updated;
+                                        });
+                                        Navigator.pop(context);
+                                        try {
+                                          await _vehicleRepository
+                                              .updateVehicle(updated);
+                                        } catch (_) {}
+                                      },
+                                variant: isCurrent
+                                    ? AppButtonVariant.ghost
+                                    : AppButtonVariant.primary,
+                              ),
                             ],
                           ),
-                        ),
-                        AppButton(
-                          label: isCurrent ? 'Atual' : 'Selecionar',
-                          onPressed: isCurrent
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _vehicle = _vehicle!.copyWith(
-                                      currentDriverId: driver.id,
-                                      currentDriverName: driver.name,
-                                      status: VehicleStatus.rented,
-                                    );
-                                  });
-                                  Navigator.pop(context);
-                                },
-                          variant: isCurrent
-                              ? AppButtonVariant.ghost
-                              : AppButtonVariant.primary,
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),

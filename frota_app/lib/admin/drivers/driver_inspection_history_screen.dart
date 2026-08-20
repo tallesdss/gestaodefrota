@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/inspection_repository.dart';
 import '../../models/inspection.dart';
 import '../../core/widgets/status_badge.dart';
 
@@ -19,7 +19,7 @@ class DriverInspectionHistoryScreen extends StatefulWidget {
 
 class _DriverInspectionHistoryScreenState
     extends State<DriverInspectionHistoryScreen> {
-  final MockRepository _repository = MockRepository();
+  final InspectionRepository _repository = InspectionRepository();
   List<Inspection> _inspections = [];
   bool _isLoading = true;
 
@@ -30,11 +30,23 @@ class _DriverInspectionHistoryScreenState
   }
 
   Future<void> _loadData() async {
-    final list = await _repository.getInspectionsByDriver(widget.driverId);
-    setState(() {
-      _inspections = list;
-      _isLoading = false;
-    });
+    setState(() => _isLoading = true);
+    try {
+      final list = await _repository.getInspections(driverId: widget.driverId);
+      if (mounted) {
+        setState(() {
+          _inspections = list;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _inspections = [];
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -62,9 +74,22 @@ class _DriverInspectionHistoryScreenState
       ),
       body: _inspections.isEmpty
           ? Center(
-              child: Text(
-                'Nenhuma vistoria registrada',
-                style: AppTextStyles.bodyMedium,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.fact_check_outlined,
+                    size: 64,
+                    color: AppColors.outlineVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Nenhuma vistoria registrada para este motorista',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             )
           : ListView.separated(
@@ -148,7 +173,10 @@ class _DriverInspectionHistoryScreenState
                             'COMBUSTÍVEL',
                             '${(i.fuelLevel * 100).toInt()}%',
                           ),
-                          _buildInfoColumn('VEÍCULO ID', i.vehicleId),
+                          _buildInfoColumn(
+                            'STATUS',
+                            i.status.name.toUpperCase(),
+                          ),
                         ],
                       ),
                     ],

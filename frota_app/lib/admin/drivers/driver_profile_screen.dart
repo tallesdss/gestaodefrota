@@ -8,11 +8,17 @@ import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/app_dialogs.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/financial_repository.dart';
+import '../../core/repositories/inspection_repository.dart';
+import '../../core/repositories/contract_repository.dart';
 import '../../models/driver.dart';
 import '../../models/vehicle.dart';
 import '../../models/financial_entry.dart';
 import '../../models/timeline_item.dart';
+import '../../models/inspection.dart';
+import '../../models/contract.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/routes/app_routes.dart';
@@ -27,11 +33,18 @@ class DriverProfileScreen extends StatefulWidget {
 }
 
 class _DriverProfileScreenState extends State<DriverProfileScreen> {
-  final MockRepository _repository = MockRepository();
+  final DriverRepository _driverRepository = DriverRepository();
+  final VehicleRepository _vehicleRepository = VehicleRepository();
+  final FinancialRepository _financialRepository = FinancialRepository();
+  final InspectionRepository _inspectionRepository = InspectionRepository();
+  final ContractRepository _contractRepository = ContractRepository();
+
   Driver? _driver;
   Vehicle? _currentVehicle;
+  Contract? _activeContract;
   List<TimelineItem> _timelineItems = [];
   List<FinancialEntry> _financialEntries = [];
+  List<Inspection> _inspections = [];
   bool _isLoading = true;
 
   @override
@@ -41,31 +54,64 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   Future<void> _loadData() async {
-    final drivers = await _repository.getDrivers();
-    final driver = drivers.firstWhere((d) => d.id == widget.driverId);
+    setState(() => _isLoading = true);
+    try {
+      final driver = await _driverRepository.getDriverById(widget.driverId);
 
-    Vehicle? vehicle;
-    if (driver.currentVehicleId != null) {
-      final vehicles = await _repository.getVehicles();
-      vehicle = vehicles.firstWhere((v) => v.id == driver.currentVehicleId);
+      Vehicle? vehicle;
+      Contract? activeContract;
+      List<Contract> contracts = [];
+      try {
+        contracts = await _contractRepository.getContracts(driverId: widget.driverId);
+        if (contracts.isNotEmpty) {
+          final active = contracts.where((c) => c.status == ContractStatus.active).toList();
+          if (active.isNotEmpty) {
+            activeContract = active.first;
+          }
+        }
+      } catch (_) {}
+
+      final vehicleIdToFetch = driver?.currentVehicleId ?? activeContract?.vehicleId;
+      if (vehicleIdToFetch != null && vehicleIdToFetch.isNotEmpty) {
+        try {
+          vehicle = await _vehicleRepository.getVehicleById(vehicleIdToFetch);
+        } catch (_) {}
+      }
+
+      List<FinancialEntry> financials = [];
+      try {
+        financials = await _financialRepository.getFinancialEntries(driverId: widget.driverId);
+      } catch (_) {}
+
+      List<TimelineItem> timeline = [];
+      try {
+        timeline = await _driverRepository.getDriverTimeline(driverId: widget.driverId, page: 1, pageSize: 5);
+      } catch (_) {}
+
+      List<Inspection> inspections = [];
+      try {
+        inspections = await _inspectionRepository.getInspections(driverId: widget.driverId);
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _driver = driver;
+          _currentVehicle = vehicle;
+          _activeContract = activeContract;
+          _financialEntries = financials;
+          _timelineItems = timeline;
+          _inspections = inspections;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _driver = null;
+          _isLoading = false;
+        });
+      }
     }
-
-    final timeline = await _repository.getDriverTimeline(
-      driverId: widget.driverId,
-      page: 1,
-      pageSize: 3,
-    );
-    final financials = await _repository.getFinancialEntriesByDriver(
-      widget.driverId,
-    );
-
-    setState(() {
-      _driver = driver;
-      _currentVehicle = vehicle;
-      _timelineItems = timeline;
-      _financialEntries = financials;
-      _isLoading = false;
-    });
   }
 
   @override
@@ -85,7 +131,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: AppColors.onSurface),
+        leading: const BackButton(color: AppColors.onSurface),
         title: Text(
           'PERFIL DO MOTORISTA',
           style: AppTextStyles.labelLarge.copyWith(
@@ -126,6 +172,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   Widget _buildHeader() {
+    final hasAvatar = _driver!.avatarUrl.isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -136,8 +184,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         children: [
           CircleAvatar(
             radius: 40,
-            backgroundImage: NetworkImage(_driver!.avatarUrl),
+            backgroundImage: hasAvatar ? NetworkImage(_driver!.avatarUrl) : null,
             backgroundColor: AppColors.surfaceContainerLow,
+            child: !hasAvatar
+                ? const Icon(Icons.person, size: 40, color: AppColors.onSurfaceVariant)
+                : null,
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
@@ -145,7 +196,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _driver!.name,
+                  _driver!.name.isNotEmpty ? _driver!.name : _driver!.email,
                   style: AppTextStyles.headlineSmall.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.onSurface,
@@ -157,14 +208,27 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
+                if (_driver!.phone.isNotEmpty)
+                  Text(
+                    _driver!.phone,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     StatusBadge(
-                      label: _driver!.isApproved ? 'APROVADO' : 'PENDENTE',
-                      type: _driver!.isApproved
+                      label: _driver!.status == DriverStatus.active
+                          ? 'ATIVO'
+                          : (_driver!.status == DriverStatus.pendingApproval
+                              ? 'PENDENTE'
+                              : 'INATIVO'),
+                      type: _driver!.status == DriverStatus.active
                           ? BadgeType.active
-                          : BadgeType.warning,
+                          : (_driver!.status == DriverStatus.pendingApproval
+                              ? BadgeType.warning
+                              : BadgeType.error),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     StatusBadge(
@@ -200,6 +264,16 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         .where((e) => e.type == FinancialType.income && e.isPaid)
         .fold(0.0, (sum, item) => sum + item.amount);
 
+    final pendingDebts = _financialEntries
+        .where((e) => e.type == FinancialType.income && !e.isPaid)
+        .fold(0.0, (sum, item) => sum + item.amount);
+
+    final saldoDevedor = _driver!.outstandingBalance > 0
+        ? _driver!.outstandingBalance
+        : pendingDebts;
+
+    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -214,8 +288,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                   onTap: () => _showPaymentHistoryModal(),
                   child: StatCard(
                     title: 'TOTAL RENDIDO',
-                    value:
-                        'R\$ ${NumberFormat('#,##0.00', 'pt_BR').format(totalReceived)}',
+                    value: currencyFormat.format(totalReceived),
                     icon: Icons.payments_outlined,
                     iconColor: AppColors.success,
                   ),
@@ -226,9 +299,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             Expanded(
               child: StatCard(
                 title: 'SALDO DEVEDOR',
-                value: 'R\$ 450,00',
+                value: currencyFormat.format(saldoDevedor),
                 icon: Icons.warning_amber_rounded,
-                iconColor: AppColors.error,
+                iconColor: saldoDevedor > 0 ? AppColors.error : AppColors.success,
               ),
             ),
           ],
@@ -293,7 +366,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               Text('Informar Pagamento', style: AppTextStyles.headlineSmall),
               const SizedBox(height: 8),
               Text(
-                'Informe o valor pago por ${_driver!.name}',
+                'Informe o valor pago por ${_driver!.name.isNotEmpty ? _driver!.name : _driver!.email}',
                 style: AppTextStyles.bodyMedium,
               ),
               const SizedBox(height: 24),
@@ -341,12 +414,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         final amount = double.tryParse(amountText) ?? 0.0;
                         if (amount > 0) {
                           final entry = FinancialEntry(
-                            id: DateTime.now().millisecondsSinceEpoch
-                                .toString(),
+                            id: '',
                             type: FinancialType.income,
                             category: 'aluguel',
                             driverId: _driver!.id,
-                            vehicleId: _driver!.currentVehicleId,
+                            vehicleId: _driver!.currentVehicleId ?? _currentVehicle?.id,
                             amount: amount,
                             date: DateTime.now(),
                             description:
@@ -355,7 +427,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                             isLate: isLate,
                           );
 
-                          await _repository.addFinancialEntry(entry);
+                          try {
+                            await _financialRepository.createFinancialEntry(entry);
+                          } catch (_) {}
 
                           if (context.mounted) {
                             Navigator.pop(context);
@@ -364,7 +438,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                                 content: Text(
                                   'Pagamento de R\$ ${amount.toStringAsFixed(2)} salvo com sucesso!',
                                 ),
-                                backgroundColor: Colors.green,
+                                backgroundColor: AppColors.success,
                               ),
                             );
                             _loadData();
@@ -424,7 +498,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Informe o valor que ${_driver!.name} deve pagar',
+                'Informe o valor que ${_driver!.name.isNotEmpty ? _driver!.name : _driver!.email} deve pagar',
                 style: AppTextStyles.bodyMedium,
               ),
               const SizedBox(height: 24),
@@ -466,12 +540,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         final amount = double.tryParse(amountText) ?? 0.0;
                         if (amount > 0) {
                           final entry = FinancialEntry(
-                            id: DateTime.now().millisecondsSinceEpoch
-                                .toString(),
-                            type: FinancialType.expense,
+                            id: '',
+                            type: FinancialType.income,
                             category: descriptionController.text.toLowerCase(),
                             driverId: _driver!.id,
-                            vehicleId: _driver!.currentVehicleId,
+                            vehicleId: _driver!.currentVehicleId ?? _currentVehicle?.id,
                             amount: amount,
                             date: DateTime.now(),
                             description:
@@ -479,7 +552,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                             isPaid: false,
                           );
 
-                          await _repository.addFinancialEntry(entry);
+                          try {
+                            await _financialRepository.createFinancialEntry(entry);
+                          } catch (_) {}
 
                           if (context.mounted) {
                             Navigator.pop(context);
@@ -507,11 +582,10 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   void _showPaymentHistoryModal() {
-    final paidEntries =
-        _financialEntries
-            .where((e) => e.type == FinancialType.income && e.isPaid)
-            .toList()
-          ..sort((a, b) => b.date.compareTo(a.date));
+    final paidEntries = _financialEntries
+        .where((e) => e.type == FinancialType.income && e.isPaid)
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
 
     AppDialogs.showBottomSheet(
       context: context,
@@ -569,9 +643,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                                 ),
                               ),
                               Text(
-                                DateFormat(
-                                  'dd/MM/yyyy HH:mm',
-                                ).format(entry.date),
+                                DateFormat('dd/MM/yyyy HH:mm').format(entry.date),
                                 style: AppTextStyles.bodySmall,
                               ),
                             ],
@@ -591,6 +663,8 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   Widget _buildVehicleUsage() {
+    final dateFormat = DateFormat('dd/MM/yyyy');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -633,7 +707,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _currentVehicle!.model,
+                            '${_currentVehicle!.brand} ${_currentVehicle!.model}',
                             style: AppTextStyles.titleMedium.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -645,25 +719,27 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         ],
                       ),
                     ),
-                    const Spacer(),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text(
-                          'DESDE',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: AppColors.onSurfaceVariant,
+                    if (_activeContract != null) ...[
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'CONTRATO ATIVO',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppColors.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        Text(
-                          '12/03/2026',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.bold,
+                          Text(
+                            dateFormat.format(_activeContract!.startDate),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -690,6 +766,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   Widget _buildDocumentsAndContracts() {
+    final cnhUrl = _driver!.cnhFrontUrl ?? _driver!.cnhBackUrl;
+    final residenceUrl = _driver!.residenceProofUrl;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -702,25 +781,23 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             _buildDocItem(
               'CNH Digital',
               Icons.badge_outlined,
-              onTap: () => _showDocumentDialog(
-                'CNH Digital',
-                'https://images.unsplash.com/photo-1633113088453-125367b49ca4?q=80&w=800&auto=format&fit=crop',
-                isEditable: true,
-              ),
+              onTap: cnhUrl != null && cnhUrl.isNotEmpty
+                  ? () => _showDocumentDialog('CNH Digital', cnhUrl, isEditable: true)
+                  : null,
             ),
             _buildDocItem(
               'Comprovante Residência',
               Icons.home_outlined,
-              onTap: () => _showDocumentDialog(
-                'Comprovante Residência',
-                'https://images.unsplash.com/photo-1586769852836-bc069f19e1b6?q=80&w=800&auto=format&fit=crop',
-                isEditable: true,
-              ),
+              onTap: residenceUrl != null && residenceUrl.isNotEmpty
+                  ? () => _showDocumentDialog('Comprovante Residência', residenceUrl, isEditable: true)
+                  : null,
             ),
             _buildDocItem(
               'Contrato Assinado',
               Icons.description_outlined,
-              onTap: null, // Futuro
+              onTap: _activeContract != null && _activeContract!.signatureUrl != null
+                  ? () => _showDocumentDialog('Contrato Assinado', _activeContract!.signatureUrl!)
+                  : null,
             ),
             _buildDocItem(
               'Termos de Uso',
@@ -817,7 +894,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Arquivo visualizado em modo de conferência. Certifique-se da validade das informações.',
+            'Arquivo do documento cadastrado.',
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -826,19 +903,6 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         ],
       ),
       actions: [
-        if (isEditable)
-          TextButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Selecione um novo arquivo para substituir...'),
-                ),
-              );
-            },
-            icon: const Icon(Icons.upload_file_rounded),
-            label: const Text('Substituir'),
-          ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context),
           style: ElevatedButton.styleFrom(
@@ -918,7 +982,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              '⚠️ Alterações afetarão os registros contratuais.',
+              '⚠️ Alterações serão salvas no Supabase.',
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.accent),
             ),
           ],
@@ -930,24 +994,32 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
+            final updatedDriver = _driver!.copyWith(
+              name: nameController.text,
+              email: emailController.text,
+              phone: phoneController.text,
+              city: cityController.text,
+              cnhNumber: cnhController.text,
+              cnhCategory: categoryController.text,
+            );
+
             setState(() {
-              _driver = _driver!.copyWith(
-                name: nameController.text,
-                email: emailController.text,
-                phone: phoneController.text,
-                city: cityController.text,
-                cnhNumber: cnhController.text,
-                cnhCategory: categoryController.text,
-              );
+              _driver = updatedDriver;
             });
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Perfil atualizado com sucesso!'),
-                backgroundColor: AppColors.success,
-              ),
-            );
+
+            try {
+              await _driverRepository.updateDriver(updatedDriver);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Perfil atualizado com sucesso!'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              }
+            } catch (_) {}
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
@@ -1119,20 +1191,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   Widget _buildInspectionHistory() {
-    final inspections = [
-      {
-        'type': 'CHECK-IN',
-        'date': '12/03/2026',
-        'km': '15.420',
-        'status': 'APROVADO',
-      },
-      {
-        'type': 'CHECK-OUT',
-        'date': '12/03/2026',
-        'km': '12.100',
-        'status': 'APROVADO',
-      },
-    ];
+    final dateFormat = DateFormat('dd/MM/yyyy');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1144,56 +1203,74 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               context.push('/admin/drivers/${widget.driverId}/inspections'),
         ),
         const SizedBox(height: AppSpacing.md),
-        ...inspections.map(
-          (i) => Container(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(16),
+        if (_inspections.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'Nenhuma vistoria registrada',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  i['type'] == 'CHECK-IN'
-                      ? Icons.login_rounded
-                      : Icons.logout_rounded,
-                  color: i['type'] == 'CHECK-IN'
-                      ? AppColors.success
-                      : AppColors.secondary,
+          )
+        else
+          ..._inspections.take(3).map(
+            (i) {
+              final isCheckin = i.type == InspectionType.checkin;
+              return Container(
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        i['type']!,
-                        style: AppTextStyles.labelSmall.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text('KM: ${i['km']}', style: AppTextStyles.bodySmall),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                child: Row(
                   children: [
-                    Text(i['date']!, style: AppTextStyles.labelSmall),
-                    Text(
-                      i['status']!,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.bold,
+                    Icon(
+                      isCheckin
+                          ? Icons.login_rounded
+                          : Icons.logout_rounded,
+                      color: isCheckin
+                          ? AppColors.success
+                          : AppColors.secondary,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isCheckin ? 'CHECK-IN' : 'CHECK-OUT',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text('KM: ${i.kmAtInspection}', style: AppTextStyles.bodySmall),
+                        ],
                       ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(dateFormat.format(i.dateTime), style: AppTextStyles.labelSmall),
+                        Text(
+                          i.status.name.toUpperCase(),
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: i.status == InspectionStatus.approved
+                                ? AppColors.success
+                                : AppColors.warning,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
-        ),
       ],
     );
   }

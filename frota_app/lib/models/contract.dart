@@ -5,6 +5,7 @@ class Contract {
   final String? contractNumber;
   final String vehicleId;
   final String driverId;
+  final String? driverName;
   final String type; // uber / prefecture
   final DateTime startDate;
   final DateTime endDate;
@@ -23,6 +24,7 @@ class Contract {
     this.contractNumber,
     required this.vehicleId,
     required this.driverId,
+    this.driverName,
     required this.type,
     required this.startDate,
     required this.endDate,
@@ -50,11 +52,19 @@ class Contract {
 
     final rentalVal = (map['valor_locacao'] ?? map['monthlyValue'] ?? map['weeklyValue'] ?? 0.0).toDouble();
 
+    String? dName;
+    if (map['motoristas'] != null && map['motoristas']['perfis'] != null) {
+      dName = map['motoristas']['perfis']['nome']?.toString();
+    } else if (map['driverName'] != null) {
+      dName = map['driverName'].toString();
+    }
+
     return Contract(
       id: (map['id'] ?? '').toString(),
       contractNumber: (map['numero_contrato'] ?? map['contractNumber'])?.toString(),
       vehicleId: (map['veiculo_id'] ?? map['vehicleId'] ?? '').toString(),
       driverId: (map['motorista_id'] ?? map['driverId'] ?? '').toString(),
+      driverName: dName,
       type: (map['type'] ?? 'uber').toString(),
       startDate: DateTime.tryParse(map['data_inicio'] ?? map['startDate'] ?? '') ?? DateTime.now(),
       endDate: DateTime.tryParse(map['data_fim'] ?? map['endDate'] ?? '') ?? DateTime.now().add(const Duration(days: 365)),

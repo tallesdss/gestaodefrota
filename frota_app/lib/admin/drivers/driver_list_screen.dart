@@ -4,7 +4,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../../core/repositories/financial_repository.dart';
 import '../../models/driver.dart';
 import '../../models/financial_entry.dart';
 import '../../core/widgets/status_badge.dart';
@@ -20,7 +21,8 @@ class DriverListScreen extends StatefulWidget {
 }
 
 class _DriverListScreenState extends State<DriverListScreen> {
-  final MockRepository _repository = MockRepository();
+  final DriverRepository _driverRepository = DriverRepository();
+  final FinancialRepository _financialRepository = FinancialRepository();
   List<Driver> _drivers = [];
   List<Driver> _filteredDrivers = [];
   bool _isLoading = true;
@@ -34,15 +36,31 @@ class _DriverListScreenState extends State<DriverListScreen> {
   }
 
   Future<void> _fetchDrivers() async {
-    final list = await _repository.getDrivers();
-    setState(() {
-      _drivers = list;
-      _filteredDrivers = list;
-      _isLoading = false;
-      // Extract unique cities
-      final citySet = list.map((d) => d.city).whereType<String>().toSet();
-      _cities = ['Todas', ...citySet];
-    });
+    setState(() => _isLoading = true);
+    try {
+      final list = await _driverRepository.getDrivers();
+      if (mounted) {
+        setState(() {
+          _drivers = list;
+          _filteredDrivers = list;
+          _isLoading = false;
+          final citySet = list
+              .map((d) => d.city)
+              .where((c) => c != null && c.isNotEmpty)
+              .cast<String>()
+              .toSet();
+          _cities = ['Todas', ...citySet];
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _drivers = [];
+          _filteredDrivers = [];
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _applyFilter(String city) {
@@ -65,7 +83,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
       content: Column(
         children: [
           Text(
-            'Informe o valor pago por ${driver.name}',
+            'Informe o valor pago por ${driver.name.isNotEmpty ? driver.name : driver.email}',
             style: AppTextStyles.bodyMedium,
           ),
           const SizedBox(height: 16),
@@ -87,18 +105,20 @@ class _DriverListScreenState extends State<DriverListScreen> {
                 0;
             if (amount > 0) {
               final entry = FinancialEntry(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                id: '',
                 type: FinancialType.income,
                 category: 'aluguel',
                 driverId: driver.id,
                 vehicleId: driver.currentVehicleId,
                 amount: amount,
                 date: DateTime.now(),
-                description: 'Pagamento informado de ${driver.name}',
+                description: 'Pagamento informado de ${driver.name.isNotEmpty ? driver.name : driver.email}',
                 isPaid: true,
               );
 
-              await _repository.addFinancialEntry(entry);
+              try {
+                await _financialRepository.createFinancialEntry(entry);
+              } catch (_) {}
 
               if (mounted) {
                 Navigator.pop(context);
@@ -128,7 +148,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
       content: Column(
         children: [
           Text(
-            'Informe o valor que ${driver.name} deve pagar',
+            'Informe o valor que ${driver.name.isNotEmpty ? driver.name : driver.email} deve pagar',
             style: AppTextStyles.bodyMedium,
           ),
           const SizedBox(height: 16),
@@ -157,7 +177,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
                 0;
             if (amount > 0) {
               final entry = FinancialEntry(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                id: '',
                 type: FinancialType.expense,
                 category: descriptionController.text.toLowerCase(),
                 driverId: driver.id,
@@ -169,7 +189,9 @@ class _DriverListScreenState extends State<DriverListScreen> {
                 isPaid: false,
               );
 
-              await _repository.addFinancialEntry(entry);
+              try {
+                await _financialRepository.createFinancialEntry(entry);
+              } catch (_) {}
 
               if (mounted) {
                 Navigator.pop(context);

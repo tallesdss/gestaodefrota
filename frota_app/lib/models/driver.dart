@@ -80,7 +80,9 @@ class Driver {
     }
 
     // Suporte a JOINs entre public.motoristas e public.perfis
-    final perfil = map['perfis'] is Map<String, dynamic> ? map['perfis'] as Map<String, dynamic> : null;
+    final perfil = map['perfis'] != null && map['perfis'] is Map
+        ? Map<String, dynamic>.from(map['perfis'] as Map)
+        : null;
 
     final nomeFinal = (perfil?['nome'] ?? map['nome'] ?? map['name'] ?? '').toString();
     final emailFinal = (perfil?['email'] ?? map['email'] ?? '').toString();

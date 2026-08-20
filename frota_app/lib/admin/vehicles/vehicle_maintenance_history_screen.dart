@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/maintenance_repository.dart';
 import '../../models/maintenance_entry.dart';
 import '../../models/vehicle.dart';
 
@@ -18,7 +19,8 @@ class MaintenanceHistoryScreen extends StatefulWidget {
 }
 
 class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
-  final MockRepository _repository = MockRepository();
+  final VehicleRepository _vehicleRepository = VehicleRepository();
+  final MaintenanceRepository _maintenanceRepository = MaintenanceRepository();
   Vehicle? _vehicle;
   List<MaintenanceEntry> _maintenances = [];
   bool _isLoading = true;
@@ -30,13 +32,27 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
   }
 
   Future<void> _fetchData() async {
-    final v = await _repository.getVehicleById(widget.vehicleId);
-    final m = await _repository.getMaintenancesByVehicle(widget.vehicleId);
-    setState(() {
-      _vehicle = v;
-      _maintenances = m.reversed.toList();
-      _isLoading = false;
-    });
+    setState(() => _isLoading = true);
+    try {
+      final v = await _vehicleRepository.getVehicleById(widget.vehicleId);
+      final m = await _maintenanceRepository.getMaintenances(
+        vehicleId: widget.vehicleId,
+      );
+      if (mounted) {
+        setState(() {
+          _vehicle = v;
+          _maintenances = m;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _vehicle = null;
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override

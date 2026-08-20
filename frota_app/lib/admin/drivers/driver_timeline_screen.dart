@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/driver_repository.dart';
 import '../../models/timeline_item.dart';
 
 class DriverTimelineScreen extends StatefulWidget {
@@ -16,7 +16,7 @@ class DriverTimelineScreen extends StatefulWidget {
 }
 
 class _DriverTimelineScreenState extends State<DriverTimelineScreen> {
-  final MockRepository _repository = MockRepository();
+  final DriverRepository _repository = DriverRepository();
   final List<TimelineItem> _items = [];
   int _currentPage = 1;
   bool _isLoading = false;
@@ -56,16 +56,20 @@ class _DriverTimelineScreenState extends State<DriverTimelineScreen> {
         pageSize: 10,
       );
 
-      setState(() {
-        _items.addAll(newItems);
-        _currentPage++;
-        _isLoading = false;
-        if (newItems.length < 10) {
-          _hasMore = false;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _items.addAll(newItems);
+          _currentPage++;
+          _isLoading = false;
+          if (newItems.length < 10) {
+            _hasMore = false;
+          }
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -87,26 +91,35 @@ class _DriverTimelineScreenState extends State<DriverTimelineScreen> {
       ),
       body: _items.isEmpty && _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              itemCount: _items.length + (_hasMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _items.length) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-                final item = _items[index];
-                return _buildTimelineItem(item);
-              },
-            ),
+          : _items.isEmpty
+              ? Center(
+                  child: Text(
+                    'Nenhuma atividade registrada para este motorista',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  itemCount: _items.length + (_hasMore ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _items.length) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final item = _items[index];
+                    return _buildTimelineItem(item);
+                  },
+                ),
     );
   }
 
   Widget _buildTimelineItem(TimelineItem item) {
-    final date = DateFormat('dd/MM/yyyy').format(item.date);
+    final date = DateFormat('dd/MM/yyyy HH:mm').format(item.date);
 
     return IntrinsicHeight(
       child: Row(
