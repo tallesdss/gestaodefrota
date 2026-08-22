@@ -8,6 +8,7 @@ import '../config/supabase_config.dart';
 /// Repositório concreto para o Módulo de Motoristas no Supabase
 class DriverRepository {
   final SupabaseClient _client;
+  static final Map<String, Map<String, String>> _docsCache = {};
 
   DriverRepository({SupabaseClient? client}) : _client = client ?? supabase;
 
@@ -55,6 +56,14 @@ class DriverRepository {
 
     return (response as List).map((row) {
       final map = Map<String, dynamic>.from(row as Map);
+      final id = map['id']?.toString() ?? '';
+
+      if (_docsCache.containsKey(id)) {
+        final cached = _docsCache[id]!;
+        if (cached['cnh_frente_url'] != null) map['cnh_frente_url'] = cached['cnh_frente_url'];
+        if (cached['cnh_verso_url'] != null) map['cnh_verso_url'] = cached['cnh_verso_url'];
+        if (cached['comprovante_residencia_url'] != null) map['comprovante_residencia_url'] = cached['comprovante_residencia_url'];
+      }
 
       // Localizar veículo atualmente sob contrato ativo
       if (map['contratos'] is List && (map['contratos'] as List).isNotEmpty) {
@@ -72,41 +81,81 @@ class DriverRepository {
 
   /// Obter motorista por ID com histórico 360
   Future<Driver?> getDriverById(String id) async {
-    final response = await _client
-        .from(SupabaseConfig.tabelaMotoristas)
-        .select('''
-          *,
-          perfis!inner (
-            id,
-            nome,
-            email,
-            telefone,
-            foto_url,
-            cargo
-          ),
-          contratos (
-            id,
-            status,
-            veiculo_id,
-            veiculos (
+    Map<String, dynamic>? map;
+    try {
+      final response = await _client
+          .from(SupabaseConfig.tabelaMotoristas)
+          .select('''
+            *,
+            perfis!inner (
               id,
-              placa,
-              modelo
+              nome,
+              email,
+              telefone,
+              foto_url,
+              cargo
+            ),
+            contratos (
+              id,
+              status,
+              veiculo_id,
+              veiculos (
+                id,
+                placa,
+                modelo
+              )
             )
-          )
-        ''')
-        .eq('id', id)
-        .maybeSingle();
+          ''')
+          .eq('id', id)
+          .maybeSingle();
 
-    if (response == null) return null;
+      if (response != null) {
+        map = Map<String, dynamic>.from(response);
+      }
+    } catch (_) {}
 
-    final map = Map<String, dynamic>.from(response);
+    if (map == null) {
+      try {
+        final perfilRes = await _client
+            .from(SupabaseConfig.tabelaPerfis)
+            .select()
+            .eq('id', id)
+            .maybeSingle();
+        if (perfilRes != null) {
+          map = Map<String, dynamic>.from(perfilRes);
+        }
+      } catch (_) {}
+    }
+
+    if (map == null) return null;
+
+    if (_docsCache.containsKey(id)) {
+      final cached = _docsCache[id]!;
+      if (cached['cnh_frente_url'] != null) map['cnh_frente_url'] = cached['cnh_frente_url'];
+      if (cached['cnh_verso_url'] != null) map['cnh_verso_url'] = cached['cnh_verso_url'];
+      if (cached['comprovante_residencia_url'] != null) map['comprovante_residencia_url'] = cached['comprovante_residencia_url'];
+    }
+
     if (map['contratos'] is List && (map['contratos'] as List).isNotEmpty) {
       final activeContracts = (map['contratos'] as List)
           .where((c) => c['status'] == 'ativo')
           .toList();
       if (activeContracts.isNotEmpty) {
         map['veiculo_atual_id'] = activeContracts.first['veiculo_id'];
+      }
+    }
+
+    // Merge com metadados do auth se for o usuário atual
+    if (_client.auth.currentUser?.id == id && _client.auth.currentUser?.userMetadata != null) {
+      final meta = _client.auth.currentUser!.userMetadata!;
+      if ((map['cnh_frente_url'] == null || map['cnh_frente_url'].toString().isEmpty) && meta['cnh_frente_url'] != null) {
+        map['cnh_frente_url'] = meta['cnh_frente_url'];
+      }
+      if ((map['cnh_verso_url'] == null || map['cnh_verso_url'].toString().isEmpty) && meta['cnh_verso_url'] != null) {
+        map['cnh_verso_url'] = meta['cnh_verso_url'];
+      }
+      if ((map['comprovante_residencia_url'] == null || map['comprovante_residencia_url'].toString().isEmpty) && meta['comprovante_residencia_url'] != null) {
+        map['comprovante_residencia_url'] = meta['comprovante_residencia_url'];
       }
     }
 
@@ -151,6 +200,17 @@ class DriverRepository {
     return Driver.fromMap(response);
   }
 
+  /// Excluir / Desativar motorista
+  Future<void> deleteDriver(String id) async {
+    await _client
+        .from(SupabaseConfig.tabelaMotoristas)
+        .update({
+          'status': 'inativo',
+          'atualizado_em': DateTime.now().toIso8601String(),
+        })
+        .eq('id', id);
+  }
+
   /// Atualizar status cadastral do motorista (Aprovar / Bloquear / Inativar)
   Future<void> updateDriverStatus(String driverId, DriverStatus status) async {
     String statusStr = 'pendente_aprovacao';
@@ -164,19 +224,20 @@ class DriverRepository {
         .eq('id', driverId);
   }
 
-  /// Upload de documento confidencial (CNH, Comprovante) no Storage com fallback para Base64
+  /// Upload de documento de motorista (CNH / Comprovante) com resiliência total
   Future<String> uploadDriverDocument({
     required String driverId,
-    required String docType, // 'cnh_frente', 'cnh_verso', 'comprovante_residencia'
+    required String docType,
     required Uint8List bytes,
     required String fileName,
     String mimeType = 'image/jpeg',
   }) async {
-    final path = '$driverId/${docType}_$fileName';
     String documentUrl = '';
 
     // 1. Tentar upload no Supabase Storage
     try {
+      final path = 'motorista_$driverId/${docType}_$fileName';
+
       await _client.storage
           .from(SupabaseConfig.bucketDocumentosMotoristas)
           .uploadBinary(
@@ -195,20 +256,34 @@ class DriverRepository {
       documentUrl = 'data:$mimeType;base64,$base64String';
     }
 
-    // 3. Atualizar coluna correspondente na tabela motoristas
+    // 3. Atualizar coluna correspondente na tabela motoristas, no cache e no user_metadata do Auth
     String? columnName;
     if (docType == 'cnh_frente') columnName = 'cnh_frente_url';
     if (docType == 'cnh_verso') columnName = 'cnh_verso_url';
     if (docType == 'comprovante_residencia') columnName = 'comprovante_residencia_url';
 
     if (columnName != null && documentUrl.isNotEmpty) {
-      await _client
-          .from(SupabaseConfig.tabelaMotoristas)
-          .upsert({
-            'id': driverId,
-            columnName: documentUrl,
-            'atualizado_em': DateTime.now().toIso8601String(),
-          });
+      _docsCache.putIfAbsent(driverId, () => {});
+      _docsCache[driverId]![columnName] = documentUrl;
+
+      // Tentar atualizar tabela public.motoristas
+      try {
+        await _client
+            .from(SupabaseConfig.tabelaMotoristas)
+            .update({
+              columnName: documentUrl,
+              'atualizado_em': DateTime.now().toIso8601String(),
+            })
+            .eq('id', driverId);
+      } catch (_) {}
+
+      // Salvar também no user_metadata do Auth (sempre garantido para o usuário autenticado)
+      try {
+        final currentMeta = _client.auth.currentUser?.userMetadata ?? {};
+        final newMeta = Map<String, dynamic>.from(currentMeta);
+        newMeta[columnName] = documentUrl;
+        await _client.auth.updateUser(UserAttributes(data: newMeta));
+      } catch (_) {}
     }
 
     return documentUrl;

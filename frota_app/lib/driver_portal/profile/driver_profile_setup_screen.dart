@@ -361,6 +361,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
                 label: 'IR PARA HOME',
                 isFullWidth: true,
                 onPressed: () {
+                  Navigator.of(context, rootNavigator: true).pop();
                   context.go(AppRoutes.driverHome);
                 },
               ),

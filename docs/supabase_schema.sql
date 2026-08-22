@@ -830,6 +830,20 @@ DO $$ BEGIN
     CREATE POLICY "Usuarios editam proprio perfil" ON public.perfis
     FOR UPDATE TO authenticated USING (id = auth.uid() OR public.eh_admin());
 
+    -- Motoristas
+    DROP POLICY IF EXISTS "Motoristas visualizaveis por autenticados" ON public.motoristas;
+    CREATE POLICY "Motoristas visualizaveis por autenticados" ON public.motoristas
+    FOR SELECT TO authenticated USING (true);
+
+    DROP POLICY IF EXISTS "Motoristas atualizam seus proprios dados" ON public.motoristas;
+    CREATE POLICY "Motoristas atualizam seus proprios dados" ON public.motoristas
+    FOR UPDATE TO authenticated USING (id = auth.uid() OR public.eh_gestor_ou_admin())
+    WITH CHECK (id = auth.uid() OR public.eh_gestor_ou_admin());
+
+    DROP POLICY IF EXISTS "Motoristas inserem seu proprio registro" ON public.motoristas;
+    CREATE POLICY "Motoristas inserem seu proprio registro" ON public.motoristas
+    FOR INSERT TO authenticated WITH CHECK (id = auth.uid() OR public.eh_gestor_ou_admin());
+
     -- Veículos
     DROP POLICY IF EXISTS "Leitura de veiculos por autenticados" ON public.veiculos;
     CREATE POLICY "Leitura de veiculos por autenticados" ON public.veiculos

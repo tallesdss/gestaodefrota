@@ -137,6 +137,155 @@ class VehicleRepository {
         .eq('id', id);
   }
 
+  /// Vincular motorista a um veículo criando contrato ativo e sincronizando status
+  Future<void> assignDriverToVehicle({
+    required String vehicleId,
+    required String driverId,
+    double? rentalValue,
+  }) async {
+    final nowStr = DateTime.now().toIso8601String();
+    final todayStr = nowStr.split('T')[0];
+
+    // 1. Concluir quaisquer contratos ativos anteriores desse veículo
+    await _client
+        .from(SupabaseConfig.tabelaContratos)
+        .update({
+          'status': 'concluido',
+          'data_fim': todayStr,
+          'atualizado_em': nowStr,
+        })
+        .eq('veiculo_id', vehicleId)
+        .eq('status', 'ativo');
+
+    // 2. Concluir quaisquer contratos ativos anteriores desse motorista
+    await _client
+        .from(SupabaseConfig.tabelaContratos)
+        .update({
+          'status': 'concluido',
+          'data_fim': todayStr,
+          'atualizado_em': nowStr,
+        })
+        .eq('motorista_id', driverId)
+        .eq('status', 'ativo');
+
+    // 3. Inserir novo contrato ativo no Supabase
+    final contractNumber = 'CTR-${DateTime.now().millisecondsSinceEpoch}';
+    final valor = (rentalValue != null && rentalValue > 0) ? rentalValue : 500.00;
+
+    await _client.from(SupabaseConfig.tabelaContratos).insert({
+      'numero_contrato': contractNumber,
+      'motorista_id': driverId,
+      'veiculo_id': vehicleId,
+      'data_inicio': todayStr,
+      'valor_locacao': valor,
+      'valor_caucao': 0.00,
+      'frequencia_cobranca': 'semanal',
+      'dia_vencimento': 5,
+      'status': 'ativo',
+    });
+
+    // 4. Atualizar status do veículo para 'alugado'
+    await _client
+        .from(SupabaseConfig.tabelaVeiculos)
+        .update({
+          'status': 'alugado',
+          'atualizado_em': nowStr,
+        })
+        .eq('id', vehicleId);
+
+    // 5. Registrar no histórico de atividades
+    try {
+      await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
+        'motorista_id': driverId,
+        'tipo': 'veiculo_vinculado',
+        'descricao': 'Veículo vinculado ao motorista (Contrato $contractNumber)',
+        'criado_em': nowStr,
+      });
+    } catch (_) {}
+  }
+
+  /// Desvincular motorista tornando o veículo disponível / livre
+  Future<void> unlinkDriverFromVehicle(
+    String vehicleId, {
+    String? previousDriverId,
+  }) async {
+    final nowStr = DateTime.now().toIso8601String();
+    final todayStr = nowStr.split('T')[0];
+
+    // 1. Concluir contrato ativo do veículo
+    await _client
+        .from(SupabaseConfig.tabelaContratos)
+        .update({
+          'status': 'concluido',
+          'data_fim': todayStr,
+          'atualizado_em': nowStr,
+        })
+        .eq('veiculo_id', vehicleId)
+        .eq('status', 'ativo');
+
+    // 2. Atualizar veículo para 'disponivel'
+    await _client
+        .from(SupabaseConfig.tabelaVeiculos)
+        .update({
+          'status': 'disponivel',
+          'atualizado_em': nowStr,
+        })
+        .eq('id', vehicleId);
+
+    // 3. Registrar no histórico de atividades se havia motorista anterior
+    if (previousDriverId != null && previousDriverId.isNotEmpty) {
+      try {
+        await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
+          'motorista_id': previousDriverId,
+          'tipo': 'veiculo_desvinculado',
+          'descricao': 'Veículo desvinculado da posse do motorista.',
+          'criado_em': nowStr,
+        });
+      } catch (_) {}
+    }
+  }
+
+  /// Colocar veículo em manutenção e encerrar vínculos ativos
+  Future<void> setVehicleMaintenance(
+    String vehicleId, {
+    String? previousDriverId,
+  }) async {
+    final nowStr = DateTime.now().toIso8601String();
+    final todayStr = nowStr.split('T')[0];
+
+    // 1. Concluir contratos ativos
+    await _client
+        .from(SupabaseConfig.tabelaContratos)
+        .update({
+          'status': 'concluido',
+          'data_fim': todayStr,
+          'atualizado_em': nowStr,
+        })
+        .eq('veiculo_id', vehicleId)
+        .eq('status', 'ativo');
+
+    // 2. Atualizar veículo para 'manutencao'
+    await _client
+        .from(SupabaseConfig.tabelaVeiculos)
+        .update({
+          'status': 'manutencao',
+          'atualizado_em': nowStr,
+        })
+        .eq('id', vehicleId);
+
+    // 3. Registrar no histórico
+    if (previousDriverId != null && previousDriverId.isNotEmpty) {
+      try {
+        await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
+          'motorista_id': previousDriverId,
+          'tipo': 'veiculo_desvinculado',
+          'descricao': 'Veículo encaminhado para manutenção.',
+          'criado_em': nowStr,
+        });
+      } catch (_) {}
+    }
+  }
+
   /// Upload de documento do veículo para o Supabase Storage
   Future<String> uploadVehicleDocument({
     required String vehicleId,

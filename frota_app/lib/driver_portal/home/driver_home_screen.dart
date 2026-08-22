@@ -61,8 +61,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         final driver = await _driverRepo.getDriverById(uid);
         final contract = await _contractRepo.getActiveContractByDriver(uid);
         Vehicle? vehicle;
-        if (contract != null && contract.vehicleId.isNotEmpty) {
-          vehicle = await _vehicleRepo.getVehicleById(contract.vehicleId);
+        final vehicleId = (contract != null && contract.vehicleId.isNotEmpty)
+            ? contract.vehicleId
+            : driver?.currentVehicleId;
+        if (vehicleId != null && vehicleId.isNotEmpty) {
+          vehicle = await _vehicleRepo.getVehicleById(vehicleId);
         }
         final debts = await _financialRepo.getFinancialEntries(driverId: uid, status: 'pendente');
         final timeline = await _timelineRepo.getDriverTimeline(driverId: uid, page: 1, pageSize: 4);

@@ -669,7 +669,74 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'VEÍCULO ATUAL & HISTÓRICO'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const SectionHeader(title: 'VEÍCULO ATUAL & HISTÓRICO'),
+            if (_currentVehicle == null)
+              TextButton.icon(
+                onPressed: _showAssignVehicleModal,
+                icon: const Icon(Icons.add_link, size: 18),
+                label: const Text('Vincular Veículo'),
+              )
+            else
+              TextButton.icon(
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Desvincular Veículo'),
+                      content: Text(
+                        'Deseja desvincular o veículo ${_currentVehicle!.brand} ${_currentVehicle!.model} (${_currentVehicle!.plate}) deste motorista?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancelar'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Desvincular'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    try {
+                      await _vehicleRepository.unlinkDriverFromVehicle(
+                        _currentVehicle!.id,
+                        previousDriverId: _driver!.id,
+                      );
+                      await _loadData();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Veículo desvinculado com sucesso!'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erro ao desvincular: $e')),
+                        );
+                      }
+                    }
+                  }
+                },
+                icon: const Icon(Icons.link_off, size: 18, color: AppColors.error),
+                label: Text(
+                  'Desvincular',
+                  style: AppTextStyles.labelSmall.copyWith(color: AppColors.error),
+                ),
+              ),
+          ],
+        ),
         const SizedBox(height: AppSpacing.md),
         if (_currentVehicle != null)
           MouseRegion(
@@ -747,22 +814,172 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             ),
           )
         else
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              'Nenhum veículo vinculado atualmente',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.onSurfaceVariant,
+          InkWell(
+            onTap: _showAssignVehicleModal,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.outlineVariant.withAlpha(60),
+                ),
               ),
-              textAlign: TextAlign.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.directions_car_filled_outlined,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Nenhum veículo vinculado atualmente',
+                            style: AppTextStyles.labelLarge.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Clique para vincular um veículo da frota a este motorista',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  AppButton(
+                    label: 'Vincular',
+                    icon: Icons.link,
+                    onPressed: _showAssignVehicleModal,
+                    variant: AppButtonVariant.primary,
+                  ),
+                ],
+              ),
             ),
           ),
       ],
+    );
+  }
+
+  void _showAssignVehicleModal() async {
+    List<Vehicle> availableVehicles = [];
+    try {
+      final all = await _vehicleRepository.getVehicles();
+      availableVehicles = all.where((v) => v.status == VehicleStatus.available).toList();
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Vincular Veículo ao Motorista',
+      content: SizedBox(
+        height: 380,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Selecione um veículo disponível para vincular a ${_driver!.name}:',
+                style: AppTextStyles.bodyMedium,
+              ),
+            ),
+            Expanded(
+              child: availableVehicles.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Nenhum veículo livre disponível no momento',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: availableVehicles.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final v = availableVehicles[index];
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 18,
+                                backgroundColor: AppColors.primaryContainer,
+                                child: Icon(Icons.directions_car, size: 20, color: AppColors.onPrimaryContainer),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${v.brand} ${v.model}',
+                                      style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      'Placa: ${v.plate} • Km: ${v.currentKm}',
+                                      style: AppTextStyles.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              AppButton(
+                                label: 'Vincular',
+                                variant: AppButtonVariant.primary,
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  try {
+                                    await _vehicleRepository.assignDriverToVehicle(
+                                      vehicleId: v.id,
+                                      driverId: _driver!.id,
+                                      rentalValue: v.rentalValue,
+                                    );
+                                    await _loadData();
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text('Veículo ${v.plate} vinculado a ${_driver!.name}!'),
+                                        backgroundColor: AppColors.success,
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    messenger.showSnackBar(
+                                      SnackBar(content: Text('Erro ao vincular: $e')),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

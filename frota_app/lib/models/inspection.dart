@@ -1,4 +1,4 @@
-enum InspectionType { checkin, checkout }
+enum InspectionType { checkin, checkout, routine }
 
 enum InspectionStatus { pending, approved, rejected }
 
@@ -171,6 +171,7 @@ class Inspection {
       if (val == null) return InspectionType.checkin;
       final s = val.toString().toLowerCase();
       if (s == 'checkout' || s == 'check_out') return InspectionType.checkout;
+      if (s == 'routine' || s == 'rotina') return InspectionType.routine;
       return InspectionType.checkin;
     }
 
@@ -265,10 +266,17 @@ class Inspection {
       statusStr = 'rejeitado';
     }
 
+    String tipoStr = 'check_in';
+    if (type == InspectionType.checkout) {
+      tipoStr = 'check_out';
+    } else if (type == InspectionType.routine) {
+      tipoStr = 'rotina';
+    }
+
     final data = <String, dynamic>{
       'veiculo_id': vehicleId,
       'motorista_id': driverId,
-      'tipo': type == InspectionType.checkin ? 'check_in' : 'check_out',
+      'tipo': tipoStr,
       'status': statusStr,
       'odometro_km': kmAtInspection,
       'nivel_combustivel': fuelLevel.clamp(0.0, 1.0),

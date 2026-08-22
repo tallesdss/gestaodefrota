@@ -534,17 +534,64 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   Widget _buildCurrentDriverCard(DateFormat dateFormat, DateFormat timeFormat) {
     if (_vehicle!.currentDriverName == null ||
         _vehicle!.currentDriverName!.isEmpty ||
-        _vehicle!.currentDriverName == 'Nenhum') {
-      return Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Center(
-          child: Text(
-            'Nenhum motorista vinculado no momento',
-            style: AppTextStyles.bodyMedium,
+        _vehicle!.currentDriverName == 'Nenhum' ||
+        _vehicle!.currentDriverId == null ||
+        _vehicle!.currentDriverId!.isEmpty) {
+      return InkWell(
+        onTap: _showDriverModal,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.outlineVariant.withAlpha(60),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.person_add_alt_1_outlined,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nenhum motorista vinculado',
+                        style: AppTextStyles.labelLarge.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Clique para selecionar ou alterar motorista',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              AppButton(
+                label: 'Vincular',
+                icon: Icons.link,
+                onPressed: _showDriverModal,
+                variant: AppButtonVariant.primary,
+              ),
+            ],
           ),
         ),
       );
@@ -557,54 +604,61 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         ? dateFormat.format(usageList.first.startDate)
         : dateFormat.format(DateTime.now());
 
-    return InkWell(
-      onTap: () {
-        if (_vehicle!.currentDriverId != null &&
-            _vehicle!.currentDriverId!.isNotEmpty) {
-          context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}');
-        }
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                const CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppColors.primaryContainer,
-                  child: Icon(Icons.person, color: AppColors.primary),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _vehicle!.currentDriverName!,
-                        style: AppTextStyles.labelLarge.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Vinculado em: $vincDate',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_ios, size: 16),
-              ],
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              if (_vehicle!.currentDriverId != null &&
+                  _vehicle!.currentDriverId!.isNotEmpty) {
+                context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}');
+              }
+            },
+            child: const CircleAvatar(
+              radius: 24,
+              backgroundColor: AppColors.primaryContainer,
+              child: Icon(Icons.person, color: AppColors.primary),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                if (_vehicle!.currentDriverId != null &&
+                    _vehicle!.currentDriverId!.isNotEmpty) {
+                  context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}');
+                }
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _vehicle!.currentDriverName!,
+                    style: AppTextStyles.labelLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Vinculado em: $vincDate',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.swap_horiz, color: AppColors.primary),
+            tooltip: 'Alterar ou Desvincular Motorista',
+            onPressed: _showDriverModal,
+          ),
+        ],
       ),
     );
   }
@@ -1841,6 +1895,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       drivers = await _driverRepository.getDrivers();
     } catch (_) {}
     if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
 
     AppDialogs.showBottomSheet(
       context: context,
@@ -1859,18 +1914,24 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       icon: Icons.build_outlined,
                       variant: AppButtonVariant.outline,
                       onPressed: () async {
-                        final updated = _vehicle!.copyWith(
-                          status: VehicleStatus.maintenance,
-                          currentDriverId: '',
-                          currentDriverName: 'Nenhum',
-                        );
-                        setState(() {
-                          _vehicle = updated;
-                        });
                         Navigator.pop(context);
                         try {
-                          await _vehicleRepository.updateVehicle(updated);
-                        } catch (_) {}
+                          await _vehicleRepository.setVehicleMaintenance(
+                            _vehicle!.id,
+                            previousDriverId: _vehicle!.currentDriverId,
+                          );
+                          await _fetchData();
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Veículo marcado em manutenção e desvinculado.'),
+                              backgroundColor: AppColors.warning,
+                            ),
+                          );
+                        } catch (e) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text('Erro ao atualizar veículo: $e')),
+                          );
+                        }
                       },
                     ),
                   ),
@@ -1881,18 +1942,24 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                       icon: Icons.check_circle_outline,
                       variant: AppButtonVariant.outline,
                       onPressed: () async {
-                        final updated = _vehicle!.copyWith(
-                          status: VehicleStatus.available,
-                          currentDriverId: '',
-                          currentDriverName: 'Nenhum',
-                        );
-                        setState(() {
-                          _vehicle = updated;
-                        });
                         Navigator.pop(context);
                         try {
-                          await _vehicleRepository.updateVehicle(updated);
-                        } catch (_) {}
+                          await _vehicleRepository.unlinkDriverFromVehicle(
+                            _vehicle!.id,
+                            previousDriverId: _vehicle!.currentDriverId,
+                          );
+                          await _fetchData();
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Veículo tornado livre e desvinculado com sucesso!'),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        } catch (e) {
+                          messenger.showSnackBar(
+                            SnackBar(content: Text('Erro ao desvincular motorista: $e')),
+                          );
+                        }
                       },
                     ),
                   ),
@@ -1992,19 +2059,25 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                                 onPressed: isCurrent
                                     ? null
                                     : () async {
-                                        final updated = _vehicle!.copyWith(
-                                          currentDriverId: driver.id,
-                                          currentDriverName: displayName,
-                                          status: VehicleStatus.rented,
-                                        );
-                                        setState(() {
-                                          _vehicle = updated;
-                                        });
                                         Navigator.pop(context);
                                         try {
-                                          await _vehicleRepository
-                                              .updateVehicle(updated);
-                                        } catch (_) {}
+                                          await _vehicleRepository.assignDriverToVehicle(
+                                            vehicleId: _vehicle!.id,
+                                            driverId: driver.id,
+                                            rentalValue: _vehicle!.rentalValue,
+                                          );
+                                          await _fetchData();
+                                          messenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text('Motorista $displayName vinculado ao veículo com sucesso!'),
+                                              backgroundColor: AppColors.success,
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          messenger.showSnackBar(
+                                            SnackBar(content: Text('Erro ao vincular motorista: $e')),
+                                          );
+                                        }
                                       },
                                 variant: isCurrent
                                     ? AppButtonVariant.ghost

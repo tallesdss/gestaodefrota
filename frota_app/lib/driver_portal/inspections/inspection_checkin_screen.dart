@@ -635,6 +635,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
             AppButton(
               label: 'VOLTAR PARA HOME',
               onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
                 context.go(AppRoutes.driverHome);
               },
               isFullWidth: true,
