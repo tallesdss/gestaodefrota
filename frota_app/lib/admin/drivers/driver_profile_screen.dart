@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -874,22 +875,39 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             borderRadius: BorderRadius.circular(12),
             child: Container(
               color: AppColors.surfaceContainerLow,
-              child: Image.network(
-                imageUrl,
-                height: 300,
-                width: double.infinity,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Icon(
-                      Icons.broken_image_outlined,
-                      size: 48,
-                      color: AppColors.outlineVariant,
+              child: imageUrl.startsWith('data:image')
+                  ? Image.memory(
+                      base64Decode(imageUrl.split(',').last),
+                      height: 300,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            size: 48,
+                            color: AppColors.outlineVariant,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Image.network(
+                      imageUrl,
+                      height: 300,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            size: 48,
+                            color: AppColors.outlineVariant,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),

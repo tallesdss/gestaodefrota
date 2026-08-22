@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/driver.dart';
@@ -163,7 +164,7 @@ class DriverRepository {
         .eq('id', driverId);
   }
 
-  /// Upload de documento confidencial (CNH, Comprovante) no Storage
+  /// Upload de documento confidencial (CNH, Comprovante) no Storage com fallback para Base64
   Future<String> uploadDriverDocument({
     required String driverId,
     required String docType, // 'cnh_frente', 'cnh_verso', 'comprovante_residencia'
@@ -172,34 +173,64 @@ class DriverRepository {
     String mimeType = 'image/jpeg',
   }) async {
     final path = '$driverId/${docType}_$fileName';
+    String documentUrl = '';
 
-    await _client.storage
-        .from(SupabaseConfig.bucketDocumentosMotoristas)
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: FileOptions(contentType: mimeType, upsert: true),
-        );
+    // 1. Tentar upload no Supabase Storage
+    try {
+      await _client.storage
+          .from(SupabaseConfig.bucketDocumentosMotoristas)
+          .uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(contentType: mimeType, upsert: true),
+          );
 
-    // Gerar link assinado de leitura segura (1 ano de validade)
-    final signedUrl = await _client.storage
-        .from(SupabaseConfig.bucketDocumentosMotoristas)
-        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      // Gerar link assinado de leitura segura (1 ano de validade)
+      documentUrl = await _client.storage
+          .from(SupabaseConfig.bucketDocumentosMotoristas)
+          .createSignedUrl(path, 60 * 60 * 24 * 365);
+    } catch (_) {
+      // 2. Se o bucket não existir ou storage falhar, salvar Data URI Base64 diretamente no banco
+      final base64String = base64Encode(bytes);
+      documentUrl = 'data:$mimeType;base64,$base64String';
+    }
 
-    // Atualizar coluna correspondente na tabela motoristas
+    // 3. Atualizar coluna correspondente na tabela motoristas
     String? columnName;
     if (docType == 'cnh_frente') columnName = 'cnh_frente_url';
     if (docType == 'cnh_verso') columnName = 'cnh_verso_url';
     if (docType == 'comprovante_residencia') columnName = 'comprovante_residencia_url';
 
-    if (columnName != null) {
+    if (columnName != null && documentUrl.isNotEmpty) {
       await _client
           .from(SupabaseConfig.tabelaMotoristas)
-          .update({columnName: signedUrl})
-          .eq('id', driverId);
+          .upsert({
+            'id': driverId,
+            columnName: documentUrl,
+            'atualizado_em': DateTime.now().toIso8601String(),
+          });
     }
 
-    return signedUrl;
+    return documentUrl;
+  }
+
+  /// Obter URL assinada para visualização de documento se for caminho de storage
+  Future<String> getDocumentSignedUrl(String pathOrUrl) async {
+    if (pathOrUrl.startsWith('http://') ||
+        pathOrUrl.startsWith('https://') ||
+        pathOrUrl.startsWith('data:image')) {
+      return pathOrUrl;
+    }
+    try {
+      final signedUrl = await _client.storage
+          .from(SupabaseConfig.bucketDocumentosMotoristas)
+          .createSignedUrl(pathOrUrl, 60 * 60 * 24);
+      return signedUrl;
+    } catch (_) {
+      return _client.storage
+          .from(SupabaseConfig.bucketDocumentosMotoristas)
+          .getPublicUrl(pathOrUrl);
+    }
   }
 
   /// Obter linha do tempo / histórico de atividades do motorista

@@ -46,7 +46,7 @@ class _DriverOnboardingDocsScreenState
     });
 
     try {
-      final driverId = SupabaseConfig.currentUserId;
+      final driverId = SupabaseConfig.currentUserId ?? SupabaseConfig.client.auth.currentUser?.id;
       if (driverId != null) {
         if (_cnhFile != null) {
           final bytes = await _cnhFile!.readAsBytes();
@@ -67,6 +67,7 @@ class _DriverOnboardingDocsScreenState
           );
         }
       }
+      await Future.delayed(const Duration(milliseconds: 600));
     } catch (_) {}
 
     if (mounted) {
