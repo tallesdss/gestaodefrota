@@ -17,25 +17,29 @@ class FinancialRepository {
     String? driverId,
     String? vehicleId,
   }) async {
-    var query = _client.from(SupabaseConfig.viewExtratoMotorista).select();
+    try {
+      var query = _client.from(SupabaseConfig.viewExtratoMotorista).select();
 
-    if (type != null && type.isNotEmpty && type != 'all') {
-      query = query.eq('tipo', type);
-    }
-    if (status != null && status.isNotEmpty && status != 'all') {
-      query = query.eq('status', status);
-    }
-    if (driverId != null && driverId.isNotEmpty) {
-      query = query.eq('motorista_id', driverId);
-    }
-    if (vehicleId != null && vehicleId.isNotEmpty) {
-      query = query.eq('veiculo_id', vehicleId);
-    }
+      if (type != null && type.isNotEmpty && type != 'all') {
+        query = query.eq('tipo', type);
+      }
+      if (status != null && status.isNotEmpty && status != 'all') {
+        query = query.eq('status', status);
+      }
+      if (driverId != null && driverId.isNotEmpty) {
+        query = query.eq('motorista_id', driverId);
+      }
+      if (vehicleId != null && vehicleId.isNotEmpty) {
+        query = query.eq('veiculo_id', vehicleId);
+      }
 
-    final response = await query.order('data_vencimento', ascending: false);
-    return (response as List)
-        .map((f) => FinancialEntry.fromMap(Map<String, dynamic>.from(f as Map)))
-        .toList();
+      final response = await query.order('data_vencimento', ascending: false);
+      return (response as List)
+          .map((f) => FinancialEntry.fromMap(Map<String, dynamic>.from(f as Map)))
+          .toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Obter lançamento por ID

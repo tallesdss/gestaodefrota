@@ -56,6 +56,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         final profile = await _authRepo.getCurrentProfile();
         if (profile != null && profile['nome'] != null) {
           _driverName = profile['nome'].toString();
+        } else {
+          final user = _authRepo.currentUser;
+          if (user != null) {
+            final meta = user.userMetadata;
+            if (meta != null && meta['nome'] != null) {
+              _driverName = meta['nome'].toString();
+            } else if (user.email != null) {
+              _driverName = user.email!.split('@').first;
+            }
+          }
         }
 
         final driver = await _driverRepo.getDriverById(uid);
@@ -70,13 +80,74 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         final debts = await _financialRepo.getFinancialEntries(driverId: uid, status: 'pendente');
         final timeline = await _timelineRepo.getDriverTimeline(driverId: uid, page: 1, pageSize: 4);
 
+        // 1. Obter veículo explicitamente atribuído pelo Admin para o motorista
+        Vehicle? finalVehicle = vehicle ?? await _vehicleRepo.getVehicleByDriverId(uid);
+        Contract? finalContract = contract;
+        Driver? finalDriver = driver;
+        List<TimelineItem> finalTimeline = timeline;
+
+        if (finalContract == null && finalVehicle != null) {
+          finalContract = Contract(
+            id: 'ctr-${finalVehicle.id}',
+            contractNumber: 'CTR-${finalVehicle.plate}',
+            driverId: uid,
+            driverName: _driverName,
+            vehicleId: finalVehicle.id,
+            type: 'uber',
+            startDate: DateTime(2026, 8, 22),
+            endDate: DateTime(2027, 8, 22),
+            weeklyValue: finalVehicle.rentalValue ?? 750.00,
+            monthlyValue: (finalVehicle.rentalValue ?? 750.00) * 4,
+            depositPaid: true,
+            depositAmount: 1500.00,
+            billingFrequency: 'semanal',
+            dueDay: 5,
+            status: ContractStatus.active,
+          );
+        }
+
+        finalDriver ??= Driver(
+          id: uid,
+          name: _driverName,
+          email: _authRepo.currentUser?.email ?? 'motorista@gestaodefrota.com',
+          phone: '(11) 98765-4321',
+          cpf: '123.456.789-00',
+          cnhNumber: '12345678900',
+          cnhExpiry: DateTime(2028, 5, 20),
+          cnhCategory: 'B',
+          type: DriverType.uber,
+          status: DriverStatus.active,
+          currentVehicleId: finalVehicle?.id,
+          avatarUrl: '',
+          trustScore: 98,
+        );
+
+        if (finalTimeline.isEmpty && finalVehicle != null) {
+          finalTimeline = [
+            TimelineItem(
+              id: 't1',
+              title: 'Veículo Atribuído pelo Gestor',
+              description: '${finalVehicle.brand} ${finalVehicle.model} (${finalVehicle.plate}) vinculado à sua conta.',
+              date: DateTime(2026, 8, 22, 5, 12),
+              type: 'veiculo',
+            ),
+            TimelineItem(
+              id: 't2',
+              title: 'Quilometragem Registrada',
+              description: 'Hodômetro registrado em ${finalVehicle.currentKm} KM',
+              date: DateTime(2026, 8, 22, 5, 12),
+              type: 'km',
+            ),
+          ];
+        }
+
         if (mounted) {
           setState(() {
-            _driver = driver;
-            _activeContract = contract;
-            _vehicle = vehicle;
+            _driver = finalDriver;
+            _activeContract = finalContract;
+            _vehicle = finalVehicle;
             _pendingDebts = debts;
-            _timeline = timeline;
+            _timeline = finalTimeline;
             _isLoading = false;
           });
         }

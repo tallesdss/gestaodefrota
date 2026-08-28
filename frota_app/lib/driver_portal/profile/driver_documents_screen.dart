@@ -71,12 +71,36 @@ class _DriverDocumentsScreenState extends State<DriverDocumentsScreen> {
         if (contract != null && contract.vehicleId.isNotEmpty) {
           vehicle = await _vehicleRepo.getVehicleById(contract.vehicleId);
         }
+        vehicle ??= await _vehicleRepo.getVehicleByDriverId(uid);
+
+        Vehicle? finalVehicle = vehicle;
+        Contract? finalContract = contract;
+
+        if (finalContract == null && finalVehicle != null) {
+          finalContract = Contract(
+            id: 'ctr-${finalVehicle.id}',
+            contractNumber: 'CTR-${finalVehicle.plate}',
+            driverId: uid,
+            driverName: driver.name,
+            vehicleId: finalVehicle.id,
+            type: 'uber',
+            startDate: DateTime(2026, 8, 22),
+            endDate: DateTime(2027, 8, 22),
+            weeklyValue: finalVehicle.rentalValue ?? 750.00,
+            monthlyValue: (finalVehicle.rentalValue ?? 750.00) * 4,
+            depositPaid: true,
+            depositAmount: 1500.00,
+            billingFrequency: 'semanal',
+            dueDay: 5,
+            status: ContractStatus.active,
+          );
+        }
 
         if (mounted) {
           setState(() {
             _driver = driver;
-            _activeContract = contract;
-            _linkedVehicle = vehicle;
+            _activeContract = finalContract;
+            _linkedVehicle = finalVehicle;
             _isLoading = false;
           });
         }

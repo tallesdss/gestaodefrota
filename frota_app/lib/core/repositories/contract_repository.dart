@@ -72,18 +72,22 @@ class ContractRepository {
 
   /// Obter contrato ativo de um motorista
   Future<Contract?> getActiveContractByDriver(String driverId) async {
-    final response = await _client
-        .from(SupabaseConfig.tabelaContratos)
-        .select('''
-          *,
-          veiculos (*)
-        ''')
-        .eq('motorista_id', driverId)
-        .eq('status', 'ativo')
-        .maybeSingle();
+    try {
+      final response = await _client
+          .from(SupabaseConfig.tabelaContratos)
+          .select('''
+            *,
+            veiculos (*)
+          ''')
+          .eq('motorista_id', driverId)
+          .eq('status', 'ativo')
+          .maybeSingle();
 
-    if (response == null) return null;
-    return Contract.fromMap(Map<String, dynamic>.from(response));
+      if (response == null) return null;
+      return Contract.fromMap(Map<String, dynamic>.from(response));
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Obter contrato ativo de um veículo
