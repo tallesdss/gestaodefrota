@@ -95,28 +95,79 @@ class AuthRepository {
     final uid = currentUserId;
     if (uid == null) return null;
 
-    final data = await _client
-        .from(SupabaseConfig.tabelaPerfis)
-        .select()
-        .eq('id', uid)
-        .maybeSingle();
+    try {
+      final data = await _client
+          .from(SupabaseConfig.tabelaPerfis)
+          .select()
+          .eq('id', uid)
+          .maybeSingle();
 
-    return data;
+      return data;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Obter Perfil Tipado do Usuário Autenticado (com flags isAdmin, isGestor, isMotorista)
   Future<UserProfile?> getCurrentUserProfile() async {
-    final profileMap = await getCurrentProfile();
-    if (profileMap == null) return null;
-    return UserProfile.fromMap(profileMap);
+    try {
+      final profileMap = await getCurrentProfile();
+      if (profileMap != null) {
+        return UserProfile.fromMap(profileMap);
+      }
+    } catch (_) {}
+
+    // Fallback sintetizado a partir de auth.currentUser metadata
+    final user = currentUser;
+    if (user != null) {
+      final meta = user.userMetadata ?? {};
+      final cargo = meta['cargo']?.toString() ?? 'motorista';
+      final isAdmin = meta['is_admin'] == true || cargo == 'admin';
+      final isGestor = meta['is_gestor'] == true || cargo == 'gestor' || isAdmin;
+      final isMotorista = meta['is_motorista'] == true || cargo == 'motorista';
+
+      final now = DateTime.now();
+      return UserProfile(
+        id: user.id,
+        nome: meta['nome']?.toString() ?? user.email?.split('@').first ?? 'Usuário',
+        email: user.email ?? '',
+        telefone: meta['telefone']?.toString(),
+        cargo: cargo,
+        isAdmin: isAdmin,
+        isGestor: isGestor,
+        isMotorista: isMotorista,
+        criadoEm: now,
+        atualizadoEm: now,
+      );
+    }
+
+    return null;
   }
 
   /// Obter Cargo do Usuário Atual ('admin', 'gestor', 'motorista')
   Future<String> getCurrentUserRole() async {
-    final profile = await getCurrentUserProfile();
-    if (profile == null) return 'motorista';
-    if (profile.isAdmin) return 'admin';
-    if (profile.isGestor) return 'gestor';
-    return profile.cargo;
+    try {
+      final profile = await getCurrentUserProfile();
+      if (profile != null) {
+        if (profile.isAdmin) return 'admin';
+        if (profile.isGestor) return 'gestor';
+        return profile.cargo;
+      }
+    } catch (_) {}
+
+    final user = currentUser;
+    if (user != null) {
+      final meta = user.userMetadata;
+      if (meta != null) {
+        if (meta['is_admin'] == true || meta['cargo'] == 'admin') return 'admin';
+        if (meta['is_gestor'] == true || meta['cargo'] == 'gestor') return 'gestor';
+        if (meta['cargo'] != null) return meta['cargo'].toString();
+      }
+      final email = user.email?.toLowerCase() ?? '';
+      if (email.contains('admin')) return 'admin';
+      if (email.contains('gestor')) return 'gestor';
+    }
+
+    return 'motorista';
   }
 }

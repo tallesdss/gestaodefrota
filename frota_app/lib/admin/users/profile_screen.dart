@@ -49,7 +49,6 @@ class ProfileScreen extends StatelessWidget {
                       const AppAvatar(
                         radius: 50,
                         name: 'Carlos Silva',
-                        imageUrl: 'https://i.pravatar.cc/150?img=12',
                       ),
                       Positioned(
                         bottom: 0,

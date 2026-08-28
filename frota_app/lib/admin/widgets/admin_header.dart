@@ -182,10 +182,10 @@ class _UserSection extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(width: AppSpacing.md),
             const AppAvatar(
               radius: 20,
-              name: 'Carlos Silva',
-              imageUrl: 'https://i.pravatar.cc/150?img=12',
+              name: 'Ricardo Almeida',
             ),
           ],
         ),

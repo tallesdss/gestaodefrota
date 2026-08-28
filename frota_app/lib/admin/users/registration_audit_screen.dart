@@ -788,10 +788,14 @@ class _RegistrationAuditScreenState extends State<RegistrationAuditScreen> {
           const SizedBox(height: AppSpacing.xl),
 
           // Detail Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.lg,
+            runSpacing: AppSpacing.md,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 80,
@@ -881,6 +885,7 @@ class _RegistrationAuditScreenState extends State<RegistrationAuditScreen> {
                 ],
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   OutlinedButton.icon(
                     onPressed: _isProcessing

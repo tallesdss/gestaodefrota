@@ -67,7 +67,7 @@ class RealtimeService {
       final res = await _client
           .from('historico_atividades')
           .select()
-          .order('data_hora', ascending: false)
+          .order('criado_em', ascending: false)
           .limit(20);
 
       final List<AppNotification> list = [];
@@ -202,7 +202,7 @@ class RealtimeService {
       id: (row['id'] ?? DateTime.now().millisecondsSinceEpoch).toString(),
       title: (row['titulo'] ?? row['tipo_evento'] ?? 'Notificação').toString().toUpperCase(),
       message: (row['descricao'] ?? '').toString(),
-      timestamp: DateTime.tryParse(row['data_hora']?.toString() ?? '') ?? DateTime.now(),
+      timestamp: DateTime.tryParse(row['criado_em']?.toString() ?? row['data_hora']?.toString() ?? '') ?? DateTime.now(),
       type: type,
       category: tipo,
       isRead: false,
