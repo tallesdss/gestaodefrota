@@ -115,53 +115,86 @@ class VehicleRepository {
     return list;
   }
 
+bool _isValidUuid(String? str) {
+  if (str == null || str.isEmpty) return false;
+  return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(str);
+}
+
   /// Obter dados detalhados de um veículo por ID ou placa
   Future<Vehicle?> getVehicleById(String id) async {
-    try {
-      final response = await _client
-          .from(SupabaseConfig.tabelaVeiculos)
-          .select('''
-            *,
-            contratos (
-              id,
-              numero_contrato,
-              status,
-              motorista_id,
-              motoristas (
-                id,
-                perfis (nome)
-              )
-            )
-          ''')
-          .eq('id', id)
-          .maybeSingle();
-
-      if (response != null) {
-        final map = Map<String, dynamic>.from(response);
-        if (map['contratos'] is List && (map['contratos'] as List).isNotEmpty) {
-          final activeContracts = (map['contratos'] as List)
-              .where((c) => c['status'] == 'ativo')
-              .toList();
-          if (activeContracts.isNotEmpty) {
-            final c = activeContracts.first;
-            map['motorista_atual_id'] = c['motorista_id'];
-            if (c['motoristas'] != null && c['motoristas']['perfis'] != null) {
-              map['motorista_atual_nome'] = c['motoristas']['perfis']['nome'];
-            }
-          }
-        }
-        final veh = Vehicle.fromMap(map);
-        _memoryVehicles[veh.id] = veh;
-        return veh;
-      }
-    } catch (_) {}
-
     if (_memoryVehicles.containsKey(id)) {
       return _memoryVehicles[id];
     }
 
     final byPlate = _memoryVehicles.values.where((v) => v.plate.toUpperCase() == id.toUpperCase()).toList();
     if (byPlate.isNotEmpty) return byPlate.first;
+
+    if (_isValidUuid(id)) {
+      try {
+        final response = await _client
+            .from(SupabaseConfig.tabelaVeiculos)
+            .select('''
+              *,
+              contratos (
+                id,
+                numero_contrato,
+                status,
+                motorista_id,
+                motoristas (
+                  id,
+                  perfis (nome)
+                )
+              )
+            ''')
+            .eq('id', id)
+            .maybeSingle();
+
+        if (response != null) {
+          final map = Map<String, dynamic>.from(response);
+          if (map['contratos'] is List && (map['contratos'] as List).isNotEmpty) {
+            final activeContracts = (map['contratos'] as List)
+                .where((c) => c['status'] == 'ativo')
+                .toList();
+            if (activeContracts.isNotEmpty) {
+              final c = activeContracts.first;
+              map['motorista_atual_id'] = c['motorista_id'];
+              if (c['motoristas'] != null && c['motoristas']['perfis'] != null) {
+                map['motorista_atual_nome'] = c['motoristas']['perfis']['nome'];
+              }
+            }
+          }
+          final veh = Vehicle.fromMap(map);
+          _memoryVehicles[veh.id] = veh;
+          return veh;
+        }
+      } catch (_) {}
+    } else {
+      try {
+        final response = await _client
+            .from(SupabaseConfig.tabelaVeiculos)
+            .select('''
+              *,
+              contratos (
+                id,
+                numero_contrato,
+                status,
+                motorista_id,
+                motoristas (
+                  id,
+                  perfis (nome)
+                )
+              )
+            ''')
+            .eq('placa', id.toUpperCase())
+            .maybeSingle();
+
+        if (response != null) {
+          final veh = Vehicle.fromMap(Map<String, dynamic>.from(response));
+          _memoryVehicles[veh.id] = veh;
+          return veh;
+        }
+      } catch (_) {}
+    }
 
     return null;
   }
@@ -184,20 +217,22 @@ class VehicleRepository {
     }
 
     // 2. Tentar obter no Supabase pelos contratos ativos
-    try {
-      final contractRes = await _client
-          .from(SupabaseConfig.tabelaContratos)
-          .select('veiculo_id')
-          .eq('motorista_id', driverId)
-          .eq('status', 'ativo')
-          .maybeSingle();
+    if (_isValidUuid(driverId)) {
+      try {
+        final contractRes = await _client
+            .from(SupabaseConfig.tabelaContratos)
+            .select('veiculo_id')
+            .eq('motorista_id', driverId)
+            .eq('status', 'ativo')
+            .maybeSingle();
 
-      if (contractRes != null && contractRes['veiculo_id'] != null) {
-        final vId = contractRes['veiculo_id'].toString();
-        final veh = await getVehicleById(vId);
-        if (veh != null) return veh;
-      }
-    } catch (_) {}
+        if (contractRes != null && contractRes['veiculo_id'] != null) {
+          final vId = contractRes['veiculo_id'].toString();
+          final veh = await getVehicleById(vId);
+          if (veh != null) return veh;
+        }
+      } catch (_) {}
+    }
 
     return null;
   }
@@ -250,12 +285,14 @@ class VehicleRepository {
     if (_memoryVehicles.containsKey(id)) {
       _memoryVehicles.remove(id);
     }
-    try {
-      await _client
-          .from(SupabaseConfig.tabelaVeiculos)
-          .update({'status': 'inativo'})
-          .eq('id', id);
-    } catch (_) {}
+    if (_isValidUuid(id)) {
+      try {
+        await _client
+            .from(SupabaseConfig.tabelaVeiculos)
+            .update({'status': 'inativo'})
+            .eq('id', id);
+      } catch (_) {}
+    }
   }
 
   /// Vincular motorista a um veículo criando contrato ativo e sincronizando status
@@ -278,62 +315,64 @@ class VehicleRepository {
       );
     }
 
-    try {
-      // 1. Concluir quaisquer contratos ativos anteriores desse veículo
-      await _client
-          .from(SupabaseConfig.tabelaContratos)
-          .update({
-            'status': 'concluido',
-            'data_fim': todayStr,
-            'atualizado_em': nowStr,
-          })
-          .eq('veiculo_id', vehicleId)
-          .eq('status', 'ativo');
+    if (_isValidUuid(vehicleId) && _isValidUuid(driverId)) {
+      try {
+        // 1. Concluir quaisquer contratos ativos anteriores desse veículo
+        await _client
+            .from(SupabaseConfig.tabelaContratos)
+            .update({
+              'status': 'concluido',
+              'data_fim': todayStr,
+              'atualizado_em': nowStr,
+            })
+            .eq('veiculo_id', vehicleId)
+            .eq('status', 'ativo');
 
-      // 2. Concluir quaisquer contratos ativos anteriores desse motorista
-      await _client
-          .from(SupabaseConfig.tabelaContratos)
-          .update({
-            'status': 'concluido',
-            'data_fim': todayStr,
-            'atualizado_em': nowStr,
-          })
-          .eq('motorista_id', driverId)
-          .eq('status', 'ativo');
+        // 2. Concluir quaisquer contratos ativos anteriores desse motorista
+        await _client
+            .from(SupabaseConfig.tabelaContratos)
+            .update({
+              'status': 'concluido',
+              'data_fim': todayStr,
+              'atualizado_em': nowStr,
+            })
+            .eq('motorista_id', driverId)
+            .eq('status', 'ativo');
 
-      // 3. Inserir novo contrato ativo no Supabase
-      final contractNumber = 'CTR-${DateTime.now().millisecondsSinceEpoch}';
-      final valor = (rentalValue != null && rentalValue > 0) ? rentalValue : 500.00;
+        // 3. Inserir novo contrato ativo no Supabase
+        final contractNumber = 'CTR-${DateTime.now().millisecondsSinceEpoch}';
+        final valor = (rentalValue != null && rentalValue > 0) ? rentalValue : 500.00;
 
-      await _client.from(SupabaseConfig.tabelaContratos).insert({
-        'numero_contrato': contractNumber,
-        'motorista_id': driverId,
-        'veiculo_id': vehicleId,
-        'data_inicio': todayStr,
-        'valor_locacao': valor,
-        'valor_caucao': 0.00,
-        'frequencia_cobranca': 'semanal',
-        'dia_vencimento': 5,
-        'status': 'ativo',
-      });
+        await _client.from(SupabaseConfig.tabelaContratos).insert({
+          'numero_contrato': contractNumber,
+          'motorista_id': driverId,
+          'veiculo_id': vehicleId,
+          'data_inicio': todayStr,
+          'valor_locacao': valor,
+          'valor_caucao': 0.00,
+          'frequencia_cobranca': 'semanal',
+          'dia_vencimento': 5,
+          'status': 'ativo',
+        });
 
-      // 4. Atualizar status do veículo para 'alugado'
-      await _client
-          .from(SupabaseConfig.tabelaVeiculos)
-          .update({
-            'status': 'alugado',
-            'atualizado_em': nowStr,
-          })
-          .eq('id', vehicleId);
+        // 4. Atualizar status do veículo para 'alugado'
+        await _client
+            .from(SupabaseConfig.tabelaVeiculos)
+            .update({
+              'status': 'alugado',
+              'atualizado_em': nowStr,
+            })
+            .eq('id', vehicleId);
 
-      // 5. Registrar no histórico de atividades
-      await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
-        'motorista_id': driverId,
-        'tipo': 'veiculo_vinculado',
-        'descricao': 'Veículo vinculado ao motorista (Contrato $contractNumber)',
-        'criado_em': nowStr,
-      });
-    } catch (_) {}
+        // 5. Registrar no histórico de atividades
+        await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
+          'motorista_id': driverId,
+          'tipo': 'veiculo_vinculado',
+          'descricao': 'Veículo vinculado ao motorista (Contrato $contractNumber)',
+          'criado_em': nowStr,
+        });
+      } catch (_) {}
+    }
   }
 
   /// Desvincular motorista tornando o veículo disponível / livre
@@ -356,37 +395,39 @@ class VehicleRepository {
       );
     }
 
-    try {
-      // 1. Concluir contrato ativo do veículo
-      await _client
-          .from(SupabaseConfig.tabelaContratos)
-          .update({
-            'status': 'concluido',
-            'data_fim': todayStr,
-            'atualizado_em': nowStr,
-          })
-          .eq('veiculo_id', vehicleId)
-          .eq('status', 'ativo');
+    if (_isValidUuid(vehicleId)) {
+      try {
+        // 1. Concluir contrato ativo do veículo
+        await _client
+            .from(SupabaseConfig.tabelaContratos)
+            .update({
+              'status': 'concluido',
+              'data_fim': todayStr,
+              'atualizado_em': nowStr,
+            })
+            .eq('veiculo_id', vehicleId)
+            .eq('status', 'ativo');
 
-      // 2. Atualizar veículo para 'disponivel'
-      await _client
-          .from(SupabaseConfig.tabelaVeiculos)
-          .update({
-            'status': 'disponivel',
-            'atualizado_em': nowStr,
-          })
-          .eq('id', vehicleId);
+        // 2. Atualizar veículo para 'disponivel'
+        await _client
+            .from(SupabaseConfig.tabelaVeiculos)
+            .update({
+              'status': 'disponivel',
+              'atualizado_em': nowStr,
+            })
+            .eq('id', vehicleId);
 
-      // 3. Registrar no histórico de atividades se havia motorista anterior
-      if (previousDriverId != null && previousDriverId.isNotEmpty) {
-        await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
-          'motorista_id': previousDriverId,
-          'tipo': 'veiculo_desvinculado',
-          'descricao': 'Veículo desvinculado da posse do motorista.',
-          'criado_em': nowStr,
-        });
-      }
-    } catch (_) {}
+        // 3. Registrar no histórico de atividades se havia motorista anterior
+        if (previousDriverId != null && previousDriverId.isNotEmpty && _isValidUuid(previousDriverId)) {
+          await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
+            'motorista_id': previousDriverId,
+            'tipo': 'veiculo_desvinculado',
+            'descricao': 'Veículo desvinculado da posse do motorista.',
+            'criado_em': nowStr,
+          });
+        }
+      } catch (_) {}
+    }
   }
 
   /// Colocar veículo em manutenção e encerrar vínculos ativos
@@ -397,35 +438,37 @@ class VehicleRepository {
     final nowStr = DateTime.now().toIso8601String();
     final todayStr = nowStr.split('T')[0];
 
-    // 1. Concluir contratos ativos
-    await _client
-        .from(SupabaseConfig.tabelaContratos)
-        .update({
-          'status': 'concluido',
-          'data_fim': todayStr,
-          'atualizado_em': nowStr,
-        })
-        .eq('veiculo_id', vehicleId)
-        .eq('status', 'ativo');
-
-    // 2. Atualizar veículo para 'manutencao'
-    await _client
-        .from(SupabaseConfig.tabelaVeiculos)
-        .update({
-          'status': 'manutencao',
-          'atualizado_em': nowStr,
-        })
-        .eq('id', vehicleId);
-
-    // 3. Registrar no histórico
-    if (previousDriverId != null && previousDriverId.isNotEmpty) {
+    if (_isValidUuid(vehicleId)) {
       try {
-        await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
-          'motorista_id': previousDriverId,
-          'tipo': 'veiculo_desvinculado',
-          'descricao': 'Veículo encaminhado para manutenção.',
-          'criado_em': nowStr,
-        });
+        // 1. Concluir contratos ativos
+        await _client
+            .from(SupabaseConfig.tabelaContratos)
+            .update({
+              'status': 'concluido',
+              'data_fim': todayStr,
+              'atualizado_em': nowStr,
+            })
+            .eq('veiculo_id', vehicleId)
+            .eq('status', 'ativo');
+
+        // 2. Atualizar veículo para 'manutencao'
+        await _client
+            .from(SupabaseConfig.tabelaVeiculos)
+            .update({
+              'status': 'manutencao',
+              'atualizado_em': nowStr,
+            })
+            .eq('id', vehicleId);
+
+        // 3. Registrar no histórico
+        if (previousDriverId != null && previousDriverId.isNotEmpty && _isValidUuid(previousDriverId)) {
+          await _client.from(SupabaseConfig.tabelaHistoricoAtividades).insert({
+            'motorista_id': previousDriverId,
+            'tipo': 'veiculo_desvinculado',
+            'descricao': 'Veículo encaminhado para manutenção.',
+            'criado_em': nowStr,
+          });
+        }
       } catch (_) {}
     }
   }

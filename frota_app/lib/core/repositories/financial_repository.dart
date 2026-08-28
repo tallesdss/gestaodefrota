@@ -10,6 +10,11 @@ class FinancialRepository {
 
   FinancialRepository({SupabaseClient? client}) : _client = client ?? supabase;
 
+bool _isValidUuid(String? str) {
+  if (str == null || str.isEmpty) return false;
+  return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(str);
+}
+
   /// Listar lançamentos financeiros usando a view relacional `vw_extrato_completo_motorista`
   Future<List<FinancialEntry>> getFinancialEntries({
     String? type, // 'receita', 'despesa'
@@ -26,10 +31,10 @@ class FinancialRepository {
       if (status != null && status.isNotEmpty && status != 'all') {
         query = query.eq('status', status);
       }
-      if (driverId != null && driverId.isNotEmpty) {
+      if (driverId != null && driverId.isNotEmpty && _isValidUuid(driverId)) {
         query = query.eq('motorista_id', driverId);
       }
-      if (vehicleId != null && vehicleId.isNotEmpty) {
+      if (vehicleId != null && vehicleId.isNotEmpty && _isValidUuid(vehicleId)) {
         query = query.eq('veiculo_id', vehicleId);
       }
 

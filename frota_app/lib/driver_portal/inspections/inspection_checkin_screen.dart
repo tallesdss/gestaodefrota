@@ -25,6 +25,8 @@ class InspectionCheckInScreen extends StatefulWidget {
 class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
   final InspectionRepository _inspectionRepo = InspectionRepository();
   final ContractRepository _contractRepo = ContractRepository();
+  final AuthRepository _authRepo = AuthRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
   int _currentStep = 0;
   final int _totalSteps = 4; // Intro, External, Internal, Verification
   final ImagePicker _picker = ImagePicker();
