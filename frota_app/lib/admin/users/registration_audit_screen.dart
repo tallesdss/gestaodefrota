@@ -39,10 +39,10 @@ class _RegistrationAuditScreenState extends State<RegistrationAuditScreen> {
   Future<void> _fetchPendingUsers() async {
     setState(() => _isLoading = true);
     try {
-      final drivers = await _repository.getDrivers();
+      final drivers = await _driverRepo.getDrivers(status: 'pendente_aprovacao');
       final managers = await _repository.getManagers();
 
-      final pendingDrivers = drivers.where((d) => !d.isApproved).toList();
+      final pendingDrivers = drivers.toList();
       final pendingManagers = managers.where((m) => !m.isApproved).toList();
 
       final List<dynamic> allPending = <dynamic>[
@@ -178,6 +178,88 @@ class _RegistrationAuditScreenState extends State<RegistrationAuditScreen> {
             content: Text('Erro ao aprovar cadastro: $e'),
             backgroundColor: AppColors.error,
           ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _rejectUser(dynamic user) async {
+    final reasonController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.block, color: AppColors.error),
+            const SizedBox(width: 8),
+            Text('Rejeitar Cadastro', style: AppTextStyles.titleMedium),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Por que você está rejeitando o cadastro de ${user.name}?',
+              style: AppTextStyles.bodyMedium,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: reasonController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: 'Motivo da rejeição',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: AppColors.surfaceContainerLow,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('CANCELAR'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('REJEITAR DEFINITIVAMENTE'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != true) return;
+
+    setState(() => _isProcessing = true);
+    try {
+      if (user is Driver) {
+        await _driverRepo.updateDriverStatus(user.id, DriverStatus.blocked);
+        // Opcional: Registrar na timeline o motivo reasonController.text
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cadastro rejeitado.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        await _fetchPendingUsers();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao rejeitar: $e'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -903,6 +985,18 @@ class _RegistrationAuditScreenState extends State<RegistrationAuditScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  OutlinedButton.icon(
+                    onPressed: _isProcessing ? null : () => _rejectUser(user),
+                    icon: const Icon(Icons.cancel_outlined, size: 18),
+                    label: const Text('REJEITAR'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      side: const BorderSide(color: AppColors.error),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),

@@ -58,13 +58,19 @@ class FinancialEntry {
       return false;
     }
 
-    bool parseIsLate(dynamic val, dynamic statusVal) {
-      if (val is bool) return val;
+    final dueDate = DateTime.tryParse((map['data_vencimento'] ?? map['date'] ?? '').toString()) ?? DateTime.now();
+    final isPaidValue = parseIsPaid(map['isPaid'], map['status']);
+    
+    bool computeIsLate(dynamic val, dynamic statusVal, DateTime due, bool paid) {
+      if (paid) return false;
+      if (val == true) return true;
       if (statusVal != null) {
-        return statusVal.toString().toLowerCase() == 'atrasado' ||
-            statusVal.toString().toLowerCase() == 'overdue';
+        final s = statusVal.toString().toLowerCase();
+        if (s == 'atrasado' || s == 'overdue') return true;
       }
-      return false;
+      final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      final dueOnly = DateTime(due.year, due.month, due.day);
+      return dueOnly.isBefore(today);
     }
 
     return FinancialEntry(
@@ -77,17 +83,20 @@ class FinancialEntry {
       driverId: (map['motorista_id'] ?? map['driverId'])?.toString(),
       createdBy: (map['criado_por'] ?? map['createdBy'])?.toString(),
       amount: (map['valor'] ?? map['amount'] ?? 0.0).toDouble(),
-      date: DateTime.tryParse((map['data_vencimento'] ?? map['date'] ?? '').toString()) ?? DateTime.now(),
+      date: dueDate,
       paymentDate: map['data_pagamento'] != null ? DateTime.tryParse(map['data_pagamento'].toString()) : null,
       description: (map['titulo'] ?? map['description'] ?? '').toString(),
-      isPaid: parseIsPaid(map['isPaid'], map['status']),
-      isLate: parseIsLate(map['isLate'], map['status']),
+      isPaid: isPaidValue,
+      isLate: computeIsLate(map['isLate'], map['status'], dueDate, isPaidValue),
       pixCode: (map['pix_copia_cola'] ?? map['pixCode'])?.toString(),
       pixQrCodeUrl: (map['pix_qr_code_url'] ?? map['pixQrCodeUrl'])?.toString(),
       paymentMethod: (map['metodo_pagamento'] ?? map['paymentMethod'] ?? 'pix').toString(),
       receiptUrl: (map['comprovante_url'] ?? map['receiptUrl'])?.toString(),
     );
   }
+
+  /// Indica se o comprovante foi enviado e está aguardando baixa/confirmação
+  bool get isUnderReview => !isPaid && receiptUrl != null && receiptUrl!.isNotEmpty;
 
   Map<String, dynamic> toMap() {
     return {

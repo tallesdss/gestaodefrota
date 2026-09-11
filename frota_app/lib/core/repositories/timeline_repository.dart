@@ -7,24 +7,7 @@ class TimelineRepository {
   final SupabaseClient _client;
 
   // Cache sincronizado em memória para persistir atividades recentes em tempo real
-  static final Map<String, List<TimelineItem>> _memoryTimeline = {
-    'dfc34aba-9a10-4da0-a38f-91b47438bde0': [
-      TimelineItem(
-        id: 't-init-1',
-        title: 'Veículo Atribuído pelo Gestor',
-        description: 'BYD Dolphin Plus EV (BVT2356) vinculado à sua conta.',
-        date: DateTime.now().subtract(const Duration(hours: 3)),
-        type: 'veiculo',
-      ),
-      TimelineItem(
-        id: 't-init-2',
-        title: 'Quilometragem Inicial Registrada',
-        description: 'Hodômetro registrado em 195.000 KM.',
-        date: DateTime.now().subtract(const Duration(hours: 3)),
-        type: 'km',
-      ),
-    ],
-  };
+  static final Map<String, List<TimelineItem>> _memoryTimeline = {};
 
   TimelineRepository({SupabaseClient? client}) : _client = client ?? supabase;
 

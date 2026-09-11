@@ -10,3 +10,6 @@
 Thumbs.db
 .vscode/
 .idea/
+
+# MCP Config (contém tokens de acesso)
+.agents/mcp_config.json

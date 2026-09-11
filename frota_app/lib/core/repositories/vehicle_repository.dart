@@ -9,30 +9,9 @@ class VehicleRepository {
 
   VehicleRepository({SupabaseClient? client}) : _client = client ?? supabase;
 
-  // Cache sincronizado em memória para persistir e refletir atribuições do Admin em tempo real
-  static final Map<String, Vehicle> _memoryVehicles = {
-    'v-byd-bvt2356': Vehicle(
-      id: 'v-byd-bvt2356',
-      plate: 'BVT2356',
-      brand: 'BYD',
-      model: 'Dolphin Plus EV',
-      year: 2024,
-      modelYear: 2025,
-      color: 'Branco',
-      currentKm: 195000,
-      status: VehicleStatus.rented,
-      fuelLevel: 0.95,
-      rentalValue: 750.00,
-      currentDriverId: 'dfc34aba-9a10-4da0-a38f-91b47438bde0',
-      currentDriverName: 'Carlos Silva Motorista',
-      lastKmUpdateDate: DateTime(2026, 8, 22, 5, 12),
-      lastKmValue: 195000,
-    ),
-  };
-
-  static final Map<String, String> _driverToVehicle = {
-    'dfc34aba-9a10-4da0-a38f-91b47438bde0': 'v-byd-bvt2356',
-  };
+  // Cache dinâmico sincronizado em memória para persistir e refletir dados do Supabase
+  static final Map<String, Vehicle> _memoryVehicles = {};
+  static final Map<String, String> _driverToVehicle = {};
 
   /// Listar veículos com filtros de status e busca textual
   Future<List<Vehicle>> getVehicles({String? status, String? search}) async {
@@ -122,13 +101,6 @@ bool _isValidUuid(String? str) {
 
   /// Obter dados detalhados de um veículo por ID ou placa
   Future<Vehicle?> getVehicleById(String id) async {
-    if (_memoryVehicles.containsKey(id)) {
-      return _memoryVehicles[id];
-    }
-
-    final byPlate = _memoryVehicles.values.where((v) => v.plate.toUpperCase() == id.toUpperCase()).toList();
-    if (byPlate.isNotEmpty) return byPlate.first;
-
     if (_isValidUuid(id)) {
       try {
         final response = await _client
@@ -196,27 +168,19 @@ bool _isValidUuid(String? str) {
       } catch (_) {}
     }
 
+    if (_memoryVehicles.containsKey(id)) {
+      return _memoryVehicles[id];
+    }
+
+    final byPlate = _memoryVehicles.values.where((v) => v.plate.toUpperCase() == id.toUpperCase()).toList();
+    if (byPlate.isNotEmpty) return byPlate.first;
+
     return null;
   }
 
   /// Obter veículo vinculado atualmente a um motorista
   Future<Vehicle?> getVehicleByDriverId(String driverId) async {
-    // 1. Tentar obter pelo cache em tempo real / atribuição do Admin
-    if (_driverToVehicle.containsKey(driverId)) {
-      final vId = _driverToVehicle[driverId]!;
-      if (_memoryVehicles.containsKey(vId)) {
-        return _memoryVehicles[vId];
-      }
-    }
-
-    final inMemory = _memoryVehicles.values.where(
-      (v) => v.currentDriverId == driverId && v.status == VehicleStatus.rented,
-    ).toList();
-    if (inMemory.isNotEmpty) {
-      return inMemory.first;
-    }
-
-    // 2. Tentar obter no Supabase pelos contratos ativos
+    // 1. Obter no Supabase pelos contratos ativos
     if (_isValidUuid(driverId)) {
       try {
         final contractRes = await _client
@@ -232,6 +196,21 @@ bool _isValidUuid(String? str) {
           if (veh != null) return veh;
         }
       } catch (_) {}
+    }
+
+    // 2. Cache em memória / atribuição em tempo real
+    if (_driverToVehicle.containsKey(driverId)) {
+      final vId = _driverToVehicle[driverId]!;
+      if (_memoryVehicles.containsKey(vId)) {
+        return _memoryVehicles[vId];
+      }
+    }
+
+    final inMemory = _memoryVehicles.values.where(
+      (v) => v.currentDriverId == driverId && v.status == VehicleStatus.rented,
+    ).toList();
+    if (inMemory.isNotEmpty) {
+      return inMemory.first;
     }
 
     return null;
@@ -277,6 +256,33 @@ bool _isValidUuid(String? str) {
       return saved;
     } catch (_) {
       return vehicle;
+    }
+  }
+
+  /// Atualizar odômetro (KM) do veículo
+  Future<void> updateOdometer(String vehicleId, int newKm, {String? driverId}) async {
+    final now = DateTime.now();
+    if (_memoryVehicles.containsKey(vehicleId)) {
+      final current = _memoryVehicles[vehicleId]!;
+      _memoryVehicles[vehicleId] = current.copyWith(
+        currentKm: newKm,
+        lastKmValue: newKm,
+        lastKmUpdateDate: now,
+      );
+    }
+
+    if (_isValidUuid(vehicleId)) {
+      try {
+        await _client
+            .from(SupabaseConfig.tabelaVeiculos)
+            .update({
+              'odometro_atual': newKm,
+              'ultimo_odometro_data': now.toIso8601String(),
+              'ultimo_odometro_valor': newKm,
+              'atualizado_em': now.toIso8601String(),
+            })
+            .eq('id', vehicleId);
+      } catch (_) {}
     }
   }
 

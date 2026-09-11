@@ -50,7 +50,22 @@ class Contract {
       return ContractStatus.active;
     }
 
-    final rentalVal = (map['valor_locacao'] ?? map['monthlyValue'] ?? map['weeklyValue'] ?? 0.0).toDouble();
+    final rawLocacao = map['valor_locacao'] ?? map['monthlyValue'] ?? map['weeklyValue'];
+    final rentalVal = rawLocacao != null ? (double.tryParse(rawLocacao.toString()) ?? 0.0) : 0.0;
+    final freq = (map['frequencia_cobranca'] ?? map['billingFrequency'] ?? 'semanal').toString().toLowerCase();
+
+    final double weeklyVal;
+    final double monthlyVal;
+    if (map['weeklyValue'] != null && map['monthlyValue'] != null) {
+      weeklyVal = (map['weeklyValue'] as num).toDouble();
+      monthlyVal = (map['monthlyValue'] as num).toDouble();
+    } else if (freq == 'semanal') {
+      weeklyVal = rentalVal;
+      monthlyVal = rentalVal * 4;
+    } else {
+      monthlyVal = rentalVal;
+      weeklyVal = rentalVal / 4;
+    }
 
     String? dName;
     if (map['motoristas'] != null && map['motoristas']['perfis'] != null) {
@@ -68,13 +83,13 @@ class Contract {
       type: (map['type'] ?? 'uber').toString(),
       startDate: DateTime.tryParse(map['data_inicio'] ?? map['startDate'] ?? '') ?? DateTime.now(),
       endDate: DateTime.tryParse(map['data_fim'] ?? map['endDate'] ?? '') ?? DateTime.now().add(const Duration(days: 365)),
-      weeklyValue: map['weeklyValue'] != null ? (map['weeklyValue'] as num).toDouble() : rentalVal / 4,
-      monthlyValue: map['monthlyValue'] != null ? (map['monthlyValue'] as num).toDouble() : rentalVal,
+      weeklyValue: weeklyVal,
+      monthlyValue: monthlyVal,
       status: parseStatus(map['status']),
       depositPaid: (map['depositPaid'] ?? ((map['valor_caucao'] ?? 0.0) > 0)) as bool,
-      depositAmount: (map['valor_caucao'] ?? map['depositAmount'] ?? 0.0).toDouble(),
-      billingFrequency: (map['frequencia_cobranca'] ?? map['billingFrequency'] ?? 'semanal').toString(),
-      dueDay: (map['dia_vencimento'] ?? map['dueDay']) as int?,
+      depositAmount: double.tryParse((map['valor_caucao'] ?? map['depositAmount'] ?? 0.0).toString()) ?? 0.0,
+      billingFrequency: freq,
+      dueDay: map['dia_vencimento'] != null ? int.tryParse(map['dia_vencimento'].toString()) : (map['dueDay'] as int?),
       signatureUrl: map['assinatura_digital_url'] ?? map['signatureUrl'],
       signedAt: map['assinado_em'] != null ? DateTime.tryParse(map['assinado_em'].toString()) : null,
     );

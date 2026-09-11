@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_avatar.dart';
+import '../../models/admin_pix_config.dart';
+import '../../core/services/pix_service.dart';
+import '../widgets/pix_config_dialog.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -133,6 +138,13 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: AppSpacing.xxl),
 
+            // PIX Configuration Section for Admin
+            _buildSectionTitle('Chave PIX para Recebimento de Aluguéis'),
+            const SizedBox(height: 16),
+            _buildPixConfigCard(context),
+
+            const SizedBox(height: AppSpacing.xxl),
+
             // Security Section
             _buildSectionTitle('Segurança'),
             const SizedBox(height: 16),
@@ -232,6 +244,171 @@ class ProfileScreen extends StatelessWidget {
       subtitle: Text(subtitle, style: AppTextStyles.bodySmall),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: () {},
+    );
+  }
+
+  Widget _buildPixConfigCard(BuildContext context) {
+    final pixService = PixService();
+
+    return ValueListenableBuilder<AdminPixConfig>(
+      valueListenable: pixService.configNotifier,
+      builder: (context, config, _) {
+        final samplePayload = pixService.generatePixPayload(
+          amount: 750.0,
+          customDescription: 'ALUGUEL SEMANAL',
+        );
+
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFF00BDAE).withValues(alpha: 0.25),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00BDAE).withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00BDAE).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.pix,
+                      color: Color(0xFF00BDAE),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              config.merchantName,
+                              style: AppTextStyles.titleMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildBadge(
+                              config.keyType.label,
+                              const Color(0xFF00BDAE).withValues(alpha: 0.15),
+                              const Color(0xFF00BDAE),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Chave PIX: ${config.pixKey}',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${config.merchantCity} • ${config.bankName ?? "Conta Padrão"}',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00BDAE),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.md,
+                      ),
+                    ),
+                    onPressed: () => PixConfigDialog.show(context),
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Alterar Chave PIX'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const Divider(),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.outlineVariant),
+                    ),
+                    child: QrImageView(
+                      data: samplePayload,
+                      version: QrVersions.auto,
+                      size: 64,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'QR Code Dinâmico Integrado aos Motoristas',
+                          style: AppTextStyles.labelMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Ao salvar uma chave, todos os pagamentos (semanais/mensais de R\$ 750,00 ou quitação) geram automaticamente este QR Code para o motorista escanear e pagar.',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Copiar Chave PIX',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: config.pixKey));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Chave PIX "${config.pixKey}" copiada!'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy, color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

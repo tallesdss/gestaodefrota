@@ -351,6 +351,13 @@ class _DriverProfileDetailScreenState extends State<DriverProfileDetailScreen> {
     return Column(
       children: [
         _buildActionItem(
+          icon: Icons.payments_outlined,
+          title: 'Histórico de Pagamentos & Aluguel',
+          subtitle: 'Faturas, Vencimentos e Comprovantes',
+          onTap: () => context.push(AppRoutes.driverFinancialStatement),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildActionItem(
           icon: Icons.person_outline,
           title: 'Editar Perfil',
           subtitle: 'Nome, E-mail e Telefone',

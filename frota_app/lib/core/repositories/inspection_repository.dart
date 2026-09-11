@@ -1,49 +1,17 @@
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/inspection.dart';
+import '../../models/timeline_item.dart';
 import '../config/supabase_config.dart';
+import 'timeline_repository.dart';
+import 'vehicle_repository.dart';
 
 /// Repositório concreto para o Módulo de Vistorias e Check-ins no Supabase
 class InspectionRepository {
   final SupabaseClient _client;
 
-  // Cache sincronizado em memória para persistir vistorias em tempo real
-  static final List<Inspection> _memoryInspections = [
-    Inspection(
-      id: 'insp-byd-init',
-      contractId: 'ctr-byd-001',
-      vehicleId: 'v-byd-bvt2356',
-      driverId: 'dfc34aba-9a10-4da0-a38f-91b47438bde0',
-      type: InspectionType.checkin,
-      status: InspectionStatus.approved,
-      dateTime: DateTime.now().subtract(const Duration(hours: 3)),
-      kmAtInspection: 195000,
-      fuelLevel: 1.0,
-      photos: [
-        InspectionPhoto(
-          id: 'p1',
-          url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=400&auto=format&fit=crop',
-          title: 'Frente',
-          photoType: 'frente',
-        ),
-        InspectionPhoto(
-          id: 'p2',
-          url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=400&auto=format&fit=crop',
-          title: 'Traseira',
-          photoType: 'traseira',
-        ),
-      ],
-      checklist: [
-        ChecklistItem(title: 'Pneus em bom estado', isChecked: true),
-        ChecklistItem(title: 'Nível de combustível registrado', isChecked: true),
-        ChecklistItem(title: 'Sem luzes de alerta no painel', isChecked: true),
-        ChecklistItem(title: 'Limpadores funcionando', isChecked: true),
-        ChecklistItem(title: 'Ar-condicionado gelando', isChecked: true),
-      ],
-      notes: 'Check-in inicial de entrega do veículo BYD Dolphin Plus EV.',
-      hasNewDamage: false,
-    ),
-  ];
+  // Cache sincronizado em memória para persistir novas vistorias criadas localmente se necessário
+  static final List<Inspection> _memoryInspections = [];
 
   InspectionRepository({SupabaseClient? client}) : _client = client ?? supabase;
 

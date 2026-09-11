@@ -86,32 +86,10 @@ bool _isValidUuid(String? str) {
   }
 
   // Cache sincronizado de contratos ativos
-  static final Map<String, Contract> _memoryContracts = {
-    'dfc34aba-9a10-4da0-a38f-91b47438bde0': Contract(
-      id: 'ctr-byd-001',
-      contractNumber: 'CTR-BVT2356',
-      driverId: 'dfc34aba-9a10-4da0-a38f-91b47438bde0',
-      driverName: 'Carlos Silva Motorista',
-      vehicleId: 'v-byd-bvt2356',
-      type: 'uber',
-      startDate: DateTime(2026, 8, 22),
-      endDate: DateTime(2027, 8, 22),
-      weeklyValue: 750.00,
-      monthlyValue: 3000.00,
-      depositPaid: true,
-      depositAmount: 1500.00,
-      billingFrequency: 'semanal',
-      dueDay: 5,
-      status: ContractStatus.active,
-    ),
-  };
+  static final Map<String, Contract> _memoryContracts = {};
 
   /// Obter contrato ativo de um motorista
   Future<Contract?> getActiveContractByDriver(String driverId) async {
-    if (_memoryContracts.containsKey(driverId)) {
-      return _memoryContracts[driverId];
-    }
-
     if (_isValidUuid(driverId)) {
       try {
         final response = await _client
@@ -130,6 +108,10 @@ bool _isValidUuid(String? str) {
           return ctr;
         }
       } catch (_) {}
+    }
+
+    if (_memoryContracts.containsKey(driverId)) {
+      return _memoryContracts[driverId];
     }
 
     return null;

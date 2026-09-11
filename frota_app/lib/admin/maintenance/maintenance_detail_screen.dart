@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/maintenance_repository.dart';
 import '../../models/maintenance_entry.dart';
 import '../../core/widgets/status_badge.dart';
 
@@ -17,7 +17,7 @@ class MaintenanceDetailScreen extends StatefulWidget {
 }
 
 class _MaintenanceDetailScreenState extends State<MaintenanceDetailScreen> {
-  final MockRepository _repository = MockRepository();
+  final MaintenanceRepository _repository = MaintenanceRepository();
   MaintenanceEntry? _entry;
   bool _isLoading = true;
 

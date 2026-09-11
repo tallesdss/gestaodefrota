@@ -4,9 +4,25 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
+import '../../core/services/pix_service.dart';
 
-class ControlPanelScreen extends StatelessWidget {
+import '../../models/admin_pix_config.dart';
+
+class ControlPanelScreen extends StatefulWidget {
   const ControlPanelScreen({super.key});
+
+  @override
+  State<ControlPanelScreen> createState() => _ControlPanelScreenState();
+}
+
+class _ControlPanelScreenState extends State<ControlPanelScreen> {
+  @override
+  void initState() {
+    super.initState();
+    PixService().initialize().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,9 +156,9 @@ class ControlPanelScreen extends StatelessWidget {
 
             const SizedBox(height: AppSpacing.xxl),
 
-            // Future Features Section
+            // System Config Section
             Text(
-              'Configurações do Sistema (Futuro)',
+              'Configurações do Sistema',
               style: AppTextStyles.headlineSmall.copyWith(
                 color: AppColors.onSurface,
                 fontSize: 18,
@@ -150,24 +166,66 @@ class ControlPanelScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  _buildFutureIcon(
-                    Icons.notifications_none_outlined,
-                    'Alertas',
+            ValueListenableBuilder<AdminPixConfig>(
+              valueListenable: PixService().configNotifier,
+              builder: (context, config, child) {
+                final hasKey = config.pixKey.isNotEmpty;
+                return Container(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: AppSpacing.xxl),
-                  _buildFutureIcon(Icons.history_outlined, 'Logs'),
-                  const SizedBox(width: AppSpacing.xxl),
-                  _buildFutureIcon(Icons.cloud_upload_outlined, 'Backup'),
-                ],
-              ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: Colors.teal.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.pix, color: Colors.teal, size: 28),
+                      ),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              hasKey ? 'Chave PIX Ativa' : 'PIX Não Configurado',
+                              style: AppTextStyles.labelMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.onSurface,
+                              ),
+                            ),
+                            if (hasKey) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                config.pixKey,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => context.push(AppRoutes.adminPixConfig),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: const Text('EDITAR'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),

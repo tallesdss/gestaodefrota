@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../config/supabase_config.dart';
 import '../onboarding/login_screen.dart';
 import '../onboarding/register_screen.dart';
 import '../onboarding/selection_profile_screen.dart';
@@ -67,6 +68,7 @@ import '../../driver_portal/notifications/notifications_screen.dart';
 import '../../driver_portal/support/support_screen.dart';
 import '../../models/financial_entry.dart';
 import '../../driver_portal/widgets/driver_scaffold.dart';
+import '../../admin/control_panel/pix_config_screen.dart';
 
 class AppRoutes {
   static const String root = '/selection';
@@ -98,6 +100,7 @@ class AppRoutes {
   static const String adminVehicleForm = '/admin/vehicles/form';
   static const String adminVehicleUsageHistory = '/admin/vehicles/:id/usage';
   static const String adminControlPanel = '/admin/control-panel';
+  static const String adminPixConfig = '/admin/pix-config';
   static const String adminManagerSalaries = '/admin/control-panel/salaries';
   static const String adminManagerSalaryHistory =
       '/admin/control-panel/salaries/history';
@@ -151,6 +154,16 @@ class AppRoutes {
 
   static final router = GoRouter(
     initialLocation: login,
+    redirect: (context, state) {
+      // Proteção de rotas RBAC-01: Somente administrador acessa /admin/control-panel
+      if (state.matchedLocation.startsWith('/admin/control-panel')) {
+        final cargo = SupabaseConfig.client.auth.currentUser?.userMetadata?['cargo'];
+        if (cargo != 'administrador') {
+          return adminDashboard;
+        }
+      }
+      return null;
+    },
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginScreen()),
       GoRoute(
@@ -313,6 +326,10 @@ class AppRoutes {
           GoRoute(
             path: adminControlPanel,
             builder: (context, state) => const ControlPanelScreen(),
+          ),
+          GoRoute(
+            path: '/admin/pix-config',
+            builder: (context, state) => const PixConfigScreen(),
           ),
           GoRoute(
             path: adminManagerSalaries,
@@ -579,8 +596,13 @@ class AppRoutes {
           GoRoute(
             path: driverPixCheckout,
             builder: (context, state) {
-              final entry = state.extra as FinancialEntry;
-              return PixCheckoutScreen(entry: entry);
+              final extra = state.extra;
+              if (extra is List<FinancialEntry>) {
+                return PixCheckoutScreen(entries: extra);
+              } else if (extra is FinancialEntry) {
+                return PixCheckoutScreen(entries: [extra]);
+              }
+              return const PixCheckoutScreen();
             },
           ),
           GoRoute(

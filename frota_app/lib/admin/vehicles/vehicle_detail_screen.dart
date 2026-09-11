@@ -43,6 +43,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
   List<MaintenanceEntry> _maintenances = [];
   List<Inspection> _inspections = [];
   bool _isLoading = true;
+  double _realProfit = 0.0;
 
   // Financial Overview States
   int? _selectedYear; // null means 'Tudo'
@@ -109,12 +110,18 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         finalVehicle = finalVehicle.copyWith(usageHistory: usages);
       }
 
+      double profit = 0.0;
+      try {
+        profit = await _financialRepository.getVehicleProfit(widget.vehicleId);
+      } catch (_) {}
+
       if (mounted) {
         setState(() {
           _vehicle = finalVehicle;
           _financials = f;
           _maintenances = m;
           _inspections = ins;
+          _realProfit = profit;
           _isLoading = false;
         });
       }
@@ -1546,24 +1553,25 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       text: _vehicle!.rentalValue?.toString() ?? '',
     );
     RentalType selectedType = _vehicle!.rentalType ?? RentalType.weekly;
-    int? selectedDay = _vehicle!.rentalDueDay;
+    int? selectedDay = _vehicle!.rentalDueDay ?? (selectedType == RentalType.weekly ? 3 : 10);
+    int selectedDuration = selectedType == RentalType.weekly ? 12 : 6;
 
     AppDialogs.showBottomSheet(
       context: context,
-      title: 'Alterar Valor do Aluguel',
+      title: 'Configurar Aluguel & Contrato',
       content: StatefulBuilder(
         builder: (context, setModalState) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AppTextField(
-                label: 'Novo Valor do Aluguel',
+                label: 'Valor do Aluguel (R\$)',
                 controller: rentalController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
                 prefixIcon: Icons.attach_money,
-                hintText: '0,00',
+                hintText: '750,00',
               ),
               const SizedBox(height: 24),
               Text(
@@ -1581,9 +1589,10 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     selectedType == RentalType.weekly,
                     () => setModalState(() {
                       selectedType = RentalType.weekly;
+                      selectedDuration = 12;
                       selectedDay = selectedDay != null && selectedDay! > 7
-                          ? 1
-                          : selectedDay;
+                          ? 3
+                          : (selectedDay ?? 3);
                     }),
                   ),
                   const SizedBox(width: 12),
@@ -1591,11 +1600,58 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     'MENSAL',
                     RentalType.monthly,
                     selectedType == RentalType.monthly,
-                    () =>
-                        setModalState(() => selectedType = RentalType.monthly),
+                    () => setModalState(() {
+                      selectedType = RentalType.monthly;
+                      selectedDuration = 6;
+                      selectedDay = 10;
+                    }),
                   ),
                 ],
               ),
+              const SizedBox(height: 24),
+              Text(
+                'Tempo de Contrato (Geração de Parcelas)',
+                style: AppTextStyles.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (selectedType == RentalType.weekly)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [4, 8, 12, 24, 48].map((weeks) {
+                    final isSel = selectedDuration == weeks;
+                    return ChoiceChip(
+                      label: Text('$weeks Semanas${weeks == 12 ? " (3 meses)" : weeks == 24 ? " (6 meses)" : weeks == 48 ? " (1 ano)" : ""}'),
+                      selected: isSel,
+                      onSelected: (_) => setModalState(() => selectedDuration = weeks),
+                      selectedColor: AppColors.primary,
+                      labelStyle: TextStyle(
+                        color: isSel ? Colors.white : AppColors.onSurface,
+                        fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    );
+                  }).toList(),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [1, 3, 6, 12, 24].map((months) {
+                    final isSel = selectedDuration == months;
+                    return ChoiceChip(
+                      label: Text('$months ${months == 1 ? "Mês" : "Meses"}${months == 12 ? " (1 ano)" : months == 24 ? " (2 anos)" : ""}'),
+                      selected: isSel,
+                      onSelected: (_) => setModalState(() => selectedDuration = months),
+                      selectedColor: AppColors.primary,
+                      labelStyle: TextStyle(
+                        color: isSel ? Colors.white : AppColors.onSurface,
+                        fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    );
+                  }).toList(),
+                ),
               const SizedBox(height: 24),
               Text(
                 selectedType == RentalType.weekly
@@ -1681,10 +1737,26 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   ),
                 ),
               const SizedBox(height: 24),
-              Text(
-                'Ao alterar o valor, a data da mudança será registrada no histórico do veículo.',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.onSurfaceVariant,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Serão geradas $selectedDuration parcelas no histórico de pagamentos do motorista de acordo com o prazo definido.',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1693,8 +1765,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       ),
       actions: [
         AppButton(
-          label: 'Confirmar Alteração',
-          onPressed: () {
+          label: 'Confirmar e Gerar Parcelas',
+          onPressed: () async {
             final newValue =
                 double.tryParse(rentalController.text.replaceAll(',', '.')) ??
                 0;
@@ -1719,12 +1791,29 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                   rentalDueDay: selectedDay,
                 );
               });
+
+              final targetDriverId = _vehicle!.currentDriverId ??
+                  _vehicle!.activeDriverId ??
+                  'dfc34aba-9a10-4da0-a38f-91b47438bde0';
+
+              final generated = await _financialRepository.generateContractInstallments(
+                driverId: targetDriverId,
+                vehicleId: _vehicle!.id,
+                rentalValue: newValue,
+                frequency: selectedType == RentalType.weekly ? 'semanal' : 'mensal',
+                dueDay: selectedDay!,
+                startDate: DateTime.now(),
+                durationWeeks: selectedType == RentalType.weekly ? selectedDuration : null,
+                durationMonths: selectedType == RentalType.monthly ? selectedDuration : null,
+              );
+
+              if (!mounted) return;
               Navigator.pop(context);
 
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text(
-                    'Configurações de aluguel atualizadas com sucesso!',
+                    'Aluguel atualizado para R\$ ${newValue.toStringAsFixed(2)} e ${generated.length} parcelas geradas no histórico do motorista!',
                   ),
                   behavior: SnackBarBehavior.floating,
                   backgroundColor: AppColors.success,
@@ -2616,7 +2705,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       totalExpense += m.cost;
     }
 
-    final profit = totalIncome - totalExpense;
+    // FIN-09: Usar o lucro consolidado real (apenas pagos) da View se for "Todo o Histórico"
+    final profit = _selectedYear == null ? _realProfit : (totalIncome - totalExpense);
     final isProfitable = profit >= 0;
 
     return Column(

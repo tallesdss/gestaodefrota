@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/maintenance_repository.dart';
 import '../../models/maintenance_entry.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/routes/app_routes.dart';
@@ -15,7 +15,7 @@ class MaintenanceListScreen extends StatefulWidget {
 }
 
 class _MaintenanceListScreenState extends State<MaintenanceListScreen> {
-  final MockRepository _repository = MockRepository();
+  final MaintenanceRepository _repository = MaintenanceRepository();
   List<MaintenanceEntry> _maintenances = [];
   bool _isLoading = true;
 

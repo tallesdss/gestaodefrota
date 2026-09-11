@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/inspection_repository.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
 import '../../models/vehicle.dart';
 import '../../models/driver.dart';
 import '../../models/inspection.dart';
@@ -18,7 +20,10 @@ class InspectionAuditScreen extends StatefulWidget {
 }
 
 class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
-  final MockRepository _repository = MockRepository();
+  final InspectionRepository _inspectionRepo = InspectionRepository();
+  final DriverRepository _driverRepo = DriverRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
+
   List<Inspection> _inspections = [];
   List<Inspection> _filteredInspections = [];
   Map<String, Driver> _driverMap = {};
@@ -34,9 +39,9 @@ class _InspectionAuditScreenState extends State<InspectionAuditScreen> {
   }
 
   Future<void> _fetchInspections() async {
-    final inspections = await _repository.getInspections();
-    final drivers = await _repository.getDrivers();
-    final vehicles = await _repository.getVehicles();
+    final inspections = await _inspectionRepo.getInspections();
+    final drivers = await _driverRepo.getDrivers();
+    final vehicles = await _vehicleRepo.getVehicles();
 
     setState(() {
       _inspections = inspections;

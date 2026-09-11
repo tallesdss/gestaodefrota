@@ -3,11 +3,14 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/driver_repository.dart';
 import '../../models/contract.dart';
 import '../../models/vehicle.dart';
 import '../../models/driver.dart';
 import '../../core/repositories/contract_repository.dart';
+import '../../core/repositories/financial_repository.dart';
+import '../../core/config/supabase_config.dart';
 
 class ContractFormScreen extends StatefulWidget {
   final Contract? contract;
@@ -19,7 +22,8 @@ class ContractFormScreen extends StatefulWidget {
 
 class _ContractFormScreenState extends State<ContractFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final MockRepository _repository = MockRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
+  final DriverRepository _driverRepo = DriverRepository();
 
   List<Vehicle> _vehicles = [];
   List<Driver> _drivers = [];
@@ -34,6 +38,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
   late ContractStatus _selectedStatus;
   late bool _depositPaid;
   late String _selectedType;
+  String _selectedFrequency = 'semanal';
 
   @override
   void initState() {
@@ -57,8 +62,9 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
   }
 
   Future<void> _fetchLists() async {
-    final v = await _repository.getVehicles();
-    final d = await _repository.getDrivers();
+    final v = await _vehicleRepo.getVehicles(status: 'disponivel');
+    final allD = await _driverRepo.getDrivers(status: 'ativo');
+    final d = allD.where((driver) => driver.currentVehicleId == null).toList();
     setState(() {
       _vehicles = v;
       _drivers = d;
@@ -150,6 +156,14 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                         onChanged: (val) =>
                             setState(() => _selectedType = val!),
                       ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildDropdown<String>(
+                        label: 'Frequência de Cobrança',
+                        initialValue: _selectedFrequency,
+                        items: ['semanal', 'quinzenal', 'mensal'],
+                        onChanged: (val) =>
+                            setState(() => _selectedFrequency = val!),
+                      ),
                       const SizedBox(height: AppSpacing.xl),
                       _buildSectionTitle('DATAS E VIGÊNCIA'),
                       const SizedBox(height: AppSpacing.md),
@@ -230,17 +244,30 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                     vehicleId: _selectedVehicleId!,
                                     contractNumber: 'CTR-${DateTime.now().millisecondsSinceEpoch}',
                                     startDate: _startDate,
-                                    rentalValue: weekly,
+                                    rentalValue: _selectedFrequency == 'semanal' ? weekly : (_selectedFrequency == 'quinzenal' ? weekly * 2 : monthly),
                                     depositValue: _depositPaid ? weekly * 2 : 0.0,
-                                    frequency: 'semanal',
-                                    dueDay: 5,
+                                    frequency: _selectedFrequency,
+                                    dueDay: _startDate.day,
                                   );
                                 }
+
+                                // Invoca a Edge Function via RPC para gerar todas as parcelas
+                                await SupabaseConfig.client.rpc(
+                                  'fn_gerar_parcelas_contrato',
+                                  params: {
+                                    'p_contrato_id': contract.id,
+                                    'p_valor_locacao': _selectedFrequency == 'semanal' ? weekly : (_selectedFrequency == 'quinzenal' ? weekly * 2 : monthly),
+                                    'p_frequencia': _selectedFrequency,
+                                    'p_dia_vencimento': _startDate.day,
+                                    'p_data_inicio': _startDate.toIso8601String().split('T')[0],
+                                    'p_num_parcelas': _selectedFrequency == 'semanal' ? 52 : (_selectedFrequency == 'quinzenal' ? 26 : 12),
+                                  },
+                                );
 
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Contrato salvo com sucesso no Supabase!'),
+                                    content: Text('Contrato e parcelas geradas com sucesso no Supabase!'),
                                     backgroundColor: AppColors.success,
                                   ),
                                 );

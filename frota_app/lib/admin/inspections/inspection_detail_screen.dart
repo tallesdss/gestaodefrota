@@ -1,13 +1,16 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/inspection_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../../core/repositories/auth_repository.dart';
 import '../../models/inspection.dart';
 import '../../models/vehicle.dart';
 import '../../models/driver.dart';
-// import '../../core/widgets/status_badge.dart'; // Removed unused import
 
 class InspectionDetailScreen extends StatefulWidget {
   final String inspectionId;
@@ -19,7 +22,10 @@ class InspectionDetailScreen extends StatefulWidget {
 }
 
 class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
-  final MockRepository _repository = MockRepository();
+  final InspectionRepository _inspectionRepo = InspectionRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
+  final DriverRepository _driverRepo = DriverRepository();
+  final AuthRepository _authRepo = AuthRepository();
   final TextEditingController _reasonController = TextEditingController();
 
   Inspection? _inspection;
@@ -28,27 +34,6 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
   bool _isLoading = true;
   bool _isSubmitting = false;
 
-  final List<String> _allRequiredPhotos = [
-    'Frente do veículo',
-    'Traseira',
-    'Lateral direita',
-    'Lateral esquerda',
-    'Diagonal frontal',
-    'Diagonal traseira',
-    'Painel ligado (KM visível)',
-    'Hodômetro (quilometragem)',
-    'Volante e painel geral',
-    'Bancos dianteiros',
-    'Bancos traseiros',
-    'Porta-malas',
-    'Parabrisa (vidro dianteiro)',
-    'Vidro traseiro',
-    'Pneus',
-    'Cofre do motor',
-    'Placa do veículo',
-    'Chassi',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -56,18 +41,16 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
   }
 
   Future<void> _loadData() async {
-    final insp = await _repository.getInspectionById(widget.inspectionId);
+    final insp = await _inspectionRepo.getInspectionById(widget.inspectionId);
     if (insp != null) {
       Vehicle? v;
       try {
-        v = await _repository.getVehicleById(insp.vehicleId);
+        v = await _vehicleRepo.getVehicleById(insp.vehicleId);
       } catch (_) {}
 
       Driver? d;
       try {
-        d = (await _repository.getDrivers()).firstWhere(
-          (d) => d.id == insp.driverId,
-        );
+        d = await _driverRepo.getDriverById(insp.driverId);
       } catch (_) {}
 
       setState(() {
@@ -97,13 +80,14 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final updated = _inspection!.copyWith(
-        status: newStatus,
-        reviewReason: _reasonController.text.trim(),
-        reviewerId: 'admin_1', // Mock admin ID
-      );
+      final currentUserId = _authRepo.currentUserId ?? 'admin_1';
 
-      await _repository.updateInspection(updated);
+      await _inspectionRepo.updateInspectionStatus(
+        _inspection!.id,
+        newStatus,
+        reviewerId: currentUserId,
+        reviewReason: _reasonController.text.trim(),
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -407,16 +391,118 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
     );
   }
 
+  Widget _renderImage(String url, {BoxFit fit = BoxFit.cover}) {
+    if (url.startsWith('data:image')) {
+      try {
+        final base64Str = url.split(',').last;
+        return Image.memory(
+          base64Decode(base64Str),
+          fit: fit,
+          errorBuilder: (c, e, s) => const Center(
+            child: Icon(Icons.broken_image_outlined, color: AppColors.onSurfaceVariant),
+          ),
+        );
+      } catch (_) {}
+    }
+    return Image.network(
+      url,
+      fit: fit,
+      errorBuilder: (c, e, s) => const Center(
+        child: Icon(Icons.broken_image_outlined, color: AppColors.onSurfaceVariant),
+      ),
+    );
+  }
+
   Widget _buildPhotosGallery() {
+    // Lista canônica dos 8 ângulos de vistoria 360º + extras
+    final List<String> canonical = [
+      'Frente',
+      'Traseira',
+      'Lateral Direita',
+      'Lateral Esquerda',
+      'Painel',
+      'Hodômetro',
+      'Bancos Dianteiros',
+      'Placa',
+    ];
+
+    InspectionPhoto? findPhoto(String title) {
+      final t = title.toLowerCase();
+      for (final p in _inspection!.photos) {
+        final pTitle = p.title.toLowerCase();
+        final pType = p.photoType.toLowerCase();
+        if (pTitle == t || pType == t) {
+          return p;
+        }
+        if (t.contains('frente') && (pTitle.contains('frente') || pType.contains('frente'))) {
+          return p;
+        }
+        if (t.contains('traseira') && (pTitle.contains('traseira') || pType.contains('traseira'))) {
+          return p;
+        }
+        if (t.contains('direita') && (pTitle.contains('direita') || pType.contains('direita'))) {
+          return p;
+        }
+        if (t.contains('esquerda') && (pTitle.contains('esquerda') || pType.contains('esquerda'))) {
+          return p;
+        }
+        if (t.contains('painel') && (pTitle.contains('painel') || pType.contains('painel'))) {
+          return p;
+        }
+        if ((t.contains('hodometro') || t.contains('odometro') || t.contains('km')) &&
+            (pTitle.contains('hodometro') || pTitle.contains('odometro') || pTitle.contains('km') || pType.contains('hodometro'))) {
+          return p;
+        }
+        if ((t.contains('banco') || t.contains('interior')) &&
+            (pTitle.contains('banco') || pTitle.contains('interior') || pType.contains('banco'))) {
+          return p;
+        }
+        if (t.contains('placa') && (pTitle.contains('placa') || pType.contains('placa'))) {
+          return p;
+        }
+      }
+      return null;
+    }
+
+    final List<Map<String, dynamic>> items = [];
+    for (final c in canonical) {
+      final p = findPhoto(c);
+      if (p != null) {
+        items.add({'title': c, 'url': p.url, 'hasDamage': p.hasDamage});
+      }
+    }
+    for (final p in _inspection!.photos) {
+      if (!items.any((i) => i['url'] == p.url)) {
+        items.add({'title': p.title.isNotEmpty ? p.title : 'Foto Adicional', 'url': p.url, 'hasDamage': p.hasDamage});
+      }
+    }
+
+    if (items.isEmpty) {
+      for (final c in canonical) {
+        items.add({'title': c, 'url': '', 'hasDamage': false});
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'GALERIA DE FOTOS',
-          style: AppTextStyles.labelMedium.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'GALERIA DE FOTOS 360º',
+              style: AppTextStyles.labelMedium.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            Text(
+              '${items.where((i) => (i['url'] as String).isNotEmpty).length} fotos registradas',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: AppSpacing.md),
         GridView.builder(
@@ -428,47 +514,65 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
             mainAxisSpacing: AppSpacing.md,
             childAspectRatio: 1.1,
           ),
-          itemCount: _allRequiredPhotos.length,
+          itemCount: items.length,
           itemBuilder: (context, index) {
-            final title = _allRequiredPhotos[index];
-            final photo = _inspection!.photos
-                .cast<InspectionPhoto?>()
-                .firstWhere(
-                  (p) => p?.title.toLowerCase() == title.toLowerCase(),
-                  orElse: () => null,
-                );
+            final item = items[index];
+            final title = item['title'] as String;
+            final url = item['url'] as String;
+            final hasDamage = item['hasDamage'] as bool? ?? false;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title.toUpperCase(),
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 9,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title.toUpperCase(),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 9,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (hasDamage)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'AVARIA',
+                          style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Expanded(
-                  child: photo != null
+                  child: url.isNotEmpty
                       ? GestureDetector(
-                          onTap: () => _showFullPhoto(photo.url),
+                          onTap: () => _showFullPhoto(url),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
-                                Image.network(photo.url, fit: BoxFit.cover),
+                                _renderImage(url),
                                 Positioned(
                                   bottom: 8,
                                   right: 8,
-                                  child: Icon(
-                                    Icons.zoom_in,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    size: 18,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.fullscreen, color: Colors.white, size: 16),
                                   ),
                                 ),
                               ],
@@ -533,7 +637,15 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                 color: Colors.black.withValues(alpha: 0.9),
               ),
             ),
-            Image.network(url, fit: BoxFit.contain),
+            InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: _renderImage(url, fit: BoxFit.contain),
+              ),
+            ),
             Positioned(
               top: 40,
               right: 20,

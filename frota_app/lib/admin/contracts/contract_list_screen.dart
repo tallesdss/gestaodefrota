@@ -4,7 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/contract_repository.dart';
 import '../../models/contract.dart';
 import '../../core/widgets/status_badge.dart';
 
@@ -16,7 +16,7 @@ class ContractListScreen extends StatefulWidget {
 }
 
 class _ContractListScreenState extends State<ContractListScreen> {
-  final MockRepository _repository = MockRepository();
+  final ContractRepository _repository = ContractRepository();
   List<Contract> _contracts = [];
   bool _isLoading = true;
 
@@ -129,6 +129,50 @@ class _ContractListScreenState extends State<ContractListScreen> {
                               ),
                             ],
                           ),
+                          if (contract.status == ContractStatus.active) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            const Divider(),
+                            SizedBox(
+                              width: double.infinity,
+                              child: TextButton.icon(
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Encerrar Contrato?'),
+                                      content: const Text('Isso mudará o status para Concluído e devolverá o veículo para disponível.'),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('NÃO')),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                                          onPressed: () => Navigator.pop(ctx, true), 
+                                          child: const Text('SIM, ENCERRAR')
+                                        ),
+                                      ],
+                                    )
+                                  );
+                                  
+                                  if (confirm == true) {
+                                    setState(() => _isLoading = true);
+                                    try {
+                                      await _repository.concludeContract(contract.id);
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Contrato encerrado.')));
+                                        _fetchContracts();
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        setState(() => _isLoading = false);
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro: $e')));
+                                      }
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.stop_circle_outlined, color: AppColors.error),
+                                label: const Text('ENCERRAR CONTRATO', style: TextStyle(color: AppColors.error)),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

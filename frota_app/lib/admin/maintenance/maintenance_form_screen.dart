@@ -3,7 +3,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/maintenance_entry.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/maintenance_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/workshop_repository.dart';
+import '../../core/repositories/financial_repository.dart';
 import '../../models/vehicle.dart';
 import '../../models/workshop.dart';
 import '../../models/expense_category.dart';
@@ -26,7 +29,10 @@ class MaintenanceFormScreen extends StatefulWidget {
 
 class _MaintenanceFormScreenState extends State<MaintenanceFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final MockRepository _repository = MockRepository();
+  final MaintenanceRepository _maintenanceRepo = MaintenanceRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
+  final WorkshopRepository _workshopRepo = WorkshopRepository();
+  final FinancialRepository _financialRepo = FinancialRepository();
 
   List<Vehicle> _vehicles = [];
   List<Workshop> _workshops = [];
@@ -77,9 +83,9 @@ class _MaintenanceFormScreenState extends State<MaintenanceFormScreen> {
   }
 
   Future<void> _fetchData() async {
-    final v = await _repository.getVehicles();
-    final w = await _repository.getWorkshops();
-    final c = await _repository.getExpenseCategories();
+    final v = await _vehicleRepo.getVehicles();
+    final w = await _workshopRepo.getWorkshops();
+    final c = await _financialRepo.getExpenseCategories();
     setState(() {
       _vehicles = v;
       _workshops = w;
@@ -684,7 +690,11 @@ class _MaintenanceFormScreenState extends State<MaintenanceFormScreen> {
               invoiceUrl: _attachments.isNotEmpty ? _attachments.first.path : null,
             );
 
-            await _repository.addMaintenance(newEntry);
+            if (isEditing) {
+              await _maintenanceRepo.updateMaintenance(newEntry);
+            } else {
+              await _maintenanceRepo.createMaintenance(newEntry);
+            }
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

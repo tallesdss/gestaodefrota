@@ -7,8 +7,11 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/repositories/financial_repository.dart';
+import '../../core/repositories/driver_repository.dart';
 import '../../core/repositories/auth_repository.dart';
+import '../../core/repositories/contract_repository.dart';
 import '../../models/financial_entry.dart';
+import 'widgets/receipt_upload_dialog.dart';
 
 class FinancialStatementScreen extends StatefulWidget {
   const FinancialStatementScreen({super.key});
@@ -29,7 +32,20 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   @override
   void initState() {
     super.initState();
+    FinancialRepository.entriesChangedNotifier.addListener(_onFinancialUpdated);
     _loadEntries();
+  }
+
+  @override
+  void dispose() {
+    FinancialRepository.entriesChangedNotifier.removeListener(_onFinancialUpdated);
+    super.dispose();
+  }
+
+  void _onFinancialUpdated() {
+    if (mounted) {
+      _loadEntries();
+    }
   }
 
   Future<void> _loadEntries() async {
@@ -39,10 +55,12 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
     });
 
     try {
-      final uid = _authRepo.currentUserId;
-      final data = uid != null
-          ? await _financialRepo.getFinancialEntries(driverId: uid)
-          : <FinancialEntry>[];
+      String uid = _authRepo.currentUserId ?? '';
+      if (uid.isEmpty) {
+        if (mounted) context.go(AppRoutes.login);
+        return;
+      }
+      List<FinancialEntry> data = await _financialRepo.getFinancialEntries(driverId: uid);
       if (mounted) {
         setState(() {
           _entries = data;
@@ -63,6 +81,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   Widget build(BuildContext context) {
     final filteredEntries = _entries.where((e) {
       if (_selectedFilter == 'Todos') return true;
+      if (_selectedFilter == 'Atrasados') return !e.isPaid && e.isLate;
       if (_selectedFilter == 'Pendentes') return !e.isPaid;
       if (_selectedFilter == 'Pagos') return e.isPaid;
       return true;
@@ -161,7 +180,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
           ),
           const SizedBox(width: AppSpacing.md),
           Text(
-            'EXTRATO',
+            'HISTÓRICO FINANCEIRO',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -179,35 +198,27 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   }
 
   Widget _buildFinancialSummary() {
-    double totalPending = _entries
-        .where((e) => !e.isPaid)
-        .fold(
-          0.0,
-          (sum, e) =>
-              sum + (e.type == FinancialType.expense ? e.amount : -e.amount),
-        );
-
-    double totalPaid = _entries
-        .where((e) => e.isPaid && e.type == FinancialType.expense)
-        .fold(0.0, (sum, e) => sum + e.amount);
-
-    double totalCredits = _entries
-        .where((e) => e.isPaid && e.type == FinancialType.income)
-        .fold(0.0, (sum, e) => sum + e.amount);
+    final pendingEntries = _entries.where((e) => !e.isPaid).toList();
+    final lateEntries = pendingEntries.where((e) => e.isLate).toList();
+    final totalPending = pendingEntries.fold(0.0, (sum, e) => sum + e.amount);
+    final totalLate = lateEntries.fold(0.0, (sum, e) => sum + e.amount);
+    final totalPaid = _entries.where((e) => e.isPaid).fold(0.0, (sum, e) => sum + e.amount);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       padding: const EdgeInsets.all(AppSpacing.xxl),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryContainer],
+        gradient: LinearGradient(
+          colors: totalLate > 0
+              ? [const Color(0xFFC92A2A), const Color(0xFFE03131)]
+              : [AppColors.primary, AppColors.primaryContainer],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: (totalLate > 0 ? AppColors.error : AppColors.primary).withValues(alpha: 0.3),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -216,12 +227,34 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'SALDO DEVEDOR ATUAL',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: Colors.white.withValues(alpha: 0.7),
-              letterSpacing: 2,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                totalLate > 0 ? '⚠️ ATENÇÃO: DÉBITOS EM ATRASO' : 'SALDO DEVEDOR ATUAL',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              if (totalLate > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${lateEntries.length} ATRASADA(S)',
+                    style: const TextStyle(
+                      color: Color(0xFFC92A2A),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
@@ -232,7 +265,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                   'R\$ ${totalPending.toStringAsFixed(2).replaceAll('.', ',')}',
                   style: AppTextStyles.displayMedium.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
@@ -243,22 +276,55 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               _buildSummaryItem(
-                'PAGO',
+                'QUITADO',
                 'R\$ ${totalPaid.toStringAsFixed(2).replaceAll('.', ',')}',
-                Colors.white.withValues(alpha: 0.8),
+                Colors.white.withValues(alpha: 0.9),
               ),
               const SizedBox(width: AppSpacing.xxl),
               _buildSummaryItem(
-                'CRÉDITOS',
-                'R\$ ${totalCredits.toStringAsFixed(2).replaceAll('.', ',')}',
-                Colors.white.withValues(alpha: 0.8),
+                'EM ATRASO',
+                'R\$ ${totalLate.toStringAsFixed(2).replaceAll('.', ',')}',
+                totalLate > 0 ? const Color(0xFFFFD8A8) : Colors.white.withValues(alpha: 0.9),
               ),
             ],
           ),
+          if (pendingEntries.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final res = await context.push(
+                    AppRoutes.driverPixCheckout,
+                    extra: pendingEntries,
+                  );
+                  if (res == true) _loadEntries();
+                },
+                icon: const Icon(Icons.flash_on, color: AppColors.primary),
+                label: Text(
+                  pendingEntries.length > 1
+                      ? 'PAGAR TUDO DE UMA VEZ (R\$ ${totalPending.toStringAsFixed(2)})'
+                      : 'PAGAR COM PIX (R\$ ${totalPending.toStringAsFixed(2)})',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -271,7 +337,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
         Text(
           label,
           style: AppTextStyles.labelSmall.copyWith(
-            color: color.withValues(alpha: 0.6),
+            color: color.withValues(alpha: 0.7),
             letterSpacing: 1,
           ),
         ),
@@ -287,7 +353,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   }
 
   Widget _buildFilters() {
-    final filters = ['Todos', 'Pendentes', 'Pagos'];
+    final filters = ['Todos', 'Atrasados', 'Pendentes', 'Pagos'];
     return Container(
       height: 60,
       margin: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
@@ -310,7 +376,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                   });
                 }
               },
-              selectedColor: AppColors.primary,
+              selectedColor: filter == 'Atrasados' ? AppColors.error : AppColors.primary,
               labelStyle: AppTextStyles.labelMedium.copyWith(
                 color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -329,100 +395,181 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   }
 
   Widget _buildTransactionCard(FinancialEntry entry) {
-    final isExpense = entry.type == FinancialType.expense;
     final statusColor = entry.isPaid
         ? Colors.green
         : (entry.isLate ? AppColors.error : AppColors.secondary);
 
-    return InkWell(
-      onTap: entry.isPaid
-          ? null
-          : () => context.push(AppRoutes.driverPixCheckout, extra: entry),
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.md),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.onSurface.withValues(alpha: 0.03),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    final String statusText = entry.isPaid
+        ? 'PAGO'
+        : (entry.isUnderReview
+            ? 'EM ANÁLISE'
+            : (entry.isLate ? 'ATRASADO' : 'PENDENTE'));
+
+    final dateStr =
+        '${entry.date.day.toString().padLeft(2, '0')}/${entry.date.month.toString().padLeft(2, '0')}/${entry.date.year}';
+
+    final daysOverdue = entry.isLate && !entry.isPaid
+        ? DateTime.now().difference(entry.date).inDays
+        : 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: entry.isLate && !entry.isPaid
+              ? AppColors.error.withValues(alpha: 0.3)
+              : Colors.transparent,
+          width: 1.5,
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: (isExpense ? AppColors.error : Colors.green).withValues(
-                  alpha: 0.1,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.onSurface.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: (entry.isPaid
+                          ? Colors.green
+                          : (entry.isLate ? AppColors.error : AppColors.primary))
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                borderRadius: BorderRadius.circular(16),
+                child: Icon(
+                  entry.isPaid
+                      ? Icons.check_circle_outline
+                      : (entry.isLate ? Icons.warning_amber_rounded : Icons.payments_outlined),
+                  color: entry.isPaid
+                      ? Colors.green
+                      : (entry.isLate ? AppColors.error : AppColors.primary),
+                  size: 24,
+                ),
               ),
-              child: Icon(
-                isExpense ? Icons.arrow_outward : Icons.arrow_downward,
-                color: isExpense ? AppColors.error : Colors.green,
-                size: 24,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.description,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Vencimento: $dateStr ${daysOverdue > 0 ? "($daysOverdue dias em atraso)" : ""}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: entry.isLate && !entry.isPaid
+                            ? AppColors.error
+                            : AppColors.onSurfaceVariant,
+                        fontWeight: entry.isLate && !entry.isPaid
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    entry.description,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
+                    'R\$ ${entry.amount.toStringAsFixed(2).replaceAll('.', ',')}',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: entry.isLate && !entry.isPaid
+                          ? AppColors.error
+                          : AppColors.onSurface,
                     ),
                   ),
-                  Text(
-                    entry.category,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: (entry.isUnderReview ? Colors.blue : statusColor)
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: entry.isUnderReview ? Colors.blue : statusColor,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            ],
+          ),
+          if (!entry.isPaid) ...[
+            const SizedBox(height: AppSpacing.md),
+            const Divider(height: 1),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
               children: [
-                Text(
-                  '${isExpense ? "-" : "+"} R\$ ${entry.amount.toStringAsFixed(2).replaceAll('.', ',')}',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: isExpense ? AppColors.onSurface : Colors.green,
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final res = await context.push(
+                        AppRoutes.driverPixCheckout,
+                        extra: entry,
+                      );
+                      if (res == true) _loadEntries();
+                    },
+                    icon: const Icon(Icons.qr_code, size: 16),
+                    label: const Text('Pagar com PIX'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: entry.isLate ? AppColors.error : AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    entry.isPaid
-                        ? 'PAGO'
-                        : (entry.isLate ? 'ATRASADO' : 'PENDENTE'),
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: statusColor,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      ReceiptUploadDialog.show(
+                        context,
+                        entry: entry,
+                        onUploaded: _loadEntries,
+                      );
+                    },
+                    icon: const Icon(Icons.attach_file, size: 16),
+                    label: Text(entry.isUnderReview ? 'Trocar Comprovante' : 'Anexar Comprovante'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ],
-        ),
+        ],
       ),
     );
   }

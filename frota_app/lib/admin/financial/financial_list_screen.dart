@@ -4,7 +4,7 @@ import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/financial_repository.dart';
 import '../../models/financial_entry.dart';
 import '../../core/utils/report_generator.dart';
 import '../../core/widgets/app_dialogs.dart';
@@ -17,7 +17,7 @@ class FinancialListScreen extends StatefulWidget {
 }
 
 class _FinancialListScreenState extends State<FinancialListScreen> {
-  final MockRepository _repository = MockRepository();
+  final FinancialRepository _repository = FinancialRepository();
   List<FinancialEntry> _entries = [];
   bool _isLoading = true;
 
@@ -141,6 +141,37 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               _confirmDelete(entry);
             },
           ),
+          if (entry.receiptUrl != null && !entry.isPaid)
+            ListTile(
+              leading: const Icon(Icons.receipt_long, color: Colors.blue),
+              title: const Text('Ver Comprovante e Aprovar', style: TextStyle(color: Colors.blue)),
+              onTap: () {
+                Navigator.pop(context);
+                // Simulando a aprovação para agora
+                AppDialogs.showModal(
+                  context: context,
+                  title: 'Comprovante Enviado',
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('O motorista anexou um comprovante para este pagamento. Deseja aprovar?'),
+                      const SizedBox(height: 8),
+                      Text('URL: ${entry.receiptUrl}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _togglePaymentStatus(entry); // Marca como pago
+                      },
+                      child: const Text('Aprovar Comprovante'),
+                    ),
+                  ],
+                );
+              },
+            ),
         ],
       ),
     );

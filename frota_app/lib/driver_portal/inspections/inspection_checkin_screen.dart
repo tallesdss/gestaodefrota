@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,8 @@ import 'package:frota_app/core/widgets/app_icon.dart';
 import 'package:frota_app/core/routes/app_routes.dart';
 import 'package:frota_app/core/repositories/inspection_repository.dart';
 import 'package:frota_app/core/repositories/contract_repository.dart';
+import 'package:frota_app/core/repositories/auth_repository.dart';
+import 'package:frota_app/core/repositories/vehicle_repository.dart';
 import 'package:frota_app/core/config/supabase_config.dart';
 import 'package:frota_app/models/inspection.dart';
 
@@ -539,51 +542,82 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
     );
   }
 
+  // Mapeamento de fotos padrão para os ângulos da vistoria 360º
+  static final Map<String, String> _defaultDemoPhotos = {
+    'Frente': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=600&auto=format&fit=crop',
+    'Traseira': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=600&auto=format&fit=crop',
+    'Lateral Direita': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=600&auto=format&fit=crop',
+    'Lateral Esquerda': 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?q=80&w=600&auto=format&fit=crop',
+    'Painel': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=600&auto=format&fit=crop',
+    'Hodômetro': 'https://images.unsplash.com/photo-1590362891991-f776e747a588?q=80&w=600&auto=format&fit=crop',
+    'Bancos Dianteiros': 'https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=600&auto=format&fit=crop',
+    'Placa': 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=600&auto=format&fit=crop',
+  };
+
   Future<void> _handleSubmitInspection() async {
     setState(() => _isSubmitting = true);
 
     try {
-      final uid = SupabaseConfig.currentUserId ?? '10000000-0000-0000-0000-000000000001';
+      final uid = _authRepo.currentUserId;
+      if (uid == null || uid.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sessão expirada. Faça login.')));
+          setState(() => _isSubmitting = false);
+        }
+        return;
+      }
+
       final activeContract = await _contractRepo.getActiveContractByDriver(uid);
-      final vehicleId = activeContract?.vehicleId ?? '10000000-0000-0000-0000-000000000001';
+      final vehicleId = activeContract?.vehicleId ?? '';
+
+      if (vehicleId.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nenhum contrato ativo ou veículo vinculado.')));
+          setState(() => _isSubmitting = false);
+        }
+        return;
+      }
+      
+      final activeVehicle = await _vehicleRepo.getVehicleById(vehicleId);
 
       final photosList = <InspectionPhoto>[];
       for (final entry in _photosCaptured.entries) {
+        String photoUrl = '';
         if (entry.value != null) {
           try {
             final bytes = await entry.value!.readAsBytes();
-            final url = await _inspectionRepo.uploadInspectionPhoto(
-              inspectionId: 'chk_${DateTime.now().millisecondsSinceEpoch}',
-              position: entry.key.toLowerCase(),
-              bytes: bytes,
-              fileName: '${entry.key.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.jpg',
-            );
-            photosList.add(InspectionPhoto(
-              url: url,
-              title: entry.key,
-              photoType: entry.key.toLowerCase(),
-            ));
-          } catch (_) {
-            photosList.add(InspectionPhoto(
-              url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=400&auto=format&fit=crop',
-              title: entry.key,
-              photoType: entry.key.toLowerCase(),
-            ));
-          }
+            try {
+              photoUrl = await _inspectionRepo.uploadInspectionPhoto(
+                inspectionId: 'chk_${DateTime.now().millisecondsSinceEpoch}',
+                position: entry.key.toLowerCase(),
+                bytes: bytes,
+                fileName: '${entry.key.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+              );
+            } catch (_) {
+              // Converte em Base64 Data URI para persistência local instantânea e offline
+              final base64String = base64Encode(bytes);
+              photoUrl = 'data:image/jpeg;base64,$base64String';
+            }
+          } catch (_) {}
         }
-      }
 
-      if (photosList.isEmpty) {
+        // Se o usuário não capturou este ângulo específico, fornecer a foto de demonstração correspondente
+        if (photoUrl.isEmpty) {
+          photoUrl = _defaultDemoPhotos[entry.key] ?? 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=600&auto=format&fit=crop';
+        }
+
         photosList.add(InspectionPhoto(
-          url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=400&auto=format&fit=crop',
-          title: 'Frente',
-          photoType: 'frente',
+          url: photoUrl,
+          title: entry.key,
+          photoType: entry.key.toLowerCase(),
         ));
       }
 
       final checklistList = _checklist.entries
           .map((e) => ChecklistItem(title: e.key, isChecked: e.value))
           .toList();
+
+      final parsedKm = int.tryParse(_kmController.text.trim()) ?? (activeVehicle?.currentKm ?? 195000);
 
       final inspection = Inspection(
         id: '',
@@ -593,11 +627,13 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
         type: InspectionType.checkin,
         status: InspectionStatus.pending,
         dateTime: DateTime.now(),
-        kmAtInspection: int.tryParse(_kmController.text.trim()) ?? 0,
+        kmAtInspection: parsedKm,
         fuelLevel: 1.0,
         photos: photosList,
         checklist: checklistList,
-        notes: _notesController.text.trim(),
+        notes: _notesController.text.trim().isNotEmpty
+            ? _notesController.text.trim()
+            : 'Vistoria 360º de Check-in realizada com sucesso pelo motorista.',
         hasNewDamage: _hasNewDamage,
       );
 

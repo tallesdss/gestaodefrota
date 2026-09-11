@@ -290,12 +290,14 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    'Manter conectado neste dispositivo',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.onSurfaceVariant,
+                  Expanded(
+                    child: Text(
+                      'Manter conectado neste dispositivo',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],

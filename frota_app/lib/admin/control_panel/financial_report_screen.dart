@@ -16,6 +16,8 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
   final FinancialRepository _financialRepo = FinancialRepository();
   List<FinancialEntry> _entries = [];
   bool _isLoading = true;
+  int _selectedMonth = DateTime.now().month;
+  int _selectedYear = DateTime.now().year;
 
   @override
   void initState() {
@@ -29,7 +31,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
       final data = await _financialRepo.getFinancialEntries();
       if (mounted) {
         setState(() {
-          _entries = data;
+          _entries = data.where((e) => e.date.month == _selectedMonth && e.date.year == _selectedYear).toList();
           _isLoading = false;
         });
       }
@@ -40,11 +42,12 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final totalIncome = _entries
+    final paidEntries = _entries.where((e) => e.isPaid).toList();
+    final totalIncome = paidEntries
         .where((e) => e.type == FinancialType.income)
         .fold(0.0, (sum, e) => sum + e.amount);
 
-    final totalExpense = _entries
+    final totalExpense = paidEntries
         .where((e) => e.type == FinancialType.expense)
         .fold(0.0, (sum, e) => sum + e.amount);
 
@@ -54,12 +57,19 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: Text(
-          'RELATÓRIO CONSOLIDADO',
-          style: AppTextStyles.labelLarge.copyWith(
-            letterSpacing: 1.5,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'RELATÓRIO CONSOLIDADO',
+              style: AppTextStyles.labelLarge.copyWith(
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            _buildMonthYearSelector(),
+          ],
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -90,9 +100,9 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: _buildSummaryCard(
-                            'TOTAL ENTRADAS',
+                            'TOTAL ENTRADAS (Pagas)',
                             'R\$ ${totalIncome.toStringAsFixed(2).replaceAll('.', ',')}',
-                            '${_entries.where((e) => e.type == FinancialType.income).length} lançamentos',
+                            '${paidEntries.where((e) => e.type == FinancialType.income).length} recebimentos',
                             AppColors.primary,
                             Icons.account_balance_wallet_outlined,
                           ),
@@ -100,9 +110,9 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: _buildSummaryCard(
-                            'TOTAL SAÍDAS',
+                            'TOTAL SAÍDAS (Pagas)',
                             'R\$ ${totalExpense.toStringAsFixed(2).replaceAll('.', ',')}',
-                            '${_entries.where((e) => e.type == FinancialType.expense).length} despesas',
+                            '${paidEntries.where((e) => e.type == FinancialType.expense).length} despesas',
                             AppColors.error,
                             Icons.payments_outlined,
                           ),
@@ -128,6 +138,50 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildMonthYearSelector() {
+    return Row(
+      children: [
+        DropdownButton<int>(
+          value: _selectedMonth,
+          dropdownColor: AppColors.surfaceContainerHigh,
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+          underline: const SizedBox(),
+          items: List.generate(12, (index) => index + 1).map((month) {
+            return DropdownMenuItem(
+              value: month,
+              child: Text(month.toString().padLeft(2, '0')),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() => _selectedMonth = val);
+              _loadReportData();
+            }
+          },
+        ),
+        const Text('/', style: TextStyle(color: AppColors.onSurfaceVariant)),
+        DropdownButton<int>(
+          value: _selectedYear,
+          dropdownColor: AppColors.surfaceContainerHigh,
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+          underline: const SizedBox(),
+          items: [DateTime.now().year - 1, DateTime.now().year, DateTime.now().year + 1].map((year) {
+            return DropdownMenuItem(
+              value: year,
+              child: Text(year.toString()),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() => _selectedYear = val);
+              _loadReportData();
+            }
+          },
+        ),
+      ],
     );
   }
 

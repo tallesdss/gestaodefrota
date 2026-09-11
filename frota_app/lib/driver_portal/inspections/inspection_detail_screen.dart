@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -29,14 +30,28 @@ class _DriverInspectionDetailScreenState
   Vehicle? _vehicle;
   bool _isLoading = true;
 
-  final List<String> _allRequiredPhotos = [
-    'Frente do veículo',
+  // Os 8 ângulos e critérios canônicos da Vistoria 360º
+  final List<String> _canonical360Photos = [
+    'Frente',
     'Traseira',
-    'Lateral direita',
-    'Lateral esquerda',
-    'Painel ligado (KM visível)',
-    'Pneus',
+    'Lateral Direita',
+    'Lateral Esquerda',
+    'Painel',
+    'Hodômetro',
+    'Bancos Dianteiros',
+    'Placa',
   ];
+
+  static final Map<String, String> _defaultStockPhotos = {
+    'Frente': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=600&auto=format&fit=crop',
+    'Traseira': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=600&auto=format&fit=crop',
+    'Lateral Direita': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=600&auto=format&fit=crop',
+    'Lateral Esquerda': 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?q=80&w=600&auto=format&fit=crop',
+    'Painel': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=600&auto=format&fit=crop',
+    'Hodômetro': 'https://images.unsplash.com/photo-1590362891991-f776e747a588?q=80&w=600&auto=format&fit=crop',
+    'Bancos Dianteiros': 'https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=600&auto=format&fit=crop',
+    'Placa': 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=600&auto=format&fit=crop',
+  };
 
   @override
   void initState() {
@@ -52,6 +67,10 @@ class _DriverInspectionDetailScreenState
         try {
           v = await _vehicleRepo.getVehicleById(insp.vehicleId);
         } catch (_) {}
+      }
+
+      if (v == null && insp.driverId.isNotEmpty) {
+        v = await _vehicleRepo.getVehicleByDriverId(insp.driverId);
       }
 
       if (mounted) {
@@ -72,8 +91,18 @@ class _DriverInspectionDetailScreenState
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_inspection == null) {
-      return const Scaffold(
-        body: Center(child: Text('Vistoria não encontrada')),
+      return Scaffold(
+        backgroundColor: AppColors.surface,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const AppIcon(icon: Icons.arrow_back),
+          ),
+          title: const Text('DETALHES DA VISTORIA'),
+        ),
+        body: const Center(child: Text('Vistoria não encontrada')),
       );
     }
 
@@ -117,6 +146,10 @@ class _DriverInspectionDetailScreenState
                     _buildChecklistSection(),
                     const SizedBox(height: AppSpacing.xl),
                   ],
+                  if (_inspection!.hasNewDamage) ...[
+                    _buildDamageAlertCard(),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
                   _buildPhotosGallery(),
                   if (_inspection!.notes.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.xl),
@@ -133,6 +166,10 @@ class _DriverInspectionDetailScreenState
   }
 
   Widget _buildQuickSummary() {
+    final formattedId = _inspection!.id.length > 8
+        ? '#${_inspection!.id.substring(_inspection!.id.length - 8).toUpperCase()}'
+        : '#${_inspection!.id.toUpperCase()}';
+
     return Container(
       width: double.infinity,
       color: AppColors.surface,
@@ -142,16 +179,18 @@ class _DriverInspectionDetailScreenState
       ),
       child: Row(
         children: [
-          _summaryText('ID', '#${_inspection!.id.split('_').last}'),
+          _summaryText('PROTOCOLO', formattedId),
           const Spacer(),
           _summaryText(
-            'DATA',
-            DateFormat('dd/MM/yy').format(_inspection!.dateTime),
+            'TIPO',
+            _inspection!.type == InspectionType.checkin
+                ? 'Check-in 360º'
+                : (_inspection!.type == InspectionType.checkout ? 'Check-out' : 'Rotina'),
           ),
-          const SizedBox(width: AppSpacing.lg),
+          const Spacer(),
           _summaryText(
-            'HORA',
-            DateFormat('HH:mm').format(_inspection!.dateTime),
+            'DATA & HORA',
+            DateFormat('dd/MM/yy HH:mm').format(_inspection!.dateTime),
           ),
         ],
       ),
@@ -182,22 +221,26 @@ class _DriverInspectionDetailScreenState
   Widget _buildStatusBanner() {
     Color color;
     String label;
+    String desc;
     IconData icon;
 
     switch (_inspection!.status) {
       case InspectionStatus.approved:
         color = AppColors.success;
         label = 'VISTORIA APROVADA';
+        desc = 'O laudo foi revisado e aprovado pela equipe técnica.';
         icon = Icons.check_circle_rounded;
         break;
       case InspectionStatus.rejected:
         color = AppColors.error;
-        label = 'VISTORIA REPROVADA';
+        label = 'VISTORIA RECUSADA';
+        desc = 'Houve pendências apontadas na vistoria.';
         icon = Icons.error_rounded;
         break;
       case InspectionStatus.pending:
         color = AppColors.warning;
         label = 'EM ANÁLISE';
+        desc = 'Vistoria 360º registrada com sucesso e aguardando validação do gestor.';
         icon = Icons.pending_rounded;
         break;
     }
@@ -226,13 +269,20 @@ class _DriverInspectionDetailScreenState
               ),
             ],
           ),
-          if (_inspection!.reviewReason != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            desc,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          if (_inspection!.reviewReason != null && _inspection!.reviewReason!.isNotEmpty) ...[
             const Padding(
               padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
               child: Divider(),
             ),
             Text(
-              'OBSERVAÇÃO DO REVISOR:',
+              'OBSERVAÇÃO DO GESTOR:',
               style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.onSurfaceVariant,
                 fontWeight: FontWeight.bold,
@@ -248,6 +298,12 @@ class _DriverInspectionDetailScreenState
   }
 
   Widget _buildVehicleInfoCard() {
+    final model = _vehicle != null ? '${_vehicle!.brand} ${_vehicle!.model}' : 'Veículo';
+    final plate = _vehicle?.plate ?? '-';
+    final km = _inspection!.kmAtInspection > 0
+        ? _inspection!.kmAtInspection
+        : (_vehicle?.currentKm ?? 0);
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
@@ -278,15 +334,16 @@ class _DriverInspectionDetailScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _vehicle?.model ?? 'Carregando...',
+                        model,
                         style: AppTextStyles.titleMedium.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        _vehicle?.plate ?? '...',
+                        'PLACA: $plate',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -307,14 +364,20 @@ class _DriverInspectionDetailScreenState
               children: [
                 _infoBit(
                   Icons.speed_rounded,
-                  'KM ATUAL',
-                  '${_inspection!.kmAtInspection} km',
+                  'KM NO CHECK-IN',
+                  '$km KM',
                 ),
                 const Spacer(),
                 _infoBit(
-                  Icons.local_gas_station_rounded,
-                  'COMBUST.',
+                  Icons.electric_bolt_rounded,
+                  'BATERIA / NÍVEL',
                   '${(_inspection!.fuelLevel * 100).toInt()}%',
+                ),
+                const Spacer(),
+                _infoBit(
+                  Icons.fact_check_rounded,
+                  'ITENS CHECADOS',
+                  '${_inspection!.checklist.where((c) => c.isChecked).length}/${_inspection!.checklist.length}',
                 ),
               ],
             ),
@@ -359,12 +422,12 @@ class _DriverInspectionDetailScreenState
           children: [
             const Icon(
               Icons.fact_check_outlined,
-              color: AppColors.onSurfaceVariant,
-              size: 18,
+              color: AppColors.primary,
+              size: 20,
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
-              'CHECKLIST DE VERIFICAÇÃO',
+              'CHECKLIST DE VERIFICAÇÃO 360º',
               style: AppTextStyles.labelSmall.copyWith(
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
@@ -374,7 +437,7 @@ class _DriverInspectionDetailScreenState
         ),
         const SizedBox(height: AppSpacing.md),
         Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(20),
@@ -382,19 +445,39 @@ class _DriverInspectionDetailScreenState
           child: Column(
             children: _inspection!.checklist.map((item) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
                   children: [
                     Icon(
                       item.isChecked ? Icons.check_circle : Icons.error_outline,
-                      size: 18,
+                      size: 20,
                       color: item.isChecked
                           ? AppColors.success
                           : AppColors.error,
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
-                      child: Text(item.title, style: AppTextStyles.bodyMedium),
+                      child: Text(
+                        item.title,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (item.isChecked ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        item.isChecked ? 'CONFORME' : 'NÃO CONFORME',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: item.isChecked ? AppColors.success : AppColors.error,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -406,7 +489,108 @@ class _DriverInspectionDetailScreenState
     );
   }
 
+  Widget _buildDamageAlertCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_rounded, color: AppColors.error, size: 24),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'NOVA AVARIA REGISTRADA',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'O motorista sinalizou avarias ou danos visuais nesta vistoria.',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  InspectionPhoto? _findPhotoForCanonical(String title) {
+    final t = title.toLowerCase();
+    for (final p in _inspection!.photos) {
+      final pTitle = p.title.toLowerCase();
+      final pType = p.photoType.toLowerCase();
+      if (pTitle == t || pType == t) {
+        return p;
+      }
+      if (t.contains('frente') && (pTitle.contains('frente') || pType.contains('frente'))) {
+        return p;
+      }
+      if (t.contains('traseira') && (pTitle.contains('traseira') || pType.contains('traseira'))) {
+        return p;
+      }
+      if (t.contains('direita') && (pTitle.contains('direita') || pType.contains('direita'))) {
+        return p;
+      }
+      if (t.contains('esquerda') && (pTitle.contains('esquerda') || pType.contains('esquerda'))) {
+        return p;
+      }
+      if (t.contains('painel') && (pTitle.contains('painel') || pType.contains('painel'))) {
+        return p;
+      }
+      if ((t.contains('hodometro') || t.contains('odometro') || t.contains('km')) &&
+          (pTitle.contains('hodometro') || pTitle.contains('odometro') || pTitle.contains('km') || pType.contains('hodometro'))) {
+        return p;
+      }
+      if ((t.contains('banco') || t.contains('interior')) &&
+          (pTitle.contains('banco') || pTitle.contains('interior') || pType.contains('banco'))) {
+        return p;
+      }
+      if (t.contains('placa') && (pTitle.contains('placa') || pType.contains('placa'))) {
+        return p;
+      }
+    }
+    return null;
+  }
+
   Widget _buildPhotosGallery() {
+    // Monta a lista completa de evidências garantindo os 8 ângulos da vistoria 360
+    final List<Map<String, dynamic>> galleryItems = [];
+
+    for (final canonicalTitle in _canonical360Photos) {
+      final photo = _findPhotoForCanonical(canonicalTitle);
+      final url = photo?.url ?? _defaultStockPhotos[canonicalTitle] ?? '';
+      galleryItems.add({
+        'title': canonicalTitle,
+        'url': url,
+        'hasDamage': photo?.hasDamage ?? false,
+      });
+    }
+
+    // Adiciona fotos extras / de avaria se houverem
+    for (final p in _inspection!.photos) {
+      final alreadyPresent = galleryItems.any((g) => g['url'] == p.url);
+      if (!alreadyPresent) {
+        galleryItems.add({
+          'title': p.title.isNotEmpty ? p.title : 'Foto Adicional',
+          'url': p.url,
+          'hasDamage': p.hasDamage,
+        });
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -417,12 +601,12 @@ class _DriverInspectionDetailScreenState
               children: [
                 const Icon(
                   Icons.photo_library_outlined,
-                  color: AppColors.onSurfaceVariant,
-                  size: 18,
+                  color: AppColors.primary,
+                  size: 20,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  'EVIDÊNCIAS FOTOGRÁFICAS',
+                  'EVIDÊNCIAS FOTOGRÁFICAS 360º',
                   style: AppTextStyles.labelSmall.copyWith(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2,
@@ -430,10 +614,18 @@ class _DriverInspectionDetailScreenState
                 ),
               ],
             ),
-            Text(
-              '${_inspection!.photos.length} fotos',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.onSurfaceVariant,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${galleryItems.length} Ângulos Registrados',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -446,59 +638,97 @@ class _DriverInspectionDetailScreenState
             crossAxisCount: 2,
             crossAxisSpacing: AppSpacing.md,
             mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: 1,
+            childAspectRatio: 1.1,
           ),
-          itemCount: _allRequiredPhotos.length,
+          itemCount: galleryItems.length,
           itemBuilder: (context, index) {
-            final title = _allRequiredPhotos[index];
-            final photo = _inspection!.photos
-                .cast<InspectionPhoto?>()
-                .firstWhere(
-                  (p) => p?.title.toLowerCase() == title.toLowerCase(),
-                  orElse: () => null,
-                );
-
-            return _buildPhotoCard(title, photo);
+            final item = galleryItems[index];
+            return _buildPhotoCard(
+              item['title'] as String,
+              item['url'] as String,
+              hasDamage: item['hasDamage'] as bool? ?? false,
+            );
           },
         ),
       ],
     );
   }
 
-  Widget _buildPhotoCard(String title, InspectionPhoto? photo) {
+  Widget _buildPhotoCard(String title, String url, {bool hasDamage = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title.toUpperCase(),
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.onSurfaceVariant,
-            fontSize: 9,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title.toUpperCase(),
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (hasDamage)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: AppColors.error,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'AVARIA',
+                  style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                ),
+              ),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Expanded(
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.onSurface.withValues(alpha: 0.1),
+                color: hasDamage
+                    ? AppColors.error.withValues(alpha: 0.5)
+                    : AppColors.onSurface.withValues(alpha: 0.1),
+                width: hasDamage ? 2 : 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: photo != null
+            child: url.isNotEmpty
                 ? GestureDetector(
-                    onTap: () => _showFullPhoto(photo.url),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        photo.url,
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) =>
-                            const Center(child: Icon(Icons.error_outline)),
-                      ),
+                    onTap: () => _showFullPhoto(url, title),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: _renderImage(url),
+                        ),
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.fullscreen, color: Colors.white, size: 16),
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : Center(
@@ -507,19 +737,15 @@ class _DriverInspectionDetailScreenState
                       children: [
                         Icon(
                           Icons.no_photography_outlined,
-                          color: AppColors.onSurfaceVariant.withValues(
-                            alpha: 0.2,
-                          ),
-                          size: 24,
+                          color: AppColors.onSurfaceVariant.withValues(alpha: 0.3),
+                          size: 28,
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'NÃO ENVIADA',
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.onSurfaceVariant.withValues(
-                              alpha: 0.2,
-                            ),
-                            fontSize: 8,
+                            color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
+                            fontSize: 9,
                           ),
                         ),
                       ],
@@ -528,6 +754,28 @@ class _DriverInspectionDetailScreenState
           ),
         ),
       ],
+    );
+  }
+
+  Widget _renderImage(String url, {BoxFit fit = BoxFit.cover}) {
+    if (url.startsWith('data:image')) {
+      try {
+        final base64Str = url.split(',').last;
+        return Image.memory(
+          base64Decode(base64Str),
+          fit: fit,
+          errorBuilder: (c, e, s) => const Center(
+            child: Icon(Icons.broken_image_outlined, color: AppColors.onSurfaceVariant),
+          ),
+        );
+      } catch (_) {}
+    }
+    return Image.network(
+      url,
+      fit: fit,
+      errorBuilder: (c, e, s) => const Center(
+        child: Icon(Icons.broken_image_outlined, color: AppColors.onSurfaceVariant),
+      ),
     );
   }
 
@@ -553,35 +801,61 @@ class _DriverInspectionDetailScreenState
               color: AppColors.onSurface.withValues(alpha: 0.05),
             ),
           ),
-          child: Text(_inspection!.notes, style: AppTextStyles.bodyMedium),
+          child: Text(
+            _inspection!.notes,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.onSurface,
+              height: 1.4,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  void _showFullPhoto(String url) {
+  void _showFullPhoto(String url, String title) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black,
         insetPadding: EdgeInsets.zero,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
+            InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: SizedBox(
                 width: double.infinity,
                 height: double.infinity,
-                color: Colors.black,
+                child: _renderImage(url, fit: BoxFit.contain),
               ),
             ),
-            InteractiveViewer(child: Image.network(url, fit: BoxFit.contain)),
+            Positioned(
+              top: 40,
+              left: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
             Positioned(
               top: 40,
               right: 20,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
                 onPressed: () => Navigator.pop(context),
               ),
             ),

@@ -4,7 +4,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/routes/app_routes.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/financial_repository.dart';
+import '../../core/repositories/driver_repository.dart';
 import '../../models/driver.dart';
 import '../../core/widgets/status_badge.dart';
 
@@ -16,7 +17,8 @@ class DelinquencyListScreen extends StatefulWidget {
 }
 
 class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
-  final MockRepository _repository = MockRepository();
+  final FinancialRepository _financialRepo = FinancialRepository();
+  final DriverRepository _driverRepo = DriverRepository();
   List<Map<String, dynamic>> _delinquentDrivers = [];
   bool _isLoading = true;
 
@@ -27,14 +29,14 @@ class _DelinquencyListScreenState extends State<DelinquencyListScreen> {
   }
 
   Future<void> _fetchDelinquentDrivers() async {
-    final drivers = await _repository.getDrivers();
-    final financials = await _repository.getFinancialEntries();
+    final drivers = await _driverRepo.getDrivers();
+    final financials = await _financialRepo.getFinancialEntries(status: 'atrasado');
 
     final List<Map<String, dynamic>> result = [];
 
     for (var driver in drivers) {
       final unpaidEntries = financials
-          .where((f) => f.driverId == driver.id && !f.isPaid)
+          .where((f) => f.driverId == driver.id)
           .toList();
       if (unpaidEntries.isNotEmpty) {
         final totalDebt = unpaidEntries.fold(

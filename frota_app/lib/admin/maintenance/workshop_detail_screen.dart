@@ -4,7 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/workshop.dart';
 import '../../models/maintenance_entry.dart';
 import '../../models/vehicle.dart';
-import '../../core/repositories/mock_repository.dart';
+import '../../core/repositories/maintenance_repository.dart';
+import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/workshop_repository.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
@@ -22,10 +24,12 @@ class WorkshopDetailScreen extends StatefulWidget {
 class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final MockRepository _repository = MockRepository();
+  final MaintenanceRepository _maintenanceRepo = MaintenanceRepository();
+  final VehicleRepository _vehicleRepo = VehicleRepository();
+  final WorkshopRepository _workshopRepo = WorkshopRepository();
 
-  // Mock Workshop Data
-  late Workshop workshop;
+  Workshop? workshop;
+  bool _isLoadingWorkshop = true;
   bool _isLoadingMaintenances = true;
 
   // Mock data for tabs
@@ -39,6 +43,7 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _loadWorkshop();
     _loadMaintenances();
     _loadVehicles();
 
@@ -105,27 +110,16 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
       ),
     ];
 
-    // Initialize mock workshop based on ID
-    workshop = Workshop(
-      id: widget.workshopId,
-      name: 'Oficina Master Car',
-      cnpj: '12.345.678/0001-90',
-      phone: '(11) 98765-4321',
-      email: 'contato@mastercar.com',
-      address: 'Rua das Oficinas, 123 - São Paulo',
-      isAccredited: true,
-      rating: 4.8,
-      totalSpent: 45000.00,
-      pendingPayment: 12500.00,
-      specializedServices: [
-        'Motor',
-        'Suspensão',
-        'Freios',
-        'Transmissão',
-        'Injeção',
-      ],
-      bankInfo: 'Banco do Brasil - AG: 4567 - CC: 12345-6',
-    );
+  }
+
+  Future<void> _loadWorkshop() async {
+    final w = await _workshopRepo.getWorkshopById(widget.workshopId);
+    if (mounted) {
+      setState(() {
+        workshop = w;
+        _isLoadingWorkshop = false;
+      });
+    }
   }
 
   @override
@@ -136,10 +130,21 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingWorkshop || workshop == null) {
+      return Scaffold(
+        backgroundColor: AppColors.surface,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: Text(workshop.name, style: AppTextStyles.headlineSmall),
+        title: Text(workshop!.name, style: AppTextStyles.headlineSmall),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -167,21 +172,17 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
   }
 
   Future<void> _loadMaintenances() async {
-    final list = await _repository.getMaintenances();
+    final list = await _maintenanceRepo.getMaintenances(workshopId: widget.workshopId);
     if (mounted) {
       setState(() {
-        _maintenances = list
-            .where(
-              (m) => m.workshopId == widget.workshopId || m.workshopId == 'w1',
-            )
-            .toList();
+        _maintenances = list;
         _isLoadingMaintenances = false;
       });
     }
   }
 
   Future<void> _loadVehicles() async {
-    final list = await _repository.getVehicles();
+    final list = await _vehicleRepo.getVehicles();
     if (mounted) {
       setState(() {
         _vehicles = list;
@@ -215,7 +216,7 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
                 Row(
                   children: [
                     Text(
-                      workshop.name,
+                      workshop!.name,
                       style: AppTextStyles.headlineSmall.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -225,7 +226,7 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
                   ],
                 ),
                 Text(
-                  workshop.cnpj,
+                  workshop!.cnpj,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -236,7 +237,7 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
                     const Icon(Icons.star, color: Colors.amber, size: 18),
                     const SizedBox(width: 4),
                     Text(
-                      workshop.rating.toString(),
+                      workshop!.rating.toString(),
                       style: AppTextStyles.labelLarge.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -248,19 +249,19 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
                       color: AppColors.onSurfaceVariant,
                     ),
                     const SizedBox(width: 4),
-                    Text(workshop.phone, style: AppTextStyles.bodySmall),
+                    Text(workshop!.phone, style: AppTextStyles.bodySmall),
                   ],
                 ),
               ],
             ),
           ),
           _buildSummaryKPI(
-            'R\$ ${workshop.totalSpent.toStringAsFixed(0)}',
+            'R\$ ${workshop!.totalSpent.toStringAsFixed(0)}',
             'Total Gasto',
           ),
           const SizedBox(width: AppSpacing.lg),
           _buildSummaryKPI(
-            'R\$ ${workshop.pendingPayment.toStringAsFixed(0)}',
+            'R\$ ${workshop!.pendingPayment.toStringAsFixed(0)}',
             'A Pagar',
             color: Colors.orange,
           ),
@@ -321,14 +322,14 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
           children: [
             _buildBalanceCard(
               'Total Pago',
-              'R\$ ${(workshop.totalSpent - workshop.pendingPayment).toStringAsFixed(2)}',
+              'R\$ ${(workshop!.totalSpent - workshop!.pendingPayment).toStringAsFixed(2)}',
               Icons.check_circle_outline,
               Colors.teal,
             ),
             const SizedBox(width: AppSpacing.md),
             _buildBalanceCard(
               'Saldo Devedor',
-              'R\$ ${workshop.pendingPayment.toStringAsFixed(2)}',
+              'R\$ ${workshop!.pendingPayment.toStringAsFixed(2)}',
               Icons.payment,
               Colors.orange,
             ),
@@ -637,7 +638,7 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
                 id: isEditing
                     ? doc.id
                     : DateTime.now().millisecondsSinceEpoch.toString(),
-                workshopId: workshop.id,
+                workshopId: workshop!.id,
                 title: titleController.text,
                 type: type,
                 date: isEditing ? doc.date : DateTime.now(),
@@ -780,8 +781,8 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
         actions: [
           if (isEditing)
             TextButton(
-              onPressed: () {
-                _repository.deleteMaintenance(entry.id);
+              onPressed: () async {
+                await _maintenanceRepo.deleteMaintenance(entry.id);
                 setState(
                   () => _maintenances.removeWhere((m) => m.id == entry.id),
                 );
@@ -809,13 +810,13 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
                 date: isEditing ? entry.date : DateTime.now(),
                 kmAtMaintenance: int.tryParse(kmController.text) ?? 0,
                 cost: double.tryParse(costController.text) ?? 0.0,
-                workshop: workshop.name,
-                workshopId: workshop.id,
+                workshop: workshop!.name,
+                workshopId: workshop!.id,
                 status: isEditing ? entry.status : MaintenanceStatus.pending,
               );
 
               if (isEditing) {
-                _repository.updateMaintenance(newEntry);
+                _maintenanceRepo.updateMaintenance(newEntry);
                 setState(() {
                   final index = _maintenances.indexWhere(
                     (m) => m.id == entry.id,
@@ -823,7 +824,7 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
                   _maintenances[index] = newEntry;
                 });
               } else {
-                _repository.addMaintenance(newEntry);
+                _maintenanceRepo.createMaintenance(newEntry);
                 setState(() => _maintenances.add(newEntry));
               }
               Navigator.pop(context);
@@ -955,7 +956,7 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
                 id: isEditing
                     ? part.id
                     : DateTime.now().millisecondsSinceEpoch.toString(),
-                workshopId: workshop.id,
+                workshopId: workshop!.id,
                 name: nameController.text,
                 price: double.tryParse(priceController.text) ?? 0.0,
                 date: isEditing ? part.date : DateTime.now(),
@@ -983,17 +984,17 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       children: [
-        _buildDetailRow(Icons.pin_drop_outlined, 'Endereço', workshop.address),
-        _buildDetailRow(Icons.email_outlined, 'E-mail', workshop.email),
+        _buildDetailRow(Icons.pin_drop_outlined, 'Endereço', workshop!.address),
+        _buildDetailRow(Icons.email_outlined, 'E-mail', workshop!.email),
         _buildDetailRow(
           Icons.phone_android_outlined,
           'Celular',
-          workshop.phone,
+          workshop!.phone,
         ),
         _buildDetailRow(
           Icons.account_balance_outlined,
           'Dados Bancários',
-          workshop.bankInfo ?? 'Não informado',
+          workshop!.bankInfo ?? 'Não informado',
         ),
         const SizedBox(height: AppSpacing.xl),
         _buildSectionTitle('Especialidades'),
@@ -1001,7 +1002,7 @@ class _WorkshopDetailScreenState extends State<WorkshopDetailScreen>
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: workshop.specializedServices
+          children: workshop!.specializedServices
               .map(
                 (service) => Chip(
                   label: Text(service),
