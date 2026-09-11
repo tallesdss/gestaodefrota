@@ -7,6 +7,8 @@ import '../../core/routes/app_routes.dart';
 import '../../core/services/pix_service.dart';
 
 import '../../models/admin_pix_config.dart';
+import '../../core/repositories/auth_repository.dart';
+import '../../models/user_profile.dart';
 
 class ControlPanelScreen extends StatefulWidget {
   const ControlPanelScreen({super.key});
@@ -16,12 +18,22 @@ class ControlPanelScreen extends StatefulWidget {
 }
 
 class _ControlPanelScreenState extends State<ControlPanelScreen> {
+  UserProfile? _profile;
+
   @override
   void initState() {
     super.initState();
+    _loadProfile();
     PixService().initialize().then((_) {
       if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await AuthRepository().getCurrentUserProfile();
+    if (mounted) {
+      setState(() => _profile = profile);
+    }
   }
 
   @override
@@ -122,34 +134,38 @@ class _ControlPanelScreenState extends State<ControlPanelScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildQuickActionButton(
-                    context,
-                    title: 'Gestores',
-                    icon: Icons.badge_outlined,
-                    color: AppColors.primary,
-                    onTap: () => context.push(AppRoutes.adminManagerList),
-                  ),
-                  _buildQuickActionButton(
-                    context,
-                    title: 'Salários',
-                    icon: Icons.payments_outlined,
-                    color: Colors.purple,
-                    onTap: () => context.push(AppRoutes.adminManagerSalaries),
-                  ),
-                  _buildQuickActionButton(
-                    context,
-                    title: 'Categorias',
-                    icon: Icons.category_outlined,
-                    color: AppColors.success,
-                    onTap: () => context.push(AppRoutes.adminExpenseCategories),
-                  ),
-                  _buildQuickActionButton(
-                    context,
-                    title: 'Relatórios',
-                    icon: Icons.analytics_outlined,
-                    color: Colors.orange,
-                    onTap: () => context.push(AppRoutes.adminFinancialReport),
-                  ),
+                  if (_profile?.isAdmin == true) ...[
+                    _buildQuickActionButton(
+                      context,
+                      title: 'Gestores',
+                      icon: Icons.badge_outlined,
+                      color: AppColors.primary,
+                      onTap: () => context.push(AppRoutes.adminManagerList),
+                    ),
+                    _buildQuickActionButton(
+                      context,
+                      title: 'Salários',
+                      icon: Icons.payments_outlined,
+                      color: Colors.purple,
+                      onTap: () => context.push(AppRoutes.adminManagerSalaries),
+                    ),
+                  ],
+                  if (_profile?.isAdmin == true || _profile?.permissoes.contains('financeiro.baixar') == true) ...[
+                    _buildQuickActionButton(
+                      context,
+                      title: 'Categorias',
+                      icon: Icons.category_outlined,
+                      color: AppColors.success,
+                      onTap: () => context.push(AppRoutes.adminExpenseCategories),
+                    ),
+                    _buildQuickActionButton(
+                      context,
+                      title: 'Relatórios',
+                      icon: Icons.analytics_outlined,
+                      color: Colors.orange,
+                      onTap: () => context.push(AppRoutes.adminFinancialReport),
+                    ),
+                  ],
                 ],
               ),
             ),

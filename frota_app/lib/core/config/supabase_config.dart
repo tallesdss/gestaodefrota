@@ -44,6 +44,7 @@ class SupabaseConfig {
   static const String tabelaGestores = 'gestores';
   static const String tabelaPermissoes = 'permissoes';
   static const String tabelaGestorPermissoes = 'gestor_permissoes';
+  static const String tabelaPagamentosGestores = 'pagamentos_gestores';
   static const String tabelaVeiculos = 'veiculos';
   static const String tabelaContratos = 'contratos';
   static const String tabelaVistorias = 'vistorias';

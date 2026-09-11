@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/contract.dart';
 import '../config/supabase_config.dart';
@@ -190,6 +191,70 @@ bool _isValidUuid(String? str) {
         .from(SupabaseConfig.tabelaContratos)
         .update({'status': 'concluido'})
         .eq('id', contractId);
+
+    // [GES-02] Calcular comissão para o gestor atual se houver
+    final userId = SupabaseConfig.currentUserId;
+    if (userId == null) return;
+
+    try {
+      final gestorRes = await _client
+          .from(SupabaseConfig.tabelaGestores)
+          .select('percentual_comissao')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (gestorRes == null) return; // Não é gestor
+      
+      final percentual = (gestorRes['percentual_comissao'] as num).toDouble();
+      if (percentual <= 0) return;
+
+      // Somar receita do contrato
+      final financeiroRes = await _client
+          .from(SupabaseConfig.tabelaLancamentosFinanceiros)
+          .select('valor')
+          .eq('contrato_id', contractId)
+          .eq('status', 'pago')
+          .eq('tipo', 'receita');
+
+      double totalReceita = 0;
+      for (var row in financeiroRes as List) {
+        totalReceita += (row['valor'] as num).toDouble();
+      }
+
+      if (totalReceita <= 0) return;
+
+      final comissao = totalReceita * (percentual / 100);
+      
+      // Registrar em pagamentos_gestores para o mês atual
+      final now = DateTime.now();
+      final mesReferencia = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+      
+      final paymentRes = await _client
+          .from(SupabaseConfig.tabelaPagamentosGestores)
+          .select()
+          .eq('gestor_id', userId)
+          .eq('mes_referencia', mesReferencia)
+          .maybeSingle();
+          
+      if (paymentRes != null) {
+        final currentComissao = (paymentRes['valor_comissao'] as num).toDouble();
+        await _client
+            .from(SupabaseConfig.tabelaPagamentosGestores)
+            .update({'valor_comissao': currentComissao + comissao})
+            .eq('id', paymentRes['id']);
+      } else {
+        await _client
+            .from(SupabaseConfig.tabelaPagamentosGestores)
+            .insert({
+              'gestor_id': userId,
+              'valor_salario': 0.0, 
+              'valor_comissao': comissao,
+              'mes_referencia': mesReferencia,
+            });
+      }
+    } catch (e) {
+      debugPrint('Erro ao calcular comissão: $e');
+    }
   }
 
   /// Cancelar contrato

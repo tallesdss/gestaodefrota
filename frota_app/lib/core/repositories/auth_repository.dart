@@ -141,6 +141,28 @@ class AuthRepository {
     try {
       final profileMap = await getCurrentProfile();
       if (profileMap != null) {
+        // [GES-03] Fetch permissions if user is manager or admin
+        final cargo = profileMap['cargo']?.toString().toLowerCase() ?? '';
+        final isGestor = profileMap['is_gestor'] == true || cargo == 'gestor' || cargo == 'admin' || profileMap['is_admin'] == true;
+        
+        if (isGestor) {
+          try {
+            final permRes = await _client.from(SupabaseConfig.tabelaGestorPermissoes).select('''
+              permissoes (
+                codigo
+              )
+            ''').eq('gestor_id', profileMap['id']);
+            
+            final perms = (permRes as List)
+                .map((e) => e['permissoes']?['codigo']?.toString())
+                .where((e) => e != null)
+                .cast<String>()
+                .toList();
+                
+            profileMap['permissoes'] = perms;
+          } catch (_) {}
+        }
+        
         return UserProfile.fromMap(profileMap);
       }
     } catch (_) {}

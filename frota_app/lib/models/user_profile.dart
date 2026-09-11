@@ -9,6 +9,7 @@ class UserProfile {
   final bool isAdmin;
   final bool isGestor;
   final bool isMotorista;
+  final List<String> permissoes;
   final DateTime criadoEm;
   final DateTime atualizadoEm;
 
@@ -22,6 +23,7 @@ class UserProfile {
     this.isAdmin = false,
     this.isGestor = false,
     this.isMotorista = true,
+    this.permissoes = const [],
     required this.criadoEm,
     required this.atualizadoEm,
   });
@@ -50,6 +52,9 @@ class UserProfile {
       isAdmin: adminFlag,
       isGestor: gestorFlag,
       isMotorista: motoristaFlag,
+      permissoes: map['permissoes'] != null 
+          ? List<String>.from(map['permissoes']) 
+          : const [],
       criadoEm: parseDate(map['criado_em']),
       atualizadoEm: parseDate(map['atualizado_em']),
     );
@@ -67,6 +72,7 @@ class UserProfile {
       'is_admin': isAdmin,
       'is_gestor': isGestor,
       'is_motorista': isMotorista,
+      // 'permissoes' isn't saved to perfis directly
     };
   }
 
@@ -81,6 +87,7 @@ class UserProfile {
     bool? isAdmin,
     bool? isGestor,
     bool? isMotorista,
+    List<String>? permissoes,
     DateTime? criadoEm,
     DateTime? atualizadoEm,
   }) {
@@ -94,6 +101,7 @@ class UserProfile {
       isAdmin: isAdmin ?? this.isAdmin,
       isGestor: isGestor ?? this.isGestor,
       isMotorista: isMotorista ?? this.isMotorista,
+      permissoes: permissoes ?? this.permissoes,
       criadoEm: criadoEm ?? this.criadoEm,
       atualizadoEm: atualizadoEm ?? this.atualizadoEm,
     );

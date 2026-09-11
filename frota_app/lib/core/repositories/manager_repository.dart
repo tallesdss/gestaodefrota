@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/manager.dart';
+import '../../models/manager_payment.dart';
 import '../config/supabase_config.dart';
 
 /// Repositório concreto para Gestão de Equipe, Salários e Permissões no Supabase
@@ -105,5 +106,44 @@ class ManagerRepository {
         .order('modulo');
 
     return (response as List).map((p) => Map<String, dynamic>.from(p as Map)).toList();
+  }
+
+  /// Listar pagamentos de gestores
+  Future<List<ManagerPayment>> getManagerPayments() async {
+    try {
+      final response = await _client.from(SupabaseConfig.tabelaPagamentosGestores).select('''
+        *,
+        gestores!inner (
+          perfis!inner (
+            nome
+          )
+        )
+      ''').order('mes_referencia', ascending: false);
+
+      return (response as List)
+          .map((p) => ManagerPayment.fromMap(Map<String, dynamic>.from(p as Map)))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Registrar pagamento de gestor
+  Future<ManagerPayment> createManagerPayment(ManagerPayment payment) async {
+    final payload = payment.toDatabaseMap();
+    final response = await _client
+        .from(SupabaseConfig.tabelaPagamentosGestores)
+        .insert(payload)
+        .select('''
+          *,
+          gestores!inner (
+            perfis!inner (
+              nome
+            )
+          )
+        ''')
+        .single();
+
+    return ManagerPayment.fromMap(response);
   }
 }
