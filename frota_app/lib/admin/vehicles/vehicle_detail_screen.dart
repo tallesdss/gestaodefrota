@@ -1419,21 +1419,25 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       actions: [
         AppButton(
           label: 'Salvar Alterações',
-          onPressed: () {
+          onPressed: () async {
+            final updated = _vehicle!.copyWith(
+              brand: brandController.text,
+              model: modelController.text,
+              year: int.tryParse(yearController.text) ?? _vehicle!.year,
+              plate: plateController.text,
+              color: colorController.text,
+              purchaseValue: double.tryParse(purchaseValueController.text),
+              fipeValue: double.tryParse(fipeValueController.text),
+              isEncumbered: isEncumbered,
+              encumberedBank: isEncumbered ? bankController.text : null,
+            );
+            
+            final saved = await _vehicleRepository.updateVehicle(updated);
+
             setState(() {
-              _vehicle = _vehicle!.copyWith(
-                brand: brandController.text,
-                model: modelController.text,
-                year: int.tryParse(yearController.text) ?? _vehicle!.year,
-                plate: plateController.text,
-                color: colorController.text,
-                purchaseValue: double.tryParse(purchaseValueController.text),
-                fipeValue: double.tryParse(fipeValueController.text),
-                isEncumbered: isEncumbered,
-                encumberedBank: isEncumbered ? bankController.text : null,
-              );
+              _vehicle = saved;
             });
-            Navigator.pop(context);
+            if (mounted) Navigator.pop(context);
           },
         ),
       ],
@@ -1923,9 +1927,12 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       actions: [
         AppButton(
           label: 'Atualizar KM',
-          onPressed: () {
+          onPressed: () async {
             final newKm =
                 int.tryParse(kmController.text) ?? _vehicle!.currentKm;
+            
+            await _vehicleRepository.updateOdometer(widget.vehicleId, newKm);
+            
             setState(() {
               _vehicle = _vehicle!.copyWith(
                 lastKmValue: _vehicle!.currentKm,
@@ -1933,7 +1940,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                 lastKmUpdateDate: DateTime.now(),
               );
             });
-            Navigator.pop(context);
+            if (mounted) Navigator.pop(context);
           },
         ),
       ],
@@ -2344,29 +2351,33 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       ),
       actions: [
         AppButton(
-          label: 'Salvar Tudo',
-          onPressed: () {
+          label: 'Salvar Alterações',
+          onPressed: () async {
+            final updated = _vehicle!.copyWith(
+              ipvaValue: double.tryParse(
+                ipvaValController.text.replaceAll(',', '.'),
+              ),
+              insuranceValue: double.tryParse(
+                insuranceValController.text.replaceAll(',', '.'),
+              ),
+              licensingValue: double.tryParse(
+                licensingValController.text.replaceAll(',', '.'),
+              ),
+              financingInstallmentsPaid: int.tryParse(
+                financingPaidController.text,
+              ),
+              financingInstallmentValue: double.tryParse(
+                financingValController.text.replaceAll(',', '.'),
+              ),
+              financingDueDay: int.tryParse(financingDayController.text),
+            );
+
+            final saved = await _vehicleRepository.updateVehicle(updated);
+
             setState(() {
-              _vehicle = _vehicle!.copyWith(
-                ipvaValue: double.tryParse(
-                  ipvaValController.text.replaceAll(',', '.'),
-                ),
-                insuranceValue: double.tryParse(
-                  insuranceValController.text.replaceAll(',', '.'),
-                ),
-                licensingValue: double.tryParse(
-                  licensingValController.text.replaceAll(',', '.'),
-                ),
-                financingInstallmentsPaid: int.tryParse(
-                  financingPaidController.text,
-                ),
-                financingInstallmentValue: double.tryParse(
-                  financingValController.text.replaceAll(',', '.'),
-                ),
-                financingDueDay: int.tryParse(financingDayController.text),
-              );
+              _vehicle = saved;
             });
-            Navigator.pop(context);
+            if (mounted) Navigator.pop(context);
           },
         ),
       ],

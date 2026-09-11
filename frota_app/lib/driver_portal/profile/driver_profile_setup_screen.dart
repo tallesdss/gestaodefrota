@@ -5,9 +5,13 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_icon.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/repositories/auth_repository.dart';
 import '../../core/config/supabase_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/widgets/app_avatar.dart';
 
 class DriverProfileSetupScreen extends StatefulWidget {
   const DriverProfileSetupScreen({super.key});
@@ -22,6 +26,8 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   bool _isLoading = true;
+  bool _isUploadingPhoto = false;
+  String? _fotoUrl;
 
   @override
   void initState() {
@@ -36,6 +42,7 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
         setState(() {
           _nameController.text = profile['nome']?.toString() ?? '';
           _phoneController.text = profile['telefone']?.toString() ?? '';
+          _fotoUrl = profile['foto_url']?.toString();
           _isLoading = false;
         });
       } else {
@@ -58,13 +65,24 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
     if (uid != null) {
       try {
         final phone = _phoneController.text.trim();
-        if (phone.isNotEmpty) {
-          await SupabaseConfig.client.from(SupabaseConfig.tabelaPerfis).update({
-            'telefone': phone,
-            'atualizado_em': DateTime.now().toIso8601String(),
-          }).eq('id', uid);
+        final name = _nameController.text.trim();
+        
+        final updateData = <String, dynamic>{
+          if (phone.isNotEmpty) 'telefone': phone,
+          if (name.isNotEmpty) 'nome': name,
+          'atualizado_em': DateTime.now().toIso8601String(),
+        };
+        
+        if (_fotoUrl != null) {
+           updateData['foto_url'] = _fotoUrl;
         }
-      } catch (_) {}
+
+        if (updateData.length > 1) {
+          await SupabaseConfig.client.from(SupabaseConfig.tabelaPerfis).update(updateData).eq('id', uid);
+        }
+      } catch (e) {
+         print('Erro ao salvar perfil: $e');
+      }
     }
 
     _showSuccessDialog();
@@ -216,14 +234,105 @@ class _DriverProfileSetupScreenState extends State<DriverProfileSetupScreen> {
     );
   }
 
+  Future<void> _pickAndUploadImage() async {
+    final uid = _authRepo.currentUserId;
+    if (uid == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() => _isUploadingPhoto = true);
+
+      final file = File(pickedFile.path);
+      final fileExt = pickedFile.name.split('.').last;
+      final fileName = 'profile_$uid.$fileExt';
+      final path = 'avatars/$uid/$fileName';
+
+      final storage = SupabaseConfig.client.storage.from('documentos-motoristas');
+      
+      await storage.upload(
+        path,
+        file,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+      );
+
+      final publicUrl = await storage.createSignedUrl(path, 60 * 60 * 24 * 365 * 10); // 10 anos
+
+      if (mounted) {
+        setState(() {
+          _fotoUrl = publicUrl;
+          _isUploadingPhoto = false;
+        });
+      }
+    } catch (e) {
+      print('Erro no upload: $e');
+      if (mounted) {
+        setState(() => _isUploadingPhoto = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao enviar foto. Tente novamente.')),
+        );
+      }
+    }
+  }
+
+  Widget _buildAvatarArea() {
+    return Center(
+      child: Stack(
+        children: [
+          AppAvatar(
+            imageUrl: _fotoUrl,
+            name: _nameController.text.isNotEmpty ? _nameController.text : 'Motorista',
+            radius: 50,
+          ),
+          if (_isUploadingPhoto)
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
+                child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+              ),
+            ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: _isUploadingPhoto ? null : _pickAndUploadImage,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProfileForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildAvatarArea(),
+        const SizedBox(height: AppSpacing.lg),
         _buildInputField(
           label: 'NOME COMPLETO',
           controller: _nameController,
-          enabled: false,
+          enabled: true,
         ),
         const SizedBox(height: AppSpacing.md),
         _buildInputField(

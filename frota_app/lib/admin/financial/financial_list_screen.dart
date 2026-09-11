@@ -8,6 +8,8 @@ import '../../core/repositories/financial_repository.dart';
 import '../../models/financial_entry.dart';
 import '../../core/utils/report_generator.dart';
 import '../../core/widgets/app_dialogs.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_text_field.dart';
 
 class FinancialListScreen extends StatefulWidget {
   const FinancialListScreen({super.key});
@@ -127,7 +129,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             title: const Text('Editar Lançamento'),
             onTap: () {
               Navigator.pop(context);
-              // Lógica de edição futura
+              _showEditModal(entry);
             },
           ),
           ListTile(
@@ -174,6 +176,155 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  void _showEditModal(FinancialEntry entry) {
+    final descController = TextEditingController(text: entry.description);
+    final amountController = TextEditingController(
+      text: entry.amount.toString(),
+    );
+    bool isPaidLocal = entry.isPaid;
+
+    AppDialogs.showBottomSheet(
+      context: context,
+      title: 'Editar Lançamento',
+      content: StatefulBuilder(
+        builder: (context, setModalState) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppTextField(
+                label: 'Descrição / Motivo',
+                controller: descController,
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: r'Valor (R$)',
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.attach_money,
+              ),
+              const SizedBox(height: 24),
+              Text('Status de Pagamento', style: AppTextStyles.labelLarge),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setModalState(() => isPaidLocal = false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: !isPaidLocal
+                              ? AppColors.errorContainer.withValues(alpha: 0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: !isPaidLocal
+                                ? AppColors.error
+                                : AppColors.outlineVariant.withValues(
+                                    alpha: 0.2,
+                                  ),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'PENDENTE',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: !isPaidLocal
+                                  ? AppColors.error
+                                  : AppColors.onSurfaceVariant,
+                              fontWeight: !isPaidLocal
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setModalState(() => isPaidLocal = true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isPaidLocal
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isPaidLocal
+                                ? Colors.green
+                                : AppColors.outlineVariant.withValues(
+                                    alpha: 0.2,
+                                  ),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'PAGO',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: isPaidLocal
+                                  ? Colors.green
+                                  : AppColors.onSurfaceVariant,
+                              fontWeight: isPaidLocal
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+      actions: [
+        AppButton(
+          label: 'Salvar Edição',
+          onPressed: () async {
+            if (descController.text.isEmpty || amountController.text.isEmpty) {
+              return;
+            }
+
+            final updatedAmount =
+                double.tryParse(amountController.text.replaceAll(',', '.')) ??
+                0.0;
+
+            final updated = entry.copyWith(
+              description: descController.text,
+              amount: updatedAmount,
+              isPaid: isPaidLocal,
+            );
+
+            await _repository.updateFinancialEntry(updated);
+
+            setState(() {
+              final index = _entries.indexWhere((e) => e.id == entry.id);
+              if (index != -1) {
+                _entries[index] = updated;
+              }
+            });
+            
+            if (!mounted) return;
+            Navigator.pop(context);
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Lançamento atualizado com sucesso.'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: AppColors.success,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 

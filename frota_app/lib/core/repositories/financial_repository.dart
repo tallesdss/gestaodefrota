@@ -126,6 +126,33 @@ class FinancialRepository {
     return FinancialEntry.fromMap(response);
   }
 
+  /// Atualizar lançamento financeiro existente
+  Future<FinancialEntry> updateFinancialEntry(FinancialEntry entry) async {
+    final payload = entry.toDatabaseMap();
+    final entryId = payload.remove('id'); 
+
+    final response = await _client
+        .from(SupabaseConfig.tabelaLancamentosFinanceiros)
+        .update(payload)
+        .eq('id', entryId)
+        .select()
+        .single();
+
+    final updatedEntry = FinancialEntry.fromMap(response);
+
+    // Atualiza memória se existir
+    for (final key in _memoryEntries.keys) {
+      final list = _memoryEntries[key]!;
+      final idx = list.indexWhere((e) => e.id == entry.id);
+      if (idx != -1) {
+        list[idx] = updatedEntry;
+      }
+    }
+    
+    entriesChangedNotifier.value++;
+    return updatedEntry;
+  }
+
   /// Baixa manual de recebimento / pagamento
   Future<void> markAsPaid(
     String entryId, {

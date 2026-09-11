@@ -286,17 +286,17 @@ O backend (Supabase) está bem modelado. O app Flutter compila e roda. O problem
 
 ## 👤 Edição de Perfil
 
-- [ ] **[PERF-01]** — Implementar edição de nome, telefone e foto do perfil pelo próprio motorista
+- [x] **[PERF-01]** — Implementar edição de nome, telefone e foto do perfil pelo próprio motorista
   > Tela `DriverProfileSetupScreen` existe mas precisa persistir dados em `perfis` no Supabase
 
-- [ ] **[PERF-02]** — Implementar upload/atualização de foto de perfil no Storage (`documentos-motoristas`)
+- [x] **[PERF-02]** — Implementar upload/atualização de foto de perfil no Storage (`documentos-motoristas`)
   > Usar campo `perfis.foto_url` para exibir e atualizar o avatar
 
-- [ ] **[PERF-03]** — Implementar edição de dados do veículo pelo Admin no `VehicleDetailScreen`
+- [x] **[PERF-03]** — Implementar edição de dados do veículo pelo Admin no `VehicleDetailScreen`
   > Integração direta com edição inline de campos (placa, KM, IPVA, seguro)
 
-- [ ] **[PERF-04]** — Tela de edição de lançamento financeiro individual
-  > No `FinancialListScreen`, o botão "Editar Lançamento" existe na UI mas tem comentário `// Lógica de edição futura` — implementar formulário de edição
+- [x] **[PERF-04]** — Tela de edição de lançamento financeiro individual
+  > No `FinancialListScreen`, o botão "Editar Lançamento" agora chama o modal de edição e salva os dados no Supabase.
 
 ## 💼 Gestores e Permissões
 
