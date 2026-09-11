@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
@@ -48,6 +49,11 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
   final _paidInstallmentsController = TextEditingController();
   final _totalInstallmentsController = TextEditingController();
   final _installmentValueController = TextEditingController();
+
+  // Document Upload
+  final ImagePicker _picker = ImagePicker();
+  XFile? _crlvFile;
+  XFile? _insuranceFile;
 
   @override
   void initState() {
@@ -126,7 +132,7 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
       final purchaseVal = double.tryParse(_purchaseValueController.text.replaceAll(',', '.'));
       final fipeVal = double.tryParse(_fipeValueController.text.replaceAll(',', '.'));
 
-      final vehicle = Vehicle(
+      final vehicleToSave = Vehicle(
         id: widget.vehicle?.id ?? '',
         plate: plate,
         brand: brand.isNotEmpty ? brand : 'Geral',
@@ -146,20 +152,68 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
         financingInstallmentsPaid: int.tryParse(_paidInstallmentsController.text.trim()),
         financingTotalInstallments: int.tryParse(_totalInstallmentsController.text.trim()),
         financingInstallmentValue: double.tryParse(_installmentValueController.text.replaceAll(',', '.')),
-        imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=400&auto=format&fit=crop',
+        imageUrl: widget.vehicle?.imageUrl ?? '',
       );
 
+      Vehicle savedVehicle;
       if (widget.vehicle != null && widget.vehicle!.id.isNotEmpty) {
-        await _vehicleRepo.updateVehicle(vehicle);
+        savedVehicle = await _vehicleRepo.updateVehicle(vehicleToSave);
       } else {
-        await _vehicleRepo.createVehicle(vehicle);
+        savedVehicle = await _vehicleRepo.createVehicle(vehicleToSave);
+      }
+
+      bool needsUpdate = false;
+      String currentImageUrl = savedVehicle.imageUrl;
+
+      if (_crlvFile != null) {
+        try {
+          final bytes = await _crlvFile!.readAsBytes();
+          final ext = _crlvFile!.name.split('.').last.toLowerCase();
+          final mimeType = (ext == 'png') ? 'image/png' : (ext == 'pdf') ? 'application/pdf' : 'image/jpeg';
+          final fileName = 'crlv_${DateTime.now().millisecondsSinceEpoch}.$ext';
+          
+          final uploadedUrl = await _vehicleRepo.uploadVehicleDocument(
+            vehicleId: savedVehicle.id,
+            fileName: fileName,
+            bytes: bytes,
+            mimeType: mimeType,
+          );
+          currentImageUrl = uploadedUrl;
+          needsUpdate = true;
+        } catch (e) {
+          debugPrint('Erro ao fazer upload do CRLV: $e');
+        }
+      }
+
+      if (_insuranceFile != null) {
+        try {
+          final bytes = await _insuranceFile!.readAsBytes();
+          final ext = _insuranceFile!.name.split('.').last.toLowerCase();
+          final mimeType = (ext == 'png') ? 'image/png' : (ext == 'pdf') ? 'application/pdf' : 'image/jpeg';
+          final fileName = 'seguro_${DateTime.now().millisecondsSinceEpoch}.$ext';
+          
+          await _vehicleRepo.uploadVehicleDocument(
+            vehicleId: savedVehicle.id,
+            fileName: fileName,
+            bytes: bytes,
+            mimeType: mimeType,
+          );
+          // Atualmente Vehicle não tem um campo específico para o seguro,
+          // mas o upload é feito e salvo na pasta do veículo no Storage.
+        } catch (e) {
+          debugPrint('Erro ao fazer upload da Apólice de Seguro: $e');
+        }
+      }
+
+      if (needsUpdate) {
+        await _vehicleRepo.updateVehicle(savedVehicle.copyWith(imageUrl: currentImageUrl));
       }
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Veículo $plate salvo com sucesso no banco de dados!'),
+          content: Text('Veículo $plate salvo com sucesso!'),
           backgroundColor: AppColors.success,
         ),
       );
@@ -494,9 +548,31 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
       case 3:
         return Column(
           children: [
-            _buildDocUploadCard('CRLV Digital (Documento do Veículo)'),
+            _buildDocUploadCard(
+              'CRLV Digital (Documento do Veículo)',
+              selectedFile: _crlvFile,
+              onTap: () async {
+                final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+                if (file != null) {
+                  setState(() {
+                    _crlvFile = file;
+                  });
+                }
+              },
+            ),
             const SizedBox(height: 16),
-            _buildDocUploadCard('Apólice de Seguro / Rastreamento'),
+            _buildDocUploadCard(
+              'Apólice de Seguro / Rastreamento',
+              selectedFile: _insuranceFile,
+              onTap: () async {
+                final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
+                if (file != null) {
+                  setState(() {
+                    _insuranceFile = file;
+                  });
+                }
+              },
+            ),
           ],
         );
       default:
@@ -504,31 +580,41 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
     }
   }
 
-  Widget _buildDocUploadCard(String label) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          width: 2,
-          style: BorderStyle.solid,
-        ),
-      ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.cloud_upload_outlined,
-            size: 48,
-            color: AppColors.primary,
+  Widget _buildDocUploadCard(String label, {VoidCallback? onTap, XFile? selectedFile}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: selectedFile != null ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selectedFile != null ? AppColors.primary : AppColors.primary.withValues(alpha: 0.1),
+            width: 2,
+            style: BorderStyle.solid,
           ),
-          const SizedBox(height: 16),
-          Text(label, style: AppTextStyles.labelLarge),
-          const SizedBox(height: 8),
-          Text('PDF, PNG ou JPG (Armazenamento seguro Supabase)', style: AppTextStyles.bodySmall),
-        ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              selectedFile != null ? Icons.check_circle_outline : Icons.cloud_upload_outlined,
+              size: 48,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(label, style: AppTextStyles.labelLarge),
+            const SizedBox(height: 8),
+            Text(
+              selectedFile != null 
+                  ? 'Arquivo selecionado: ${selectedFile.name}' 
+                  : 'PDF, PNG ou JPG (Armazenamento seguro Supabase)', 
+              style: AppTextStyles.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
