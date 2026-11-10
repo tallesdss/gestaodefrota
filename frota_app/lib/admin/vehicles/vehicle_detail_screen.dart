@@ -492,18 +492,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: 'Registrar Venda',
-                  icon: Icons.sell_outlined,
-                  onPressed: _showRegisterSaleModal,
-                  variant: AppButtonVariant.outline,
+          if (_vehicle!.status != VehicleStatus.sold)
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'Registrar Venda',
+                    icon: Icons.sell_outlined,
+                    onPressed: _showRegisterSaleModal,
+                    variant: AppButtonVariant.outline,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );
@@ -1531,21 +1532,37 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       actions: [
         AppButton(
           label: 'Confirmar Venda',
-          onPressed: () {
-            // Mock sale registration logic
-            setState(() {
-              _vehicle = _vehicle!.copyWith(status: VehicleStatus.sold);
-            });
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Venda de ${_vehicle!.plate} registrada com sucesso!',
+          onPressed: () async {
+            try {
+              final activeContract = await _contractRepository
+                  .getActiveContractByVehicle(_vehicle!.id);
+              if (activeContract != null) {
+                throw StateError(
+                  'Encerre o contrato ativo antes de registrar a venda do veículo.',
+                );
+              }
+
+              final soldVehicle = await _vehicleRepository.markVehicleAsSold(
+                _vehicle!.id,
+              );
+              if (!mounted) return;
+              setState(() => _vehicle = soldVehicle);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Venda de ${soldVehicle.plate} registrada com sucesso!',
+                  ),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
                 ),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+              );
+            } catch (error) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Não foi possível registrar a venda: $error')),
+              );
+            }
           },
         ),
       ],

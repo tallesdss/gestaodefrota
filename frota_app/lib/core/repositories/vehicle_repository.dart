@@ -234,6 +234,28 @@ bool _isValidUuid(String? str) {
     }
   }
 
+  /// Registrar venda do veículo no Supabase antes de atualizar o cache local.
+  Future<Vehicle> markVehicleAsSold(String vehicleId) async {
+    if (!_isValidUuid(vehicleId)) {
+      throw ArgumentError.value(vehicleId, 'vehicleId', 'ID de veículo inválido.');
+    }
+
+    final response = await _client
+        .from(SupabaseConfig.tabelaVeiculos)
+        .update({'status': 'vendido'})
+        .eq('id', vehicleId)
+        .select()
+        .maybeSingle();
+
+    if (response == null) {
+      throw StateError('O veículo não foi encontrado no Supabase.');
+    }
+
+    final soldVehicle = Vehicle.fromMap(Map<String, dynamic>.from(response));
+    _memoryVehicles[soldVehicle.id] = soldVehicle;
+    return soldVehicle;
+  }
+
   /// Atualizar odômetro (KM) do veículo
   Future<void> updateOdometer(String vehicleId, int newKm, {String? driverId}) async {
     final now = DateTime.now();

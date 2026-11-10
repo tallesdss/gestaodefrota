@@ -35,7 +35,7 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
       if (mounted) {
         setState(() {
           _vehicles = list;
-          _filteredVehicles = list;
+          _filteredVehicles = _filterVehicles(list, _selectedFilter);
           _isLoading = false;
         });
       }
@@ -49,18 +49,27 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
   void _applyFilter(String filter) {
     setState(() {
       _selectedFilter = filter;
-      if (filter == 'Todos') {
-        _filteredVehicles = _vehicles;
-      } else if (filter == 'Alugados') {
-        _filteredVehicles = _vehicles
-            .where((v) => v.status == VehicleStatus.rented)
-            .toList();
-      } else if (filter == 'Livres') {
-        _filteredVehicles = _vehicles
-            .where((v) => v.status == VehicleStatus.available)
-            .toList();
-      }
+      _filteredVehicles = _filterVehicles(_vehicles, filter);
     });
+  }
+
+  List<Vehicle> _filterVehicles(List<Vehicle> vehicles, String filter) {
+    switch (filter) {
+      case 'Alugados':
+        return vehicles
+            .where((vehicle) => vehicle.status == VehicleStatus.rented)
+            .toList();
+      case 'Livres':
+        return vehicles
+            .where((vehicle) => vehicle.status == VehicleStatus.available)
+            .toList();
+      case 'Vendido':
+        return vehicles
+            .where((vehicle) => vehicle.status == VehicleStatus.sold)
+            .toList();
+      default:
+        return vehicles;
+    }
   }
 
   @override
@@ -96,14 +105,19 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                 // Fast Filter Row
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Row(
-                    children: [
-                      _buildFilterChip('Todos'),
-                      const SizedBox(width: AppSpacing.md),
-                      _buildFilterChip('Alugados'),
-                      const SizedBox(width: AppSpacing.md),
-                      _buildFilterChip('Livres'),
-                    ],
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildFilterChip('Todos'),
+                        const SizedBox(width: AppSpacing.md),
+                        _buildFilterChip('Alugados'),
+                        const SizedBox(width: AppSpacing.md),
+                        _buildFilterChip('Livres'),
+                        const SizedBox(width: AppSpacing.md),
+                        _buildFilterChip('Vendido'),
+                      ],
+                    ),
                   ),
                 ),
                 // Grid View
@@ -142,11 +156,15 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
                             ),
                             itemCount: _filteredVehicles.length,
                             itemBuilder: (context, index) {
+                              final vehicle = _filteredVehicles[index];
                               return VehicleGridCard(
-                                vehicle: _filteredVehicles[index],
-                                onTap: () => context.push(
-                                  '/admin/vehicles/detail/${_filteredVehicles[index].id}',
-                                ),
+                                vehicle: vehicle,
+                                onTap: () async {
+                                  await context.push(
+                                    '/admin/vehicles/detail/${vehicle.id}',
+                                  );
+                                  if (mounted) await _fetchVehicles();
+                                },
                               );
                             },
                           ),
