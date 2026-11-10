@@ -28,11 +28,16 @@ class ContractRepository {
       )
     ''');
 
-    if (status != null && status.isNotEmpty && status != 'all' && status != 'todos') {
+    if (status != null &&
+        status.isNotEmpty &&
+        status != 'all' &&
+        status != 'todos') {
       String statusDb = status.toLowerCase();
       if (statusDb == 'ativo' || statusDb == 'active') statusDb = 'ativo';
-      if (statusDb == 'concluido' || statusDb == 'concluded') statusDb = 'concluido';
-      if (statusDb == 'cancelado' || statusDb == 'cancelled') statusDb = 'cancelado';
+      if (statusDb == 'concluido' || statusDb == 'concluded')
+        statusDb = 'concluido';
+      if (statusDb == 'cancelado' || statusDb == 'cancelled')
+        statusDb = 'cancelado';
       query = query.eq('status', statusDb);
     }
 
@@ -45,77 +50,59 @@ class ContractRepository {
     }
 
     final response = await query.order('data_inicio', ascending: false);
-    return (response as List).map((c) => Contract.fromMap(Map<String, dynamic>.from(c as Map))).toList();
+    return (response as List)
+        .map((c) => Contract.fromMap(Map<String, dynamic>.from(c as Map)))
+        .toList();
   }
 
-bool _isValidUuid(String? str) {
-  if (str == null || str.isEmpty) return false;
-  return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(str);
-}
+  bool _isValidUuid(String? str) {
+    if (str == null || str.isEmpty) return false;
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(str);
+  }
 
   /// Obter contrato por ID
   Future<Contract?> getContractById(String id) async {
-    final fromMem = _memoryContracts.values.where((c) => c.id == id).toList();
-    if (fromMem.isNotEmpty) return fromMem.first;
+    if (!_isValidUuid(id)) return null;
 
-    if (_isValidUuid(id)) {
-      try {
-        final response = await _client
-            .from(SupabaseConfig.tabelaContratos)
-            .select('''
-              *,
-              motoristas (
-                id,
-                perfis (nome)
-              ),
-              veiculos (
-                id,
-                placa,
-                modelo
-              )
-            ''')
-            .eq('id', id)
-            .maybeSingle();
+    final response = await _client
+        .from(SupabaseConfig.tabelaContratos)
+        .select('''
+          *,
+          motoristas (
+            id,
+            perfis (nome)
+          ),
+          veiculos (
+            id,
+            placa,
+            modelo
+          )
+        ''')
+        .eq('id', id)
+        .maybeSingle();
 
-        if (response != null) {
-          return Contract.fromMap(Map<String, dynamic>.from(response));
-        }
-      } catch (_) {}
-    }
-
-    return null;
+    if (response == null) return null;
+    return Contract.fromMap(Map<String, dynamic>.from(response));
   }
-
-  // Cache sincronizado de contratos ativos
-  static final Map<String, Contract> _memoryContracts = {};
 
   /// Obter contrato ativo de um motorista
   Future<Contract?> getActiveContractByDriver(String driverId) async {
-    if (_isValidUuid(driverId)) {
-      try {
-        final response = await _client
-            .from(SupabaseConfig.tabelaContratos)
-            .select('''
-              *,
-              veiculos (*)
-            ''')
-            .eq('motorista_id', driverId)
-            .eq('status', 'ativo')
-            .maybeSingle();
+    if (!_isValidUuid(driverId)) return null;
 
-        if (response != null) {
-          final ctr = Contract.fromMap(Map<String, dynamic>.from(response));
-          _memoryContracts[driverId] = ctr;
-          return ctr;
-        }
-      } catch (_) {}
-    }
+    final response = await _client
+        .from(SupabaseConfig.tabelaContratos)
+        .select('''
+          *,
+          veiculos (*)
+        ''')
+        .eq('motorista_id', driverId)
+        .eq('status', 'ativo')
+        .maybeSingle();
 
-    if (_memoryContracts.containsKey(driverId)) {
-      return _memoryContracts[driverId];
-    }
-
-    return null;
+    if (response == null) return null;
+    return Contract.fromMap(Map<String, dynamic>.from(response));
   }
 
   /// Obter contrato ativo de um veículo
@@ -204,7 +191,7 @@ bool _isValidUuid(String? str) {
           .maybeSingle();
 
       if (gestorRes == null) return; // Não é gestor
-      
+
       final percentual = (gestorRes['percentual_comissao'] as num).toDouble();
       if (percentual <= 0) return;
 
@@ -224,33 +211,33 @@ bool _isValidUuid(String? str) {
       if (totalReceita <= 0) return;
 
       final comissao = totalReceita * (percentual / 100);
-      
+
       // Registrar em pagamentos_gestores para o mês atual
       final now = DateTime.now();
-      final mesReferencia = '${now.year}-${now.month.toString().padLeft(2, '0')}';
-      
+      final mesReferencia =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}';
+
       final paymentRes = await _client
           .from(SupabaseConfig.tabelaPagamentosGestores)
           .select()
           .eq('gestor_id', userId)
           .eq('mes_referencia', mesReferencia)
           .maybeSingle();
-          
+
       if (paymentRes != null) {
-        final currentComissao = (paymentRes['valor_comissao'] as num).toDouble();
+        final currentComissao = (paymentRes['valor_comissao'] as num)
+            .toDouble();
         await _client
             .from(SupabaseConfig.tabelaPagamentosGestores)
             .update({'valor_comissao': currentComissao + comissao})
             .eq('id', paymentRes['id']);
       } else {
-        await _client
-            .from(SupabaseConfig.tabelaPagamentosGestores)
-            .insert({
-              'gestor_id': userId,
-              'valor_salario': 0.0, 
-              'valor_comissao': comissao,
-              'mes_referencia': mesReferencia,
-            });
+        await _client.from(SupabaseConfig.tabelaPagamentosGestores).insert({
+          'gestor_id': userId,
+          'valor_salario': 0.0,
+          'valor_comissao': comissao,
+          'mes_referencia': mesReferencia,
+        });
       }
     } catch (e) {
       debugPrint('Erro ao calcular comissão: $e');

@@ -6,7 +6,7 @@
 > **Região:** `South America (São Paulo) - sa-east-1`  
 > **Padrão de Nomenclatura:** Tabelas, colunas, enums, views e funções em **Português** (`snake_case`)  
 > **Paradigma:** Banco de Dados Relacional Normalizado (3FN), Integridade Referencial Forte, Transações ACID e Triggers PL/pgSQL  
-> **Integração MCP:** Ativa via [`.agents/mcp_config.json`](file:///c:/gestaodefrota/.agents/mcp_config.json)
+> **Integração MCP:** Configurada no workspace via [`.vscode/mcp.json`](.vscode/mcp.json), em modo somente leitura.
 
 ---
 

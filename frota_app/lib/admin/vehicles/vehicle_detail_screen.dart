@@ -2157,18 +2157,11 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                                     : () async {
                                         Navigator.pop(context);
                                         try {
-                                          await _vehicleRepository.assignDriverToVehicle(
-                                            vehicleId: _vehicle!.id,
-                                            driverId: driver.id,
-                                            rentalValue: _vehicle!.rentalValue,
+                                          final created = await context.push<bool>(
+                                            AppRoutes.adminContractForm,
+                                            extra: {'vehicleId': _vehicle!.id},
                                           );
-                                          await _fetchData();
-                                          messenger.showSnackBar(
-                                            SnackBar(
-                                              content: Text('Motorista $displayName vinculado ao veículo com sucesso!'),
-                                              backgroundColor: AppColors.success,
-                                            ),
-                                          );
+                                          if (created == true) await _fetchData();
                                         } catch (e) {
                                           messenger.showSnackBar(
                                             SnackBar(content: Text('Erro ao vincular motorista: $e')),

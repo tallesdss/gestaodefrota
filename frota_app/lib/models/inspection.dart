@@ -26,7 +26,8 @@ class InspectionPhoto {
       id: map['id']?.toString(),
       vistoriaId: map['vistoria_id']?.toString(),
       url: (map['url_foto'] ?? map['url'] ?? '').toString(),
-      title: (map['title'] ?? map['tipo_foto'] ?? 'Foto da Vistoria').toString(),
+      title: (map['title'] ?? map['tipo_foto'] ?? 'Foto da Vistoria')
+          .toString(),
       photoType: (map['tipo_foto'] ?? map['photoType'] ?? 'outro').toString(),
       hasDamage: (map['tem_avaria'] ?? map['hasDamage'] ?? false) as bool,
       damageDescription: map['descricao_avaria'] ?? map['damageDescription'],
@@ -47,7 +48,10 @@ class InspectionPhoto {
 
   Map<String, dynamic> toDatabaseMap(String parentVistoriaId) {
     String tipoEnum = 'outro';
-    final t = (photoType.isNotEmpty ? photoType : title).toLowerCase();
+    final t = (photoType.isNotEmpty ? photoType : title)
+        .toLowerCase()
+        .replaceAll('ô', 'o')
+        .replaceAll('ó', 'o');
     if (t.contains('frente')) {
       tipoEnum = 'frente';
     } else if (t.contains('traseira')) {
@@ -96,7 +100,9 @@ class ChecklistItem {
       id: map['id']?.toString(),
       vistoriaId: map['vistoria_id']?.toString(),
       title: (map['item_nome'] ?? map['title'] ?? '').toString(),
-      isChecked: (map['conforme'] ?? map['isChecked'] ?? map['checado'] ?? false) as bool,
+      isChecked:
+          (map['conforme'] ?? map['isChecked'] ?? map['checado'] ?? false)
+              as bool,
       notes: map['observacao'] ?? map['notes'],
     );
   }
@@ -197,12 +203,54 @@ class Inspection {
           )
           .toList();
     } else {
-      if (map['foto_frente_url'] != null) photosList.add(InspectionPhoto(url: map['foto_frente_url'], title: 'Frente', photoType: 'frente'));
-      if (map['foto_traseira_url'] != null) photosList.add(InspectionPhoto(url: map['foto_traseira_url'], title: 'Traseira', photoType: 'traseira'));
-      if (map['foto_lateral_esquerda_url'] != null) photosList.add(InspectionPhoto(url: map['foto_lateral_esquerda_url'], title: 'Lateral Esquerda', photoType: 'lateral_esquerda'));
-      if (map['foto_lateral_direita_url'] != null) photosList.add(InspectionPhoto(url: map['foto_lateral_direita_url'], title: 'Lateral Direita', photoType: 'lateral_direita'));
-      if (map['foto_painel_url'] != null) photosList.add(InspectionPhoto(url: map['foto_painel_url'], title: 'Painel', photoType: 'painel'));
-      if (map['foto_pneus_url'] != null) photosList.add(InspectionPhoto(url: map['foto_pneus_url'], title: 'Pneus', photoType: 'bancos'));
+      if (map['foto_frente_url'] != null)
+        photosList.add(
+          InspectionPhoto(
+            url: map['foto_frente_url'],
+            title: 'Frente',
+            photoType: 'frente',
+          ),
+        );
+      if (map['foto_traseira_url'] != null)
+        photosList.add(
+          InspectionPhoto(
+            url: map['foto_traseira_url'],
+            title: 'Traseira',
+            photoType: 'traseira',
+          ),
+        );
+      if (map['foto_lateral_esquerda_url'] != null)
+        photosList.add(
+          InspectionPhoto(
+            url: map['foto_lateral_esquerda_url'],
+            title: 'Lateral Esquerda',
+            photoType: 'lateral_esquerda',
+          ),
+        );
+      if (map['foto_lateral_direita_url'] != null)
+        photosList.add(
+          InspectionPhoto(
+            url: map['foto_lateral_direita_url'],
+            title: 'Lateral Direita',
+            photoType: 'lateral_direita',
+          ),
+        );
+      if (map['foto_painel_url'] != null)
+        photosList.add(
+          InspectionPhoto(
+            url: map['foto_painel_url'],
+            title: 'Painel',
+            photoType: 'painel',
+          ),
+        );
+      if (map['foto_pneus_url'] != null)
+        photosList.add(
+          InspectionPhoto(
+            url: map['foto_pneus_url'],
+            title: 'Pneus',
+            photoType: 'bancos',
+          ),
+        );
     }
 
     List<ChecklistItem> checklistItems = [];
@@ -212,7 +260,11 @@ class Inspection {
           .toList();
     } else if (map['checklist'] is List) {
       checklistItems = (map['checklist'] as List)
-          .map((c) => ChecklistItem.fromMap(c is Map<String, dynamic> ? c : {'title': c.toString()}))
+          .map(
+            (c) => ChecklistItem.fromMap(
+              c is Map<String, dynamic> ? c : {'title': c.toString()},
+            ),
+          )
           .toList();
     }
 
@@ -223,15 +275,25 @@ class Inspection {
       driverId: (map['motorista_id'] ?? map['driverId'] ?? '').toString(),
       type: parseType(map['tipo'] ?? map['type']),
       status: parseStatus(map['status']),
-      dateTime: DateTime.tryParse((map['criado_em'] ?? map['dateTime'] ?? '').toString()) ?? DateTime.now(),
+      dateTime:
+          DateTime.tryParse(
+            (map['criado_em'] ?? map['dateTime'] ?? '').toString(),
+          ) ??
+          DateTime.now(),
       kmAtInspection: (map['odometro_km'] ?? map['kmAtInspection'] ?? 0) is int
           ? (map['odometro_km'] ?? map['kmAtInspection'] ?? 0) as int
-          : int.tryParse((map['odometro_km'] ?? map['kmAtInspection'] ?? '0').toString()) ?? 0,
-      fuelLevel: (map['nivel_combustivel'] ?? map['fuelLevel'] ?? 1.0).toDouble(),
+          : int.tryParse(
+                  (map['odometro_km'] ?? map['kmAtInspection'] ?? '0')
+                      .toString(),
+                ) ??
+                0,
+      fuelLevel: (map['nivel_combustivel'] ?? map['fuelLevel'] ?? 1.0)
+          .toDouble(),
       photos: photosList,
       checklist: checklistItems,
       notes: (map['observacoes'] ?? map['notes'] ?? '').toString(),
-      hasNewDamage: (map['tem_avaria_nova'] ?? map['hasNewDamage'] ?? false) as bool,
+      hasNewDamage:
+          (map['tem_avaria_nova'] ?? map['hasNewDamage'] ?? false) as bool,
       reviewReason: (map['motivo_revisao'] ?? map['reviewReason'])?.toString(),
       reviewerId: (map['vistoriador_id'] ?? map['reviewerId'])?.toString(),
     );

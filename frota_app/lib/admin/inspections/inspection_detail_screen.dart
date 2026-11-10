@@ -80,7 +80,12 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final currentUserId = _authRepo.currentUserId ?? 'admin_1';
+      final currentUserId = _authRepo.currentUserId;
+      if (currentUserId == null) {
+        throw StateError(
+          'Sessão administrativa expirada. Faça login novamente.',
+        );
+      }
 
       await _inspectionRepo.updateInspectionStatus(
         _inspection!.id,
@@ -103,6 +108,14 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
           ),
         );
         Navigator.pop(context, true);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Não foi possível registrar a decisão: $error'),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -399,7 +412,10 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
           base64Decode(base64Str),
           fit: fit,
           errorBuilder: (c, e, s) => const Center(
-            child: Icon(Icons.broken_image_outlined, color: AppColors.onSurfaceVariant),
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
         );
       } catch (_) {}
@@ -408,7 +424,10 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
       url,
       fit: fit,
       errorBuilder: (c, e, s) => const Center(
-        child: Icon(Icons.broken_image_outlined, color: AppColors.onSurfaceVariant),
+        child: Icon(
+          Icons.broken_image_outlined,
+          color: AppColors.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -434,30 +453,43 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
         if (pTitle == t || pType == t) {
           return p;
         }
-        if (t.contains('frente') && (pTitle.contains('frente') || pType.contains('frente'))) {
+        if (t.contains('frente') &&
+            (pTitle.contains('frente') || pType.contains('frente'))) {
           return p;
         }
-        if (t.contains('traseira') && (pTitle.contains('traseira') || pType.contains('traseira'))) {
+        if (t.contains('traseira') &&
+            (pTitle.contains('traseira') || pType.contains('traseira'))) {
           return p;
         }
-        if (t.contains('direita') && (pTitle.contains('direita') || pType.contains('direita'))) {
+        if (t.contains('direita') &&
+            (pTitle.contains('direita') || pType.contains('direita'))) {
           return p;
         }
-        if (t.contains('esquerda') && (pTitle.contains('esquerda') || pType.contains('esquerda'))) {
+        if (t.contains('esquerda') &&
+            (pTitle.contains('esquerda') || pType.contains('esquerda'))) {
           return p;
         }
-        if (t.contains('painel') && (pTitle.contains('painel') || pType.contains('painel'))) {
+        if (t.contains('painel') &&
+            (pTitle.contains('painel') || pType.contains('painel'))) {
           return p;
         }
-        if ((t.contains('hodometro') || t.contains('odometro') || t.contains('km')) &&
-            (pTitle.contains('hodometro') || pTitle.contains('odometro') || pTitle.contains('km') || pType.contains('hodometro'))) {
+        if ((t.contains('hodometro') ||
+                t.contains('odometro') ||
+                t.contains('km')) &&
+            (pTitle.contains('hodometro') ||
+                pTitle.contains('odometro') ||
+                pTitle.contains('km') ||
+                pType.contains('hodometro'))) {
           return p;
         }
         if ((t.contains('banco') || t.contains('interior')) &&
-            (pTitle.contains('banco') || pTitle.contains('interior') || pType.contains('banco'))) {
+            (pTitle.contains('banco') ||
+                pTitle.contains('interior') ||
+                pType.contains('banco'))) {
           return p;
         }
-        if (t.contains('placa') && (pTitle.contains('placa') || pType.contains('placa'))) {
+        if (t.contains('placa') &&
+            (pTitle.contains('placa') || pType.contains('placa'))) {
           return p;
         }
       }
@@ -473,7 +505,11 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
     }
     for (final p in _inspection!.photos) {
       if (!items.any((i) => i['url'] == p.url)) {
-        items.add({'title': p.title.isNotEmpty ? p.title : 'Foto Adicional', 'url': p.url, 'hasDamage': p.hasDamage});
+        items.add({
+          'title': p.title.isNotEmpty ? p.title : 'Foto Adicional',
+          'url': p.url,
+          'hasDamage': p.hasDamage,
+        });
       }
     }
 
@@ -540,14 +576,21 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                     ),
                     if (hasDamage)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.error,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
                           'AVARIA',
-                          style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                   ],
@@ -569,10 +612,16 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.6),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.6,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
-                                    child: const Icon(Icons.fullscreen, color: Colors.white, size: 16),
+                                    child: const Icon(
+                                      Icons.fullscreen,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
                                   ),
                                 ),
                               ],

@@ -952,18 +952,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                                 onPressed: () async {
                                   Navigator.pop(context);
                                   try {
-                                    await _vehicleRepository.assignDriverToVehicle(
-                                      vehicleId: v.id,
-                                      driverId: _driver!.id,
-                                      rentalValue: v.rentalValue,
+                                    final created = await context.push<bool>(
+                                      AppRoutes.adminContractForm,
+                                      extra: {'driverId': _driver!.id},
                                     );
-                                    await _loadData();
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text('Veículo ${v.plate} vinculado a ${_driver!.name}!'),
-                                        backgroundColor: AppColors.success,
-                                      ),
-                                    );
+                                    if (created == true) await _loadData();
                                   } catch (e) {
                                     messenger.showSnackBar(
                                       SnackBar(content: Text('Erro ao vincular: $e')),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
@@ -14,9 +15,12 @@ import '../../core/repositories/timeline_repository.dart';
 import '../../models/driver.dart';
 import '../../models/contract.dart';
 import '../../models/financial_entry.dart';
+import '../../models/inspection.dart';
 import '../../models/timeline_item.dart';
 
 import '../../core/repositories/vehicle_repository.dart';
+import '../../core/repositories/inspection_repository.dart';
+import '../../core/services/realtime_service.dart';
 import '../../models/vehicle.dart';
 import '../payments/widgets/receipt_upload_dialog.dart';
 
@@ -34,6 +38,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   final FinancialRepository _financialRepo = FinancialRepository();
   final TimelineRepository _timelineRepo = TimelineRepository();
   final VehicleRepository _vehicleRepo = VehicleRepository();
+  final InspectionRepository _inspectionRepo = InspectionRepository();
 
   Driver? _driver;
   Contract? _activeContract;
@@ -41,19 +46,27 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   List<FinancialEntry> _allDebts = [];
   List<FinancialEntry> _pendingDebts = [];
   List<TimelineItem> _timeline = [];
+  Inspection? _latestCheckin;
+  Inspection? _latestCheckout;
   bool _isLoading = true;
   String _driverName = 'Motorista';
+  Timer? _syncRefreshDebounce;
 
   @override
   void initState() {
     super.initState();
     FinancialRepository.entriesChangedNotifier.addListener(_onFinancialUpdated);
+    RealtimeService().dataChangesNotifier.addListener(_onRemoteDataChanged);
     _loadDriverData();
   }
 
   @override
   void dispose() {
-    FinancialRepository.entriesChangedNotifier.removeListener(_onFinancialUpdated);
+    FinancialRepository.entriesChangedNotifier.removeListener(
+      _onFinancialUpdated,
+    );
+    RealtimeService().dataChangesNotifier.removeListener(_onRemoteDataChanged);
+    _syncRefreshDebounce?.cancel();
     super.dispose();
   }
 
@@ -61,6 +74,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     if (mounted) {
       _loadDriverData();
     }
+  }
+
+  void _onRemoteDataChanged() {
+    _syncRefreshDebounce?.cancel();
+    _syncRefreshDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) unawaited(_loadDriverData());
+    });
   }
 
   Future<void> _loadDriverData() async {
@@ -83,25 +103,50 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
       }
 
       Vehicle? vehicle;
-      final vehicleId = (contract != null && contract.vehicleId.isNotEmpty)
-          ? contract.vehicleId
-          : driver?.currentVehicleId;
+      final vehicleId = contract?.vehicleId;
       if (vehicleId != null && vehicleId.isNotEmpty) {
         vehicle = await _vehicleRepo.getVehicleById(vehicleId);
       }
-      vehicle ??= await _vehicleRepo.getVehicleByDriverId(uid);
 
-      List<FinancialEntry> debts = await _financialRepo.getFinancialEntries(driverId: uid);
-      if (debts.isEmpty && contract != null) {
-        debts = await _financialRepo.getFinancialEntries(driverId: contract.driverId);
+      final inspections = await _inspectionRepo.getInspections(
+        driverId: uid,
+        vehicleId: vehicleId,
+      );
+      Inspection? latestCheckin;
+      Inspection? latestCheckout;
+      for (final inspection in inspections) {
+        if (inspection.contractId != contract?.id) continue;
+        if (inspection.type == InspectionType.checkin &&
+            latestCheckin == null) {
+          latestCheckin = inspection;
+        }
+        if (inspection.type == InspectionType.checkout &&
+            latestCheckout == null) {
+          latestCheckout = inspection;
+        }
       }
-      final timeline = await _timelineRepo.getDriverTimeline(driverId: uid, page: 1, pageSize: 4);
+
+      List<FinancialEntry> debts = await _financialRepo.getFinancialEntries(
+        driverId: uid,
+      );
+      if (debts.isEmpty && contract != null) {
+        debts = await _financialRepo.getFinancialEntries(
+          driverId: contract.driverId,
+        );
+      }
+      final timeline = await _timelineRepo.getDriverTimeline(
+        driverId: uid,
+        page: 1,
+        pageSize: 4,
+      );
 
       if (mounted) {
         setState(() {
           _driver = driver;
           _activeContract = contract;
           _vehicle = vehicle;
+          _latestCheckin = latestCheckin;
+          _latestCheckout = latestCheckout;
           _allDebts = debts;
           _pendingDebts = debts.where((e) => !e.isPaid).toList();
           _timeline = timeline;
@@ -115,7 +160,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double totalPending = _pendingDebts.fold(0.0, (acc, item) => acc + item.amount);
+    final double totalPending = _pendingDebts.fold(
+      0.0,
+      (acc, item) => acc + item.amount,
+    );
 
     return SafeArea(
       child: RefreshIndicator(
@@ -160,7 +208,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                 letterSpacing: 2,
               ),
             ),
-            Text(_driver?.name.isNotEmpty == true ? _driver!.name : _driverName, style: AppTextStyles.headlineMedium),
+            Text(
+              _driver?.name.isNotEmpty == true ? _driver!.name : _driverName,
+              style: AppTextStyles.headlineMedium,
+            ),
           ],
         ),
         GestureDetector(
@@ -183,12 +234,14 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
   Widget _buildVehicleStatusCard() {
     final hasVehicle = _vehicle != null;
-    final modelName = hasVehicle ? '${_vehicle!.brand} ${_vehicle!.model}' : 'Nenhum Veículo Vinculado';
+    final modelName = hasVehicle
+        ? '${_vehicle!.brand} ${_vehicle!.model}'
+        : 'Nenhum Veículo Vinculado';
     final plateStr = hasVehicle
         ? 'PLACA: ${_vehicle!.plate}'
         : (_activeContract != null
-            ? 'Contrato: ${_activeContract!.contractNumber}'
-            : 'Sem Contrato Ativo');
+              ? 'Contrato: ${_activeContract!.contractNumber}'
+              : 'Sem Contrato Ativo');
 
     return Container(
       width: double.infinity,
@@ -225,14 +278,18 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     Text(
                       modelName,
                       style: AppTextStyles.headlineSmall.copyWith(
-                        color: hasVehicle ? AppColors.onSurface : AppColors.onSurfaceVariant,
+                        color: hasVehicle
+                            ? AppColors.onSurface
+                            : AppColors.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       plateStr,
                       style: AppTextStyles.labelMedium.copyWith(
-                        color: hasVehicle ? AppColors.primary : AppColors.onSurfaceVariant.withAlpha(150),
+                        color: hasVehicle
+                            ? AppColors.primary
+                            : AppColors.onSurfaceVariant.withAlpha(150),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -241,7 +298,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               ),
               AppIcon(
                 icon: Icons.directions_car_outlined,
-                color: hasVehicle ? AppColors.primary : AppColors.onSurfaceVariant.withAlpha(120),
+                color: hasVehicle
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant.withAlpha(120),
                 size: 48,
               ),
             ],
@@ -265,9 +324,40 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               ),
             ],
           ),
+          if (_activeContract != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              _vehicleWorkflowStatus,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  String get _vehicleWorkflowStatus {
+    if (_latestCheckout?.status == InspectionStatus.pending) {
+      return 'Devolução enviada; aguardando análise do administrador.';
+    }
+    if (_latestCheckout?.status == InspectionStatus.approved) {
+      return 'Devolução aprovada pelo administrador.';
+    }
+    if (_latestCheckout?.status == InspectionStatus.rejected) {
+      return 'Devolução reprovada. Consulte o motivo e envie novamente.';
+    }
+    if (_latestCheckin?.status == InspectionStatus.pending) {
+      return 'Vistoria de recebimento enviada; aguardando aprovação.';
+    }
+    if (_latestCheckin?.status == InspectionStatus.approved) {
+      return 'Vistoria aprovada. Veículo recebido.';
+    }
+    if (_latestCheckin?.status == InspectionStatus.rejected) {
+      return 'Vistoria reprovada. Envie uma nova vistoria de recebimento.';
+    }
+    return 'Contrato ativo. Faça a vistoria para registrar o recebimento do veículo.';
   }
 
   Widget _buildMetricItem(String label, String value, IconData icon) {
@@ -298,7 +388,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
   Widget _buildFinancialSummaryCard(BuildContext context, double totalPending) {
     final lateDebts = _allDebts.where((e) => !e.isPaid && e.isLate).toList();
-    final upcomingDebts = _allDebts.where((e) => !e.isPaid && !e.isLate).toList();
+    final upcomingDebts = _allDebts
+        .where((e) => !e.isPaid && !e.isLate)
+        .toList();
     final totalLate = lateDebts.fold(0.0, (acc, item) => acc + item.amount);
     final hasLate = lateDebts.isNotEmpty;
     final hasPending = totalPending > 0;
@@ -333,7 +425,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 22),
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'ALUGUEL EM ATRASO!',
@@ -346,7 +442,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -390,10 +489,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                       );
                       if (res == true) _loadDriverData();
                     },
-                    icon: const Icon(Icons.qr_code_scanner, color: Color(0xFFC92A2A)),
+                    icon: const Icon(
+                      Icons.qr_code_scanner,
+                      color: Color(0xFFC92A2A),
+                    ),
                     label: const Text(
                       'PAGAR PARCELA ATRASADA',
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -419,7 +524,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     );
                     if (res == true) _loadDriverData();
                   },
-                  icon: const Icon(Icons.all_inclusive, color: Colors.white, size: 18),
+                  icon: const Icon(
+                    Icons.all_inclusive,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   label: Text(
                     'QUITAR TUDO DE UMA VEZ (R\$ ${totalPending.toStringAsFixed(2)})',
                     style: const TextStyle(
@@ -444,7 +553,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     }
 
     if (hasPending) {
-      final nextEntry = upcomingDebts.isNotEmpty ? upcomingDebts.first : _pendingDebts.first;
+      final nextEntry = upcomingDebts.isNotEmpty
+          ? upcomingDebts.first
+          : _pendingDebts.first;
       final daysToDue = nextEntry.date.difference(DateTime.now()).inDays;
 
       return Container(
@@ -480,7 +591,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -552,7 +666,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                     );
                     if (res == true) _loadDriverData();
                   },
-                  icon: const Icon(Icons.payments_outlined, color: Colors.white, size: 18),
+                  icon: const Icon(
+                    Icons.payments_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   label: Text(
                     'PAGAR TUDO DE UMA VEZ (R\$ ${totalPending.toStringAsFixed(2)})',
                     style: const TextStyle(
@@ -605,7 +723,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -662,7 +783,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   Widget _buildPaymentHistorySection(BuildContext context) {
     if (_allDebts.isEmpty) return const SizedBox.shrink();
 
-    final rentalCycle = _activeContract?.billingFrequency?.toUpperCase() ?? 'SEMANAL';
+    final rentalCycle =
+        _activeContract?.billingFrequency?.toUpperCase() ?? 'SEMANAL';
     final rentalVal = _activeContract?.weeklyValue ?? 750.0;
 
     return Column(
@@ -692,7 +814,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             ),
             TextButton(
               onPressed: () => context.push(AppRoutes.driverFinancialStatement),
-              child: const Text('Ver Extrato', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Ver Extrato',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -714,8 +839,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             final statusLabel = item.isPaid
                 ? 'PAGO'
                 : (item.isUnderReview
-                    ? 'EM ANÁLISE'
-                    : (item.isLate ? 'ATRASADO' : 'A VENCER'));
+                      ? 'EM ANÁLISE'
+                      : (item.isLate ? 'ATRASADO' : 'A VENCER'));
 
             return Container(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -743,19 +868,26 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: (item.isPaid
-                                  ? Colors.green
-                                  : (item.isLate ? AppColors.error : AppColors.primary))
-                              .withValues(alpha: 0.1),
+                          color:
+                              (item.isPaid
+                                      ? Colors.green
+                                      : (item.isLate
+                                            ? AppColors.error
+                                            : AppColors.primary))
+                                  .withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           item.isPaid
                               ? Icons.check
-                              : (item.isLate ? Icons.warning : Icons.calendar_today),
+                              : (item.isLate
+                                    ? Icons.warning
+                                    : Icons.calendar_today),
                           color: item.isPaid
                               ? Colors.green
-                              : (item.isLate ? AppColors.error : AppColors.primary),
+                              : (item.isLate
+                                    ? AppColors.error
+                                    : AppColors.primary),
                           size: 18,
                         ),
                       ),
@@ -798,16 +930,24 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                           ),
                           const SizedBox(height: 2),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: (item.isUnderReview ? Colors.blue : statusColor)
-                                  .withValues(alpha: 0.1),
+                              color:
+                                  (item.isUnderReview
+                                          ? Colors.blue
+                                          : statusColor)
+                                      .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               statusLabel,
                               style: TextStyle(
-                                color: item.isUnderReview ? Colors.blue : statusColor,
+                                color: item.isUnderReview
+                                    ? Colors.blue
+                                    : statusColor,
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -831,14 +971,22 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                               if (res == true) _loadDriverData();
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: item.isLate ? AppColors.error : AppColors.primary,
+                              backgroundColor: item.isLate
+                                  ? AppColors.error
+                                  : AppColors.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            child: const Text('Pagar (PIX)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'Pagar (PIX)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -853,7 +1001,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                             },
                             icon: const Icon(Icons.attach_file, size: 14),
                             label: Text(
-                              item.isUnderReview ? 'Comprovante' : 'Anexar Comprovante',
+                              item.isUnderReview
+                                  ? 'Comprovante'
+                                  : 'Anexar Comprovante',
                               style: const TextStyle(fontSize: 11),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -878,6 +1028,29 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final canStartCheckin =
+        _activeContract != null &&
+        (_latestCheckin == null ||
+            _latestCheckin!.status == InspectionStatus.rejected) &&
+        _latestCheckout?.status != InspectionStatus.pending;
+    final checkinLabel = _latestCheckin?.status == InspectionStatus.pending
+        ? 'Aguardando'
+        : _latestCheckin?.status == InspectionStatus.approved
+        ? 'Recebido'
+        : 'Receber carro';
+    final canRequestCheckout =
+        _activeContract != null &&
+        _latestCheckin?.status == InspectionStatus.approved &&
+        _latestCheckout?.status != InspectionStatus.pending &&
+        _latestCheckout?.status != InspectionStatus.approved;
+    final checkoutLabel = canRequestCheckout
+        ? 'Devolver carro'
+        : _latestCheckout?.status == InspectionStatus.pending
+        ? 'Devolução em análise'
+        : _latestCheckout?.status == InspectionStatus.approved
+        ? 'Devolvido'
+        : 'Aguarda vistoria';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -893,10 +1066,15 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildActionButton(
-              'Vistoria 360',
+              checkinLabel,
               Icons.camera_alt_outlined,
-              () => context.push(AppRoutes.driverInspectionCheckIn),
-              isEnabled: _activeContract != null,
+              () async {
+                final submitted = await context.push<bool>(
+                  AppRoutes.driverInspectionCheckIn,
+                );
+                if (submitted == true) await _loadDriverData();
+              },
+              isEnabled: canStartCheckin,
             ),
             _buildActionButton(
               'Documentos',
@@ -915,41 +1093,68 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             ),
           ],
         ),
+        if (_activeContract != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: canRequestCheckout
+                  ? () async {
+                      final submitted = await context.push<bool>(
+                        AppRoutes.driverInspectionCheckOut,
+                      );
+                      if (submitted == true) await _loadDriverData();
+                    }
+                  : null,
+              icon: const Icon(Icons.assignment_return_outlined),
+              label: Text(checkoutLabel),
+            ),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap, {bool isEnabled = true}) {
+  Widget _buildActionButton(
+    String label,
+    IconData icon,
+    VoidCallback onTap, {
+    bool isEnabled = true,
+  }) {
     return GestureDetector(
-      onTap: isEnabled ? onTap : () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ação bloqueada. Requer contrato ativo.')),
-        );
-      },
+      onTap: isEnabled
+          ? onTap
+          : () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Ação bloqueada. Requer contrato ativo.'),
+                ),
+              );
+            },
       child: Opacity(
         opacity: isEnabled ? 1.0 : 0.5,
         child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.onSurface.withValues(alpha: 0.04),
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.onSurface.withValues(alpha: 0.04),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: AppIcon(icon: icon, color: AppColors.primary),
             ),
-            child: AppIcon(icon: icon, color: AppColors.primary),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(label, style: AppTextStyles.labelSmall),
-        ],
-      ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(label, style: AppTextStyles.labelSmall),
+          ],
+        ),
       ),
     );
   }
@@ -999,40 +1204,44 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             ),
           )
         else
-          ..._timeline.take(4).map(
-            (t) {
-              IconData icon = Icons.notifications_active_outlined;
-              Color color = AppColors.primary;
+          ..._timeline.take(4).map((t) {
+            IconData icon = Icons.notifications_active_outlined;
+            Color color = AppColors.primary;
 
-              final type = t.type?.toLowerCase() ?? '';
-              final title = t.title.toLowerCase();
+            final type = t.type?.toLowerCase() ?? '';
+            final title = t.title.toLowerCase();
 
-              if (type == 'vistoria' || title.contains('vistoria')) {
-                icon = Icons.camera_alt_outlined;
-                color = const Color(0xFF00897B); // Teal
-              } else if (type == 'ocorrencia' || title.contains('ocorr')) {
-                icon = Icons.warning_amber_rounded;
-                color = AppColors.warning;
-              } else if (type == 'veiculo' || title.contains('veículo') || title.contains('veiculo')) {
-                icon = Icons.directions_car_filled_outlined;
-                color = AppColors.primary;
-              } else if (type == 'km' || title.contains('km') || title.contains('hodômetro')) {
-                icon = Icons.speed_outlined;
-                color = const Color(0xFF1976D2); // Blue
-              } else if (type == 'pagamento' || title.contains('pagamento') || title.contains('pix')) {
-                icon = Icons.check_circle_outline;
-                color = AppColors.success;
-              }
+            if (type == 'vistoria' || title.contains('vistoria')) {
+              icon = Icons.camera_alt_outlined;
+              color = const Color(0xFF00897B); // Teal
+            } else if (type == 'ocorrencia' || title.contains('ocorr')) {
+              icon = Icons.warning_amber_rounded;
+              color = AppColors.warning;
+            } else if (type == 'veiculo' ||
+                title.contains('veículo') ||
+                title.contains('veiculo')) {
+              icon = Icons.directions_car_filled_outlined;
+              color = AppColors.primary;
+            } else if (type == 'km' ||
+                title.contains('km') ||
+                title.contains('hodômetro')) {
+              icon = Icons.speed_outlined;
+              color = const Color(0xFF1976D2); // Blue
+            } else if (type == 'pagamento' ||
+                title.contains('pagamento') ||
+                title.contains('pix')) {
+              icon = Icons.check_circle_outline;
+              color = AppColors.success;
+            }
 
-              return _buildTimelineItem(
-                t.title,
-                t.description,
-                '${t.date.day.toString().padLeft(2, '0')}/${t.date.month.toString().padLeft(2, '0')} às ${t.date.hour.toString().padLeft(2, '0')}:${t.date.minute.toString().padLeft(2, '0')}',
-                icon,
-                color,
-              );
-            },
-          ),
+            return _buildTimelineItem(
+              t.title,
+              t.description,
+              '${t.date.day.toString().padLeft(2, '0')}/${t.date.month.toString().padLeft(2, '0')} às ${t.date.hour.toString().padLeft(2, '0')}:${t.date.minute.toString().padLeft(2, '0')}',
+              icon,
+              color,
+            );
+          }),
       ],
     );
   }

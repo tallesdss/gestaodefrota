@@ -44,13 +44,17 @@ class RealtimeService {
 
   final SupabaseClient _client = SupabaseConfig.client;
   RealtimeChannel? _fleetChannel;
+  RealtimeChannel? _contractChannel;
   RealtimeChannel? _inspectionChannel;
+  RealtimeChannel? _inspectionPhotoChannel;
+  RealtimeChannel? _checklistChannel;
   RealtimeChannel? _financeChannel;
 
   final ValueNotifier<List<AppNotification>> notificationsNotifier =
       ValueNotifier<List<AppNotification>>([]);
 
   final ValueNotifier<int> unreadCountNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<int> dataChangesNotifier = ValueNotifier<int>(0);
 
   bool _initialized = false;
 
@@ -86,61 +90,122 @@ class RealtimeService {
   void _subscribeChannels() {
     try {
       // 1. Channel for Fleet Changes
-      _fleetChannel = _client.channel('public:veiculos').onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'veiculos',
-        callback: (payload) {
-          final eventType = payload.eventType.name.toUpperCase();
-          final newRecord = payload.newRecord;
-          final plate = newRecord['placa'] ?? 'Veículo';
-          final status = newRecord['status'] ?? 'Atualizado';
+      _fleetChannel =
+          _client
+              .channel('public:veiculos')
+              .onPostgresChanges(
+                event: PostgresChangeEvent.all,
+                schema: 'public',
+                table: 'veiculos',
+                callback: (payload) {
+                  dataChangesNotifier.value++;
+                  final eventType = payload.eventType.name.toUpperCase();
+                  final newRecord = payload.newRecord;
+                  final plate = newRecord['placa'] ?? 'Veículo';
+                  final status = newRecord['status'] ?? 'Atualizado';
 
-          _addInAppNotification(
-            title: 'ATUALIZAÇÃO DE FROTA ($eventType)',
-            message: 'Veículo $plate agora está $status.',
-            type: AppNotificationType.info,
-            category: 'frota',
-          );
-        },
-      )..subscribe();
+                  _addInAppNotification(
+                    title: 'ATUALIZAÇÃO DE FROTA ($eventType)',
+                    message: 'Veículo $plate agora está $status.',
+                    type: AppNotificationType.info,
+                    category: 'frota',
+                  );
+                },
+              )
+            ..subscribe();
 
-      // 2. Channel for Inspections
-      _inspectionChannel = _client.channel('public:vistorias').onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'vistorias',
-        callback: (payload) {
-          final tipo = payload.newRecord['tipo'] ?? 'Vistoria';
-          final status = payload.newRecord['status'] ?? 'Pendente';
+      _contractChannel =
+          _client
+              .channel('public:contratos')
+              .onPostgresChanges(
+                event: PostgresChangeEvent.all,
+                schema: 'public',
+                table: 'contratos',
+                callback: (payload) {
+                  dataChangesNotifier.value++;
+                  final status = payload.newRecord['status'] ?? 'Atualizado';
+                  _addInAppNotification(
+                    title: 'CONTRATO ATUALIZADO',
+                    message: 'Status do contrato: $status.',
+                    type: AppNotificationType.info,
+                    category: 'contrato',
+                  );
+                },
+              )
+            ..subscribe();
 
-          _addInAppNotification(
-            title: 'NOVA VISTORIA ($tipo)',
-            message: 'Status atualizado para: $status.',
-            type: status == 'aprovado' ? AppNotificationType.success : AppNotificationType.warning,
-            category: 'vistoria',
-          );
-        },
-      )..subscribe();
+      // Vistorias e seus registros relacionados atualizam as duas interfaces.
+      _inspectionChannel =
+          _client
+              .channel('public:vistorias')
+              .onPostgresChanges(
+                event: PostgresChangeEvent.all,
+                schema: 'public',
+                table: 'vistorias',
+                callback: (payload) {
+                  dataChangesNotifier.value++;
+                  final tipo = payload.newRecord['tipo'] ?? 'Vistoria';
+                  final status = payload.newRecord['status'] ?? 'Pendente';
+
+                  _addInAppNotification(
+                    title: 'NOVA VISTORIA ($tipo)',
+                    message: 'Status atualizado para: $status.',
+                    type: status == 'aprovado'
+                        ? AppNotificationType.success
+                        : AppNotificationType.warning,
+                    category: 'vistoria',
+                  );
+                },
+              )
+            ..subscribe();
+
+      _inspectionPhotoChannel =
+          _client
+              .channel('public:fotos_vistoria')
+              .onPostgresChanges(
+                event: PostgresChangeEvent.all,
+                schema: 'public',
+                table: 'fotos_vistoria',
+                callback: (_) => dataChangesNotifier.value++,
+              )
+            ..subscribe();
+
+      _checklistChannel =
+          _client
+              .channel('public:itens_checklist_vistoria')
+              .onPostgresChanges(
+                event: PostgresChangeEvent.all,
+                schema: 'public',
+                table: 'itens_checklist_vistoria',
+                callback: (_) => dataChangesNotifier.value++,
+              )
+            ..subscribe();
 
       // 3. Channel for Financial entries
-      _financeChannel = _client.channel('public:lancamentos_financeiros').onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'lancamentos_financeiros',
-        callback: (payload) {
-          final desc = payload.newRecord['descricao'] ?? 'Lançamento';
-          final valor = payload.newRecord['valor'] ?? 0;
-          final status = payload.newRecord['status'] ?? 'pendente';
+      _financeChannel =
+          _client
+              .channel('public:lancamentos_financeiros')
+              .onPostgresChanges(
+                event: PostgresChangeEvent.all,
+                schema: 'public',
+                table: 'lancamentos_financeiros',
+                callback: (payload) {
+                  dataChangesNotifier.value++;
+                  final desc = payload.newRecord['descricao'] ?? 'Lançamento';
+                  final valor = payload.newRecord['valor'] ?? 0;
+                  final status = payload.newRecord['status'] ?? 'pendente';
 
-          _addInAppNotification(
-            title: 'MOVIMENTAÇÃO FINANCEIRA',
-            message: '$desc no valor de R\$ $valor ($status).',
-            type: status == 'pago' ? AppNotificationType.success : AppNotificationType.danger,
-            category: 'financeiro',
-          );
-        },
-      )..subscribe();
+                  _addInAppNotification(
+                    title: 'MOVIMENTAÇÃO FINANCEIRA',
+                    message: '$desc no valor de R\$ $valor ($status).',
+                    type: status == 'pago'
+                        ? AppNotificationType.success
+                        : AppNotificationType.danger,
+                    category: 'financeiro',
+                  );
+                },
+              )
+            ..subscribe();
     } catch (_) {}
   }
 
@@ -183,8 +248,9 @@ class RealtimeService {
   }
 
   void _updateUnreadCount() {
-    unreadCountNotifier.value =
-        notificationsNotifier.value.where((n) => !n.isRead).length;
+    unreadCountNotifier.value = notificationsNotifier.value
+        .where((n) => !n.isRead)
+        .length;
   }
 
   AppNotification _mapActivityToNotification(Map<String, dynamic> row) {
@@ -200,9 +266,15 @@ class RealtimeService {
 
     return AppNotification(
       id: (row['id'] ?? DateTime.now().millisecondsSinceEpoch).toString(),
-      title: (row['titulo'] ?? row['tipo_evento'] ?? 'Notificação').toString().toUpperCase(),
+      title: (row['titulo'] ?? row['tipo_evento'] ?? 'Notificação')
+          .toString()
+          .toUpperCase(),
       message: (row['descricao'] ?? '').toString(),
-      timestamp: DateTime.tryParse(row['criado_em']?.toString() ?? row['data_hora']?.toString() ?? '') ?? DateTime.now(),
+      timestamp:
+          DateTime.tryParse(
+            row['criado_em']?.toString() ?? row['data_hora']?.toString() ?? '',
+          ) ??
+          DateTime.now(),
       type: type,
       category: tipo,
       isRead: false,
@@ -211,7 +283,10 @@ class RealtimeService {
 
   void dispose() {
     _fleetChannel?.unsubscribe();
+    _contractChannel?.unsubscribe();
     _inspectionChannel?.unsubscribe();
+    _inspectionPhotoChannel?.unsubscribe();
+    _checklistChannel?.unsubscribe();
     _financeChannel?.unsubscribe();
     _initialized = false;
   }

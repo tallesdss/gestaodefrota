@@ -8,8 +8,10 @@
 # IDE & OS
 .DS_Store
 Thumbs.db
-.vscode/
+!.vscode/
+.vscode/*
+!.vscode/mcp.json
 .idea/
 
-# MCP Config (contém tokens de acesso)
+# MCP Config (contï¿½m tokens de acesso)
 .agents/mcp_config.json

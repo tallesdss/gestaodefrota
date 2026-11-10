@@ -9,12 +9,19 @@ import '../../models/contract.dart';
 import '../../models/vehicle.dart';
 import '../../models/driver.dart';
 import '../../core/repositories/contract_repository.dart';
-import '../../core/repositories/financial_repository.dart';
 import '../../core/config/supabase_config.dart';
 
 class ContractFormScreen extends StatefulWidget {
   final Contract? contract;
-  const ContractFormScreen({super.key, this.contract});
+  final String? initialVehicleId;
+  final String? initialDriverId;
+
+  const ContractFormScreen({
+    super.key,
+    this.contract,
+    this.initialVehicleId,
+    this.initialDriverId,
+  });
 
   @override
   State<ContractFormScreen> createState() => _ContractFormScreenState();
@@ -44,8 +51,8 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
   void initState() {
     super.initState();
     _fetchLists();
-    _selectedVehicleId = widget.contract?.vehicleId;
-    _selectedDriverId = widget.contract?.driverId;
+    _selectedVehicleId = widget.contract?.vehicleId ?? widget.initialVehicleId;
+    _selectedDriverId = widget.contract?.driverId ?? widget.initialDriverId;
     _weeklyValueController = TextEditingController(
       text: widget.contract?.weeklyValue.toString() ?? '',
     );
@@ -235,34 +242,45 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                   depositPaid: _depositPaid,
                                   type: _selectedType,
                                 );
+                                final rentalValue = _selectedFrequency == 'semanal'
+                                    ? weekly
+                                    : (_selectedFrequency == 'quinzenal'
+                                        ? weekly * 2
+                                        : monthly);
+                                final isNewContract = widget.contract == null ||
+                                    widget.contract!.id.isEmpty;
+                                var contractId = contract.id;
 
-                                if (widget.contract != null && widget.contract!.id.isNotEmpty) {
+                                if (!isNewContract) {
                                   await ContractRepository().updateContract(contract);
                                 } else {
-                                  await ContractRepository().createContractWithDeposit(
+                                  contractId = await ContractRepository().createContractWithDeposit(
                                     driverId: _selectedDriverId!,
                                     vehicleId: _selectedVehicleId!,
                                     contractNumber: 'CTR-${DateTime.now().millisecondsSinceEpoch}',
                                     startDate: _startDate,
-                                    rentalValue: _selectedFrequency == 'semanal' ? weekly : (_selectedFrequency == 'quinzenal' ? weekly * 2 : monthly),
+                                    rentalValue: rentalValue,
                                     depositValue: _depositPaid ? weekly * 2 : 0.0,
                                     frequency: _selectedFrequency,
                                     dueDay: _startDate.day,
                                   );
                                 }
 
-                                // Invoca a Edge Function via RPC para gerar todas as parcelas
-                                await SupabaseConfig.client.rpc(
-                                  'fn_gerar_parcelas_contrato',
-                                  params: {
-                                    'p_contrato_id': contract.id,
-                                    'p_valor_locacao': _selectedFrequency == 'semanal' ? weekly : (_selectedFrequency == 'quinzenal' ? weekly * 2 : monthly),
-                                    'p_frequencia': _selectedFrequency,
-                                    'p_dia_vencimento': _startDate.day,
-                                    'p_data_inicio': _startDate.toIso8601String().split('T')[0],
-                                    'p_num_parcelas': _selectedFrequency == 'semanal' ? 52 : (_selectedFrequency == 'quinzenal' ? 26 : 12),
-                                  },
-                                );
+                                if (isNewContract) {
+                                  await SupabaseConfig.client.rpc(
+                                    'fn_gerar_parcelas_contrato',
+                                    params: {
+                                      'p_contrato_id': contractId,
+                                      'p_valor_locacao': rentalValue,
+                                      'p_frequencia': _selectedFrequency,
+                                      'p_dia_vencimento': _startDate.day,
+                                      'p_data_inicio': _startDate.toIso8601String().split('T')[0],
+                                      'p_num_parcelas': _selectedFrequency == 'semanal'
+                                          ? 52
+                                          : (_selectedFrequency == 'quinzenal' ? 26 : 12),
+                                    },
+                                  );
+                                }
 
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(

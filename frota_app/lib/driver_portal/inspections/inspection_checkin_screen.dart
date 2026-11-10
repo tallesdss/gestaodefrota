@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,12 +8,10 @@ import 'package:frota_app/core/theme/app_text_styles.dart';
 import 'package:frota_app/core/theme/app_spacing.dart';
 import 'package:frota_app/core/widgets/app_button.dart';
 import 'package:frota_app/core/widgets/app_icon.dart';
-import 'package:frota_app/core/routes/app_routes.dart';
 import 'package:frota_app/core/repositories/inspection_repository.dart';
 import 'package:frota_app/core/repositories/contract_repository.dart';
 import 'package:frota_app/core/repositories/auth_repository.dart';
 import 'package:frota_app/core/repositories/vehicle_repository.dart';
-import 'package:frota_app/core/config/supabase_config.dart';
 import 'package:frota_app/models/inspection.dart';
 
 class InspectionCheckInScreen extends StatefulWidget {
@@ -49,16 +46,17 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
 
   final TextEditingController _kmController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  String _selectedFuelLevel = 'Cheio';
+  String? _selectedFuelLevel;
   bool _hasNewDamage = false;
 
   final Map<String, bool> _checklist = {
-    'Pneus em bom estado': true,
-    'Nível de combustível registrado': true,
-    'Sem luzes de alerta no painel': true,
-    'Limpadores funcionando': true,
-    'Ar-condicionado gelando': true,
+    'Pneus em bom estado': false,
+    'Nível de combustível registrado': false,
+    'Sem luzes de alerta no painel': false,
+    'Limpadores funcionando': false,
+    'Ar-condicionado gelando': false,
   };
+  final Set<String> _reviewedChecklist = {};
 
   Future<void> _pickPhoto(String item) async {
     showModalBottomSheet(
@@ -75,12 +73,20 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
             children: [
               Text(
                 'Capturar Foto - $item',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
-                title: Text('Tirar Foto com a Câmera', style: AppTextStyles.bodyMedium),
+                leading: const Icon(
+                  Icons.camera_alt_outlined,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  'Tirar Foto com a Câmera',
+                  style: AppTextStyles.bodyMedium,
+                ),
                 onTap: () async {
                   Navigator.pop(ctx);
                   final photo = await _picker.pickImage(
@@ -95,8 +101,14 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
-                title: Text('Escolher da Galeria', style: AppTextStyles.bodyMedium),
+                leading: const Icon(
+                  Icons.photo_library_outlined,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  'Escolher da Galeria',
+                  style: AppTextStyles.bodyMedium,
+                ),
                 onTap: () async {
                   Navigator.pop(ctx);
                   final photo = await _picker.pickImage(
@@ -317,7 +329,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
                         color: AppColors.onSurface.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
-                      )
+                      ),
                     ]
                   : null,
             ),
@@ -352,7 +364,11 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
                               color: AppColors.success,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.check, size: 16, color: Colors.white),
+                            child: const Icon(
+                              Icons.check,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         Positioned(
@@ -416,14 +432,19 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        ..._checklist.keys.map((key) => CheckboxListTile(
-              value: _checklist[key] ?? false,
-              onChanged: (val) => setState(() => _checklist[key] = val ?? false),
-              title: Text(key, style: AppTextStyles.bodyMedium),
-              activeColor: AppColors.primary,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-            )),
+        ..._checklist.keys.map(
+          (key) => CheckboxListTile(
+            value: _checklist[key] ?? false,
+            onChanged: (val) => setState(() {
+              _checklist[key] = val ?? false;
+              _reviewedChecklist.add(key);
+            }),
+            title: Text(key, style: AppTextStyles.bodyMedium),
+            activeColor: AppColors.primary,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+        ),
         const SizedBox(height: AppSpacing.lg),
         Text(
           'DADOS DA VISTORIA',
@@ -460,10 +481,15 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
-            prefixIcon: const Icon(Icons.local_gas_station, color: AppColors.primary),
+            prefixIcon: const Icon(
+              Icons.local_gas_station,
+              color: AppColors.primary,
+            ),
           ),
           items: ['Vazio', '1/4', '1/2', '3/4', 'Cheio']
-              .map((level) => DropdownMenuItem(value: level, child: Text(level)))
+              .map(
+                (level) => DropdownMenuItem(value: level, child: Text(level)),
+              )
               .toList(),
           onChanged: (val) {
             if (val != null) setState(() => _selectedFuelLevel = val);
@@ -473,7 +499,10 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
         SwitchListTile(
           value: _hasNewDamage,
           onChanged: (val) => setState(() => _hasNewDamage = val),
-          title: Text('Identificou alguma avaria nova?', style: AppTextStyles.bodyMedium),
+          title: Text(
+            'Identificou alguma avaria nova?',
+            style: AppTextStyles.bodyMedium,
+          ),
           activeThumbColor: AppColors.primary,
           contentPadding: EdgeInsets.zero,
         ),
@@ -542,107 +571,152 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
     );
   }
 
-  // Mapeamento de fotos padrão para os ângulos da vistoria 360º
-  static final Map<String, String> _defaultDemoPhotos = {
-    'Frente': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=600&auto=format&fit=crop',
-    'Traseira': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=600&auto=format&fit=crop',
-    'Lateral Direita': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=600&auto=format&fit=crop',
-    'Lateral Esquerda': 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?q=80&w=600&auto=format&fit=crop',
-    'Painel': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=600&auto=format&fit=crop',
-    'Hodômetro': 'https://images.unsplash.com/photo-1590362891991-f776e747a588?q=80&w=600&auto=format&fit=crop',
-    'Bancos Dianteiros': 'https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=600&auto=format&fit=crop',
-    'Placa': 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=600&auto=format&fit=crop',
-  };
-
   Future<void> _handleSubmitInspection() async {
+    if (_isSubmitting) return;
+
+    final missingPhotos = _photosCaptured.entries
+        .where((entry) => entry.value == null)
+        .map((entry) => entry.key)
+        .toList();
+    if (missingPhotos.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Capture todas as fotos: ${missingPhotos.join(', ')}.'),
+        ),
+      );
+      return;
+    }
+    if (_reviewedChecklist.length != _checklist.length) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Responda todos os itens do checklist.')),
+      );
+      return;
+    }
+    if (_hasNewDamage && _notesController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Descreva a avaria identificada.')),
+      );
+      return;
+    }
+
+    final parsedKm = int.tryParse(_kmController.text.trim());
+    if (parsedKm == null || parsedKm <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Informe a quilometragem atual do veículo.'),
+        ),
+      );
+      return;
+    }
+    if (_selectedFuelLevel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione o nível de combustível.')),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
       final uid = _authRepo.currentUserId;
       if (uid == null || uid.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sessão expirada. Faça login.')));
-          setState(() => _isSubmitting = false);
-        }
-        return;
+        throw StateError('Sessão expirada. Faça login novamente.');
       }
 
       final activeContract = await _contractRepo.getActiveContractByDriver(uid);
-      final vehicleId = activeContract?.vehicleId ?? '';
-
-      if (vehicleId.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nenhum contrato ativo ou veículo vinculado.')));
-          setState(() => _isSubmitting = false);
-        }
-        return;
+      if (activeContract == null || activeContract.vehicleId.isEmpty) {
+        throw StateError('Não há contrato ativo com veículo atribuído.');
       }
-      
+      final vehicleId = activeContract.vehicleId;
+      final existingInspections = await _inspectionRepo.getInspections(
+        driverId: uid,
+        vehicleId: vehicleId,
+      );
+      final existingCheckin = existingInspections.where(
+        (inspection) =>
+            inspection.contractId == activeContract.id &&
+            inspection.type == InspectionType.checkin,
+      );
+      if (existingCheckin.any(
+        (inspection) => inspection.status != InspectionStatus.rejected,
+      )) {
+        throw StateError(
+          'Já existe uma vistoria de recebimento registrada para este contrato.',
+        );
+      }
+
       final activeVehicle = await _vehicleRepo.getVehicleById(vehicleId);
+      if (activeVehicle == null) {
+        throw StateError('Não foi possível carregar o veículo do contrato.');
+      }
+      if (parsedKm < activeVehicle.currentKm) {
+        throw StateError(
+          'O KM informado não pode ser menor que o último registrado (${activeVehicle.currentKm} km).',
+        );
+      }
 
       final photosList = <InspectionPhoto>[];
       for (final entry in _photosCaptured.entries) {
-        String photoUrl = '';
-        if (entry.value != null) {
-          try {
-            final bytes = await entry.value!.readAsBytes();
-            try {
-              photoUrl = await _inspectionRepo.uploadInspectionPhoto(
-                inspectionId: 'chk_${DateTime.now().millisecondsSinceEpoch}',
-                position: entry.key.toLowerCase(),
-                bytes: bytes,
-                fileName: '${entry.key.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.jpg',
-              );
-            } catch (_) {
-              // Converte em Base64 Data URI para persistência local instantânea e offline
-              final base64String = base64Encode(bytes);
-              photoUrl = 'data:image/jpeg;base64,$base64String';
-            }
-          } catch (_) {}
-        }
+        final photo = entry.value!;
+        final bytes = await photo.readAsBytes();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final photoUrl = await _inspectionRepo.uploadInspectionPhoto(
+          inspectionId: 'checkin_${uid}_$timestamp',
+          position: entry.key.toLowerCase(),
+          bytes: bytes,
+          fileName: '${entry.key.toLowerCase()}_$timestamp.jpg',
+        );
 
-        // Se o usuário não capturou este ângulo específico, fornecer a foto de demonstração correspondente
-        if (photoUrl.isEmpty) {
-          photoUrl = _defaultDemoPhotos[entry.key] ?? 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=600&auto=format&fit=crop';
-        }
-
-        photosList.add(InspectionPhoto(
-          url: photoUrl,
-          title: entry.key,
-          photoType: entry.key.toLowerCase(),
-        ));
+        photosList.add(
+          InspectionPhoto(
+            url: photoUrl,
+            title: entry.key,
+            photoType: entry.key.toLowerCase(),
+          ),
+        );
       }
 
       final checklistList = _checklist.entries
           .map((e) => ChecklistItem(title: e.key, isChecked: e.value))
           .toList();
 
-      final parsedKm = int.tryParse(_kmController.text.trim()) ?? (activeVehicle?.currentKm ?? 195000);
+      final fuelLevel = switch (_selectedFuelLevel) {
+        'Vazio' => 0.0,
+        '1/4' => 0.25,
+        '1/2' => 0.5,
+        '3/4' => 0.75,
+        'Cheio' => 1.0,
+        _ => throw StateError('Nível de combustível inválido.'),
+      };
 
       final inspection = Inspection(
         id: '',
-        contractId: activeContract?.id,
+        contractId: activeContract.id,
         vehicleId: vehicleId,
         driverId: uid,
         type: InspectionType.checkin,
         status: InspectionStatus.pending,
         dateTime: DateTime.now(),
         kmAtInspection: parsedKm,
-        fuelLevel: 1.0,
+        fuelLevel: fuelLevel,
         photos: photosList,
         checklist: checklistList,
-        notes: _notesController.text.trim().isNotEmpty
-            ? _notesController.text.trim()
-            : 'Vistoria 360º de Check-in realizada com sucesso pelo motorista.',
+        notes: _notesController.text.trim(),
         hasNewDamage: _hasNewDamage,
       );
 
       await _inspectionRepo.createInspection(inspection);
-    } catch (_) {}
-
-    if (mounted) {
-      setState(() => _isSubmitting = false);
-      _showSuccessDialog();
+      if (mounted) _showSuccessDialog();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Não foi possível registrar a vistoria: $error'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -665,7 +739,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'As fotos e o checklist foram registrados e estão prontos para envio.',
+              'A vistoria foi gravada e já está disponível para análise do administrador.',
               style: AppTextStyles.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -674,7 +748,7 @@ class _InspectionCheckInScreenState extends State<InspectionCheckInScreen> {
               label: 'VOLTAR PARA HOME',
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).pop();
-                context.go(AppRoutes.driverHome);
+                context.pop(true);
               },
               isFullWidth: true,
             ),

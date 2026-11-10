@@ -157,8 +157,12 @@ class AppRoutes {
     redirect: (context, state) {
       // Proteção de rotas RBAC-01: Somente administrador acessa /admin/control-panel
       if (state.matchedLocation.startsWith('/admin/control-panel')) {
-        final cargo = SupabaseConfig.client.auth.currentUser?.userMetadata?['cargo'];
-        if (cargo != 'administrador') {
+        final metadata = SupabaseConfig.client.auth.currentUser?.userMetadata;
+        final cargo = metadata?['cargo']?.toString().toLowerCase();
+        final isAdmin = metadata?['is_admin'] == true ||
+            cargo == 'admin' ||
+            cargo == 'administrador';
+        if (!isAdmin) {
           return adminDashboard;
         }
       }
@@ -255,8 +259,19 @@ class AppRoutes {
           GoRoute(
             path: adminContractForm,
             builder: (context, state) {
-              final contract = state.extra as Contract?;
-              return ContractFormScreen(contract: contract);
+              final extra = state.extra;
+              final contract = extra is Contract ? extra : null;
+              final initialVehicleId = extra is Map
+                  ? extra['vehicleId']?.toString()
+                  : null;
+              final initialDriverId = extra is Map
+                  ? extra['driverId']?.toString()
+                  : null;
+              return ContractFormScreen(
+                contract: contract,
+                initialVehicleId: initialVehicleId,
+                initialDriverId: initialDriverId,
+              );
             },
           ),
           GoRoute(

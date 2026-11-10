@@ -4,20 +4,18 @@ import '../../models/inspection.dart';
 import '../../models/timeline_item.dart';
 import '../config/supabase_config.dart';
 import 'timeline_repository.dart';
-import 'vehicle_repository.dart';
 
 /// Repositório concreto para o Módulo de Vistorias e Check-ins no Supabase
 class InspectionRepository {
   final SupabaseClient _client;
 
-  // Cache sincronizado em memória para persistir novas vistorias criadas localmente se necessário
-  static final List<Inspection> _memoryInspections = [];
-
   InspectionRepository({SupabaseClient? client}) : _client = client ?? supabase;
 
   bool _isValidUuid(String? str) {
     if (str == null || str.isEmpty) return false;
-    return RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(str);
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(str);
   }
 
   /// Listar vistorias com fotos e itens de checklist
@@ -26,82 +24,62 @@ class InspectionRepository {
     String? vehicleId,
     String? status,
   }) async {
-    final List<Inspection> list = [];
-
-    if (driverId == null || _isValidUuid(driverId)) {
-      try {
-        var query = _client.from(SupabaseConfig.tabelaVistorias).select('''
-          *,
-          fotos_vistoria (*),
-          itens_checklist_vistoria (*)
-        ''');
-
-        if (driverId != null && driverId.isNotEmpty && _isValidUuid(driverId)) {
-          query = query.eq('motorista_id', driverId);
-        }
-        if (vehicleId != null && vehicleId.isNotEmpty && _isValidUuid(vehicleId)) {
-          query = query.eq('veiculo_id', vehicleId);
-        }
-        if (status != null && status.isNotEmpty && status != 'all' && status != 'todos') {
-          String statusDb = status.toLowerCase();
-          if (statusDb == 'aprovado' || statusDb == 'approved') statusDb = 'aprovado';
-          if (statusDb == 'rejeitado' || statusDb == 'rejected') statusDb = 'rejeitado';
-          if (statusDb == 'pendente' || statusDb == 'pending') statusDb = 'pendente_revisao';
-          query = query.eq('status', statusDb);
-        }
-
-        final response = await query.order('criado_em', ascending: false);
-        final dbInspections = (response as List)
-            .map((v) => Inspection.fromMap(Map<String, dynamic>.from(v as Map)))
-            .toList();
-        list.addAll(dbInspections);
-      } catch (_) {}
+    if (driverId != null && driverId.isNotEmpty && !_isValidUuid(driverId)) {
+      throw ArgumentError.value(
+        driverId,
+        'driverId',
+        'ID de motorista inválido.',
+      );
     }
 
-    // Mesclar vistorias em memória
-    for (final mem in _memoryInspections) {
-      if (driverId != null && mem.driverId != driverId) continue;
-      if (vehicleId != null && mem.vehicleId != vehicleId) continue;
-      if (status != null && status.isNotEmpty && status != 'all' && status != 'todos') {
-        if (status == 'aprovado' && mem.status != InspectionStatus.approved) continue;
-        if (status == 'rejeitado' && mem.status != InspectionStatus.rejected) continue;
-        if (status == 'pendente' && mem.status != InspectionStatus.pending) continue;
-      }
-      if (!list.any((i) => i.id == mem.id)) {
-        list.insert(0, mem);
-      }
+    var query = _client.from(SupabaseConfig.tabelaVistorias).select('''
+      *,
+      fotos_vistoria (*),
+      itens_checklist_vistoria (*)
+    ''');
+
+    if (driverId != null && driverId.isNotEmpty) {
+      query = query.eq('motorista_id', driverId);
+    }
+    if (vehicleId != null && vehicleId.isNotEmpty && _isValidUuid(vehicleId)) {
+      query = query.eq('veiculo_id', vehicleId);
+    }
+    if (status != null &&
+        status.isNotEmpty &&
+        status != 'all' &&
+        status != 'todos') {
+      String statusDb = status.toLowerCase();
+      if (statusDb == 'aprovado' || statusDb == 'approved')
+        statusDb = 'aprovado';
+      if (statusDb == 'rejeitado' || statusDb == 'rejected')
+        statusDb = 'rejeitado';
+      if (statusDb == 'pendente' || statusDb == 'pending')
+        statusDb = 'pendente_revisao';
+      query = query.eq('status', statusDb);
     }
 
-    // Ordenar pela mais recente
-    list.sort((a, b) => b.dateTime.compareTo(a.dateTime));
-
-    return list;
+    final response = await query.order('criado_em', ascending: false);
+    return (response as List)
+        .map((v) => Inspection.fromMap(Map<String, dynamic>.from(v as Map)))
+        .toList();
   }
 
   /// Obter laudo detalhado por ID
   Future<Inspection?> getInspectionById(String id) async {
-    final fromMem = _memoryInspections.where((i) => i.id == id).toList();
-    if (fromMem.isNotEmpty) return fromMem.first;
+    if (!_isValidUuid(id)) return null;
 
-    if (_isValidUuid(id)) {
-      try {
-        final response = await _client
-            .from(SupabaseConfig.tabelaVistorias)
-            .select('''
-              *,
-              fotos_vistoria (*),
-              itens_checklist_vistoria (*)
-            ''')
-            .eq('id', id)
-            .maybeSingle();
+    final response = await _client
+        .from(SupabaseConfig.tabelaVistorias)
+        .select('''
+          *,
+          fotos_vistoria (*),
+          itens_checklist_vistoria (*)
+        ''')
+        .eq('id', id)
+        .maybeSingle();
 
-        if (response != null) {
-          return Inspection.fromMap(Map<String, dynamic>.from(response));
-        }
-      } catch (_) {}
-    }
-
-    return null;
+    if (response == null) return null;
+    return Inspection.fromMap(Map<String, dynamic>.from(response));
   }
 
   /// Salvar vistoria completa em cascata relacional
@@ -111,26 +89,49 @@ class InspectionRepository {
         ? inspection.id
         : 'insp_${now.millisecondsSinceEpoch}';
 
-    final fullInspection = inspection.copyWith(
-      id: localId,
-      dateTime: now,
-    );
+    final fullInspection = inspection.copyWith(id: localId, dateTime: now);
 
-    // 1. Inserir no topo do cache em memória
-    _memoryInspections.insert(0, fullInspection);
+    if (!_isValidUuid(fullInspection.driverId) ||
+        !_isValidUuid(fullInspection.vehicleId) ||
+        !_isValidUuid(fullInspection.contractId)) {
+      throw ArgumentError(
+        'Motorista, veículo e contrato válidos são obrigatórios.',
+      );
+    }
 
-    // 2. Registrar evento na linha do tempo
+    final vistoriaMap = fullInspection.toDatabaseMap()..remove('id');
+    final photosPayload = fullInspection.photos.map((photo) {
+      final payload = photo.toDatabaseMap('')..remove('vistoria_id');
+      return payload;
+    }).toList();
+    final checklistPayload = fullInspection.checklist.map((item) {
+      final payload = item.toDatabaseMap('')..remove('vistoria_id');
+      return payload;
+    }).toList();
+    final vistoriaId = (await _client.rpc(
+      'fn_criar_vistoria_completa',
+      params: {
+        'p_vistoria': vistoriaMap,
+        'p_fotos': photosPayload,
+        'p_checklist': checklistPayload,
+      },
+    )).toString();
+    if (!_isValidUuid(vistoriaId)) {
+      throw StateError('O Supabase não retornou o ID da vistoria criada.');
+    }
+
+    final isCheckin = fullInspection.type == InspectionType.checkin;
+    final isCheckout = fullInspection.type == InspectionType.checkout;
+    final typeLabel = isCheckin
+        ? 'Check-in'
+        : (isCheckout ? 'Check-out' : 'Rotina');
     try {
-      final timelineRepo = TimelineRepository(client: _client);
-      final isCheckin = fullInspection.type == InspectionType.checkin;
-      final isCheckout = fullInspection.type == InspectionType.checkout;
-      final typeLabel = isCheckin ? 'Check-in' : (isCheckout ? 'Check-out' : 'Rotina');
-
-      await timelineRepo.addTimelineItem(
+      await TimelineRepository(client: _client).addTimelineItem(
         TimelineItem(
-          id: 't_insp_${now.millisecondsSinceEpoch}',
-          title: 'Vistoria 360º Realizada',
-          description: 'Vistoria de $typeLabel enviada para análise.${fullInspection.kmAtInspection > 0 ? ' (KM: ${fullInspection.kmAtInspection})' : ''}',
+          id: '',
+          title: 'Vistoria $typeLabel realizada',
+          description:
+              'Vistoria enviada para análise. KM: ${fullInspection.kmAtInspection}.',
           date: now,
           type: 'vistoria',
         ),
@@ -138,57 +139,13 @@ class InspectionRepository {
       );
     } catch (_) {}
 
-    // 3. Se for informada a quilometragem, atualizar odômetro do veículo
-    if (fullInspection.kmAtInspection > 0) {
-      try {
-        final vehicleRepo = VehicleRepository(client: _client);
-        await vehicleRepo.updateOdometer(
-          fullInspection.vehicleId,
-          fullInspection.kmAtInspection,
-          driverId: fullInspection.driverId,
-        );
-      } catch (_) {}
+    final savedInspection = await getInspectionById(vistoriaId);
+    if (savedInspection == null) {
+      throw StateError(
+        'A vistoria foi gravada, mas não pôde ser recuperada do Supabase.',
+      );
     }
-
-    // 4. Salvar no Supabase (sanitizando UUIDs para evitar erros de sintaxe)
-    try {
-      final vistoriaMap = fullInspection.toDatabaseMap();
-      vistoriaMap.remove('id');
-
-      if (!_isValidUuid(vistoriaMap['motorista_id']?.toString())) {
-        vistoriaMap['motorista_id'] = 'dfc34aba-9a10-4da0-a38f-91b47438bde0';
-      }
-      if (!_isValidUuid(vistoriaMap['veiculo_id']?.toString())) {
-        vistoriaMap.remove('veiculo_id');
-      }
-      if (!_isValidUuid(vistoriaMap['contrato_id']?.toString())) {
-        vistoriaMap.remove('contrato_id');
-      }
-
-      final vistoriaRes = await _client
-          .from(SupabaseConfig.tabelaVistorias)
-          .insert(vistoriaMap)
-          .select()
-          .single();
-
-      final vistoriaId = vistoriaRes['id'].toString();
-
-      if (fullInspection.photos.isNotEmpty) {
-        final photosPayload = fullInspection.photos
-            .map((p) => p.toDatabaseMap(vistoriaId))
-            .toList();
-        await _client.from(SupabaseConfig.tabelaFotosVistoria).insert(photosPayload);
-      }
-
-      if (fullInspection.checklist.isNotEmpty) {
-        final checklistPayload = fullInspection.checklist
-            .map((c) => c.toDatabaseMap(vistoriaId))
-            .toList();
-        await _client.from(SupabaseConfig.tabelaItensChecklistVistoria).insert(checklistPayload);
-      }
-    } catch (_) {}
-
-    return fullInspection;
+    return savedInspection;
   }
 
   /// Atualizar status do laudo (Aprovar / Rejeitar)
@@ -202,9 +159,7 @@ class InspectionRepository {
     if (status == InspectionStatus.approved) statusStr = 'aprovado';
     if (status == InspectionStatus.rejected) statusStr = 'rejeitado';
 
-    final payload = <String, dynamic>{
-      'status': statusStr,
-    };
+    final payload = <String, dynamic>{'status': statusStr};
     if (reviewerId != null) payload['vistoriador_id'] = reviewerId;
     if (reviewReason != null) payload['motivo_revisao'] = reviewReason;
 
