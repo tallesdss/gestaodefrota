@@ -153,7 +153,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
           if (entry.receiptUrl != null && entry.isOutstanding)
             ListTile(
               leading: const Icon(Icons.receipt_long, color: Colors.blue),
-              title: const Text('Ver Comprovante e Aprovar', style: TextStyle(color: Colors.blue)),
+              title: const Text(
+                'Ver Comprovante e Aprovar',
+                style: TextStyle(color: Colors.blue),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 // Simulando a aprovação para agora
@@ -163,7 +166,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('O motorista anexou um comprovante para este pagamento. Deseja aprovar?'),
+                      const Text(
+                        'O motorista anexou um comprovante para este pagamento. Deseja aprovar?',
+                      ),
                       const SizedBox(height: 8),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
@@ -179,7 +184,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
                     ],
                   ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancelar'),
+                    ),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
@@ -328,10 +336,10 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
                 _entries[index] = updated;
               }
             });
-            
+
             if (!mounted) return;
             Navigator.pop(context);
-            
+
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Lançamento atualizado com sucesso.'),
@@ -720,7 +728,9 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
           if (top3.isEmpty)
             Text(
               'Nenhum lançamento registrado.',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.onSurfaceVariant),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
             )
           else
             ...top3.asMap().entries.map((entry) {
@@ -916,25 +926,39 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  entry.category.toLowerCase().contains('manutenção')
-                      ? Icons.build_outlined
-                      : entry.category.toLowerCase().contains('multa')
-                      ? Icons.report_problem_outlined
-                      : Icons.add_circle_outline,
-                  size: 18,
-                  color: amountColor,
+                Row(
+                  children: [
+                    Icon(
+                      entry.category.toLowerCase().contains('manutenção')
+                          ? Icons.build_outlined
+                          : entry.category.toLowerCase().contains('multa')
+                          ? Icons.report_problem_outlined
+                          : Icons.add_circle_outline,
+                      size: 18,
+                      color: amountColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      entry.description,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: amountColor,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  entry.description,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: amountColor,
+                if (entry.discountPercentage > 0)
+                  Text(
+                    '${entry.discountPercentage.toStringAsFixed(2)}% de desconto'
+                    '${entry.originalAmount != null ? ' (original R\$ ${entry.originalAmount!.toStringAsFixed(2).replaceAll('.', ',')})' : ''}'
+                    '${entry.discountReason?.isNotEmpty == true ? ' — ${entry.discountReason}' : ''}',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.success,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

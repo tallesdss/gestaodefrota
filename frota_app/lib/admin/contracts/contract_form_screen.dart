@@ -39,6 +39,8 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
   String? _selectedDriverId;
   late TextEditingController _weeklyValueController;
   late TextEditingController _monthlyValueController;
+  late TextEditingController _discountReasonController;
+  double _discountPercentage = 0;
   late DateTime _startDate;
   late DateTime _endDate;
   late ContractStatus _selectedStatus;
@@ -57,6 +59,10 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
     );
     _monthlyValueController = TextEditingController(
       text: widget.contract?.monthlyValue.toString() ?? '',
+    );
+    _discountPercentage = widget.contract?.discountPercentage ?? 0;
+    _discountReasonController = TextEditingController(
+      text: widget.contract?.discountReason ?? '',
     );
     _startDate = widget.contract?.startDate ?? DateTime.now();
     _endDate =
@@ -105,6 +111,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
   void dispose() {
     _weeklyValueController.dispose();
     _monthlyValueController.dispose();
+    _discountReasonController.dispose();
     super.dispose();
   }
 
@@ -150,14 +157,22 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                             child: TextFormField(
                               controller: _weeklyValueController,
                               keyboardType: TextInputType.number,
-                              decoration: _inputDecoration('Valor Semanal (R\$)', Icons.payments_outlined),
+                              decoration: _inputDecoration(
+                                'Valor Semanal (R\$)',
+                                Icons.payments_outlined,
+                              ),
                               onChanged: (val) {
-                                final w = double.tryParse(val.replaceAll(',', '.')) ?? 0.0;
+                                final w =
+                                    double.tryParse(val.replaceAll(',', '.')) ??
+                                    0.0;
                                 if (w > 0) {
-                                  _monthlyValueController.text = (w * 4.33).toStringAsFixed(2);
+                                  _monthlyValueController.text = (w * 4.33)
+                                      .toStringAsFixed(2);
                                 }
                               },
-                              validator: (val) => val == null || val.isEmpty ? 'Obrigatório' : null,
+                              validator: (val) => val == null || val.isEmpty
+                                  ? 'Obrigatório'
+                                  : null,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
@@ -165,14 +180,22 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                             child: TextFormField(
                               controller: _monthlyValueController,
                               keyboardType: TextInputType.number,
-                              decoration: _inputDecoration('Valor Mensal (R\$)', Icons.account_balance_wallet_outlined),
+                              decoration: _inputDecoration(
+                                'Valor Mensal (R\$)',
+                                Icons.account_balance_wallet_outlined,
+                              ),
                               onChanged: (val) {
-                                final m = double.tryParse(val.replaceAll(',', '.')) ?? 0.0;
+                                final m =
+                                    double.tryParse(val.replaceAll(',', '.')) ??
+                                    0.0;
                                 if (m > 0) {
-                                  _weeklyValueController.text = (m / 4.33).toStringAsFixed(2);
+                                  _weeklyValueController.text = (m / 4.33)
+                                      .toStringAsFixed(2);
                                 }
                               },
-                              validator: (val) => val == null || val.isEmpty ? 'Obrigatório' : null,
+                              validator: (val) => val == null || val.isEmpty
+                                  ? 'Obrigatório'
+                                  : null,
                             ),
                           ),
                         ],
@@ -193,6 +216,25 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                         onChanged: (val) =>
                             setState(() => _selectedFrequency = val!),
                       ),
+                      const SizedBox(height: AppSpacing.md),
+                      OutlinedButton.icon(
+                        onPressed: _showDiscountDialog,
+                        icon: const Icon(Icons.discount_outlined),
+                        label: Text(
+                          _discountPercentage > 0
+                              ? 'Desconto de ${_discountPercentage.toStringAsFixed(2)}% configurado'
+                              : 'Configurar desconto nas cobranças',
+                        ),
+                      ),
+                      if (_discountPercentage > 0) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Motivo: ${_discountReasonController.text}',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.xl),
                       _buildSectionTitle('DATAS E VIGÊNCIA'),
                       const SizedBox(height: AppSpacing.md),
@@ -249,8 +291,22 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                 _selectedVehicleId != null &&
                                 _selectedDriverId != null) {
                               try {
-                                final weekly = double.tryParse(_weeklyValueController.text.replaceAll(',', '.')) ?? 0.0;
-                                final monthly = double.tryParse(_monthlyValueController.text.replaceAll(',', '.')) ?? (weekly * 4.33);
+                                final weekly =
+                                    double.tryParse(
+                                      _weeklyValueController.text.replaceAll(
+                                        ',',
+                                        '.',
+                                      ),
+                                    ) ??
+                                    0.0;
+                                final monthly =
+                                    double.tryParse(
+                                      _monthlyValueController.text.replaceAll(
+                                        ',',
+                                        '.',
+                                      ),
+                                    ) ??
+                                    (weekly * 4.33);
 
                                 final contract = Contract(
                                   id: widget.contract?.id ?? '',
@@ -266,6 +322,10 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                   depositPaid: _depositPaid,
                                   type: _selectedType,
                                   billingFrequency: _selectedFrequency,
+                                  discountPercentage: _discountPercentage,
+                                  discountReason: _discountPercentage > 0
+                                      ? _discountReasonController.text.trim()
+                                      : null,
                                   dueDay:
                                       widget.contract?.dueDay ??
                                       (_selectedFrequency == 'semanal' ||
@@ -273,15 +333,19 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                           ? _startDate.weekday
                                           : _startDate.day),
                                 );
-                                final rentalValue = _selectedFrequency == 'semanal'
+                                final rentalValue =
+                                    _selectedFrequency == 'semanal'
                                     ? weekly
                                     : (_selectedFrequency == 'quinzenal'
-                                        ? weekly * 2
-                                        : monthly);
-                                final isNewContract = widget.contract == null ||
+                                          ? weekly * 2
+                                          : monthly);
+                                final isNewContract =
+                                    widget.contract == null ||
                                     widget.contract!.id.isEmpty;
                                 if (!isNewContract) {
-                                  await ContractRepository().updateContract(contract);
+                                  await ContractRepository().updateContract(
+                                    contract,
+                                  );
                                 } else {
                                   await ContractRepository()
                                       .createContractWithDeposit(
@@ -302,6 +366,11 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                                     'quinzenal'
                                             ? _startDate.weekday
                                             : _startDate.day,
+                                        discountPercentage: _discountPercentage,
+                                        discountReason: _discountPercentage > 0
+                                            ? _discountReasonController.text
+                                                  .trim()
+                                            : null,
                                       );
                                 }
 
@@ -321,7 +390,9 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Erro ao salvar contrato: ${e.toString()}'),
+                                    content: Text(
+                                      'Erro ao salvar contrato: ${e.toString()}',
+                                    ),
                                     backgroundColor: AppColors.error,
                                   ),
                                 );
@@ -357,6 +428,100 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
               ),
             ),
     );
+  }
+
+  Future<void> _showDiscountDialog() async {
+    final percentageController = TextEditingController(
+      text: _discountPercentage == 0
+          ? ''
+          : _discountPercentage.toStringAsFixed(2),
+    );
+    var reason = _discountReasonController.text;
+    final formKey = GlobalKey<FormState>();
+
+    final discount = await showDialog<({double percentage, String reason})>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Desconto nas cobranças recorrentes'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: percentageController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: _inputDecoration('Desconto (%)', Icons.percent),
+                validator: (value) {
+                  final percentage = double.tryParse(
+                    (value ?? '').replaceAll(',', '.'),
+                  );
+                  if (percentage == null ||
+                      percentage < 0 ||
+                      percentage >= 100) {
+                    return 'Informe um percentual entre 0 e 99,99.';
+                  }
+                  if (percentage > 0 && reason.trim().isEmpty) {
+                    return 'Informe o motivo do desconto.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                initialValue: reason,
+                minLines: 2,
+                maxLines: 4,
+                decoration: _inputDecoration(
+                  'Motivo do desconto',
+                  Icons.notes_outlined,
+                ).copyWith(hintText: 'Descreva o motivo'),
+                onChanged: (value) => reason = value,
+                validator: (_) {
+                  final percentage =
+                      double.tryParse(
+                        percentageController.text.replaceAll(',', '.'),
+                      ) ??
+                      0;
+                  if (percentage > 0 && reason.trim().isEmpty) {
+                    return 'Informe o motivo do desconto.';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              final percentage = double.parse(
+                percentageController.text.replaceAll(',', '.'),
+              );
+              Navigator.pop(dialogContext, (
+                percentage: percentage,
+                reason: percentage > 0 ? reason.trim() : '',
+              ));
+            },
+            child: const Text('Aplicar'),
+          ),
+        ],
+      ),
+    );
+
+    percentageController.dispose();
+    if (!mounted || discount == null) return;
+    setState(() {
+      _discountPercentage = discount.percentage;
+      _discountReasonController.text = discount.reason;
+    });
   }
 
   Widget _buildSectionTitle(String title) {

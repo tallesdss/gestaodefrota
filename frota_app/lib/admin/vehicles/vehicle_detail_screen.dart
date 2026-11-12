@@ -553,9 +553,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.outlineVariant.withAlpha(60),
-            ),
+            border: Border.all(color: AppColors.outlineVariant.withAlpha(60)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -624,7 +622,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             onTap: () {
               if (_vehicle!.currentDriverId != null &&
                   _vehicle!.currentDriverId!.isNotEmpty) {
-                context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}');
+                context.push(
+                  '/admin/drivers/profile/${_vehicle!.currentDriverId}',
+                );
               }
             },
             child: const CircleAvatar(
@@ -639,7 +639,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               onTap: () {
                 if (_vehicle!.currentDriverId != null &&
                     _vehicle!.currentDriverId!.isNotEmpty) {
-                  context.push('/admin/drivers/profile/${_vehicle!.currentDriverId}');
+                  context.push(
+                    '/admin/drivers/profile/${_vehicle!.currentDriverId}',
+                  );
                 }
               },
               child: Column(
@@ -1079,65 +1081,63 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     final previewList = _inspections.take(3).toList();
 
     return Column(
-      children: previewList
-          .map(
-            (i) {
-              final isCheckin = i.type == InspectionType.checkin;
-              return Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
+      children: previewList.map((i) {
+        final isCheckin = i.type == InspectionType.checkin;
+        return Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isCheckin ? Icons.login_rounded : Icons.logout_rounded,
+                color: isCheckin ? AppColors.success : AppColors.secondary,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      isCheckin
-                          ? Icons.login_rounded
-                          : Icons.logout_rounded,
-                      color: isCheckin
-                          ? AppColors.success
-                          : AppColors.secondary,
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isCheckin ? 'CHECK-IN' : 'CHECK-OUT',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text('KM: ${i.kmAtInspection}', style: AppTextStyles.bodySmall),
-                        ],
+                    Text(
+                      isCheckin ? 'CHECK-IN' : 'CHECK-OUT',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(dateFormat.format(i.dateTime), style: AppTextStyles.labelSmall),
-                        Text(
-                          i.status.name.toUpperCase(),
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: i.status == InspectionStatus.approved
-                                ? AppColors.success
-                                : (i.status == InspectionStatus.rejected
-                                    ? AppColors.error
-                                    : AppColors.warning),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'KM: ${i.kmAtInspection}',
+                      style: AppTextStyles.bodySmall,
                     ),
                   ],
                 ),
-              );
-            },
-          )
-          .toList(),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    dateFormat.format(i.dateTime),
+                    style: AppTextStyles.labelSmall,
+                  ),
+                  Text(
+                    i.status.name.toUpperCase(),
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: i.status == InspectionStatus.approved
+                          ? AppColors.success
+                          : (i.status == InspectionStatus.rejected
+                                ? AppColors.error
+                                : AppColors.warning),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -1432,7 +1432,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               isEncumbered: isEncumbered,
               encumberedBank: isEncumbered ? bankController.text : null,
             );
-            
+
             final saved = await _vehicleRepository.updateVehicle(updated);
 
             setState(() {
@@ -1560,7 +1560,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
             } catch (error) {
               if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Não foi possível registrar a venda: $error')),
+                SnackBar(
+                  content: Text('Não foi possível registrar a venda: $error'),
+                ),
               );
             }
           },
@@ -1569,12 +1571,31 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     );
   }
 
-  void _showRentalValueUpdateModal() {
+  Future<void> _showRentalValueUpdateModal() async {
+    final Contract? activeContract;
+    try {
+      activeContract = await _contractRepository.getActiveContractByVehicle(
+        _vehicle!.id,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Não foi possível carregar o contrato ativo: $error'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
     final rentalController = TextEditingController(
       text: _vehicle!.rentalValue?.toString() ?? '',
     );
+    double discountPercentage = activeContract?.discountPercentage ?? 0;
+    String? discountReason = activeContract?.discountReason;
     RentalType selectedType = _vehicle!.rentalType ?? RentalType.weekly;
-    int? selectedDay = _vehicle!.rentalDueDay ?? (selectedType == RentalType.weekly ? 3 : 10);
+    int? selectedDay =
+        _vehicle!.rentalDueDay ?? (selectedType == RentalType.weekly ? 3 : 10);
     int selectedDuration = selectedType == RentalType.weekly ? 12 : 6;
 
     AppDialogs.showBottomSheet(
@@ -1585,219 +1606,302 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppTextField(
-                label: 'Valor do Aluguel (R\$)',
-                controller: rentalController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                prefixIcon: Icons.attach_money,
-                hintText: '750,00',
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Ciclo de Faturamento',
-                style: AppTextStyles.labelLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildCycleChip(
-                    'SEMANAL',
-                    RentalType.weekly,
-                    selectedType == RentalType.weekly,
-                    () => setModalState(() {
-                      selectedType = RentalType.weekly;
-                      selectedDuration = 12;
-                      selectedDay = selectedDay != null && selectedDay! > 7
-                          ? 3
-                          : (selectedDay ?? 3);
-                    }),
-                  ),
-                  const SizedBox(width: 12),
-                  _buildCycleChip(
-                    'MENSAL',
-                    RentalType.monthly,
-                    selectedType == RentalType.monthly,
-                    () => setModalState(() {
-                      selectedType = RentalType.monthly;
-                      selectedDuration = 6;
-                      selectedDay = 10;
-                    }),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Tempo de Contrato (Geração de Parcelas)',
-                style: AppTextStyles.labelLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (selectedType == RentalType.weekly)
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [4, 8, 12, 24, 48].map((weeks) {
-                    final isSel = selectedDuration == weeks;
-                    return ChoiceChip(
-                      label: Text('$weeks Semanas${weeks == 12 ? " (3 meses)" : weeks == 24 ? " (6 meses)" : weeks == 48 ? " (1 ano)" : ""}'),
-                      selected: isSel,
-                      onSelected: (_) => setModalState(() => selectedDuration = weeks),
-                      selectedColor: AppColors.primary,
-                      labelStyle: TextStyle(
-                        color: isSel ? Colors.white : AppColors.onSurface,
-                        fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                      ),
+              if (activeContract != null)
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final discount = await _editRecurringDiscount(
+                      initialPercentage: discountPercentage,
+                      initialReason: discountReason ?? '',
                     );
-                  }).toList(),
-                )
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [1, 3, 6, 12, 24].map((months) {
-                    final isSel = selectedDuration == months;
-                    return ChoiceChip(
-                      label: Text('$months ${months == 1 ? "Mês" : "Meses"}${months == 12 ? " (1 ano)" : months == 24 ? " (2 anos)" : ""}'),
-                      selected: isSel,
-                      onSelected: (_) => setModalState(() => selectedDuration = months),
-                      selectedColor: AppColors.primary,
-                      labelStyle: TextStyle(
-                        color: isSel ? Colors.white : AppColors.onSurface,
-                        fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    );
-                  }).toList(),
-                ),
-              const SizedBox(height: 24),
-              Text(
-                selectedType == RentalType.weekly
-                    ? 'Dia da Semana do Vencimento'
-                    : 'Dia do Mês do Vencimento',
-                style: AppTextStyles.labelLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (selectedType == RentalType.weekly)
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildDayChip(
-                        'SEG',
-                        1,
-                        selectedDay == 1,
-                        () => setModalState(() => selectedDay = 1),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildDayChip(
-                        'TER',
-                        2,
-                        selectedDay == 2,
-                        () => setModalState(() => selectedDay = 2),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildDayChip(
-                        'QUA',
-                        3,
-                        selectedDay == 3,
-                        () => setModalState(() => selectedDay = 3),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildDayChip(
-                        'QUI',
-                        4,
-                        selectedDay == 4,
-                        () => setModalState(() => selectedDay = 4),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildDayChip(
-                        'SEX',
-                        5,
-                        selectedDay == 5,
-                        () => setModalState(() => selectedDay = 5),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildDayChip(
-                        'SAB',
-                        6,
-                        selectedDay == 6,
-                        () => setModalState(() => selectedDay = 6),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildDayChip(
-                        'DOM',
-                        7,
-                        selectedDay == 7,
-                        () => setModalState(() => selectedDay = 7),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                SizedBox(
-                  height: 48,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: 31,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final day = index + 1;
-                      return _buildDayChip(
-                        day.toString().padLeft(2, '0'),
-                        day,
-                        selectedDay == day,
-                        () => setModalState(() => selectedDay = day),
-                      );
-                    },
+                    if (discount == null) return;
+                    setModalState(() {
+                      discountPercentage = discount.percentage;
+                      discountReason = discount.reason;
+                    });
+                  },
+                  icon: const Icon(Icons.discount_outlined),
+                  label: Text(
+                    discountPercentage > 0
+                        ? 'Desconto de ${discountPercentage.toStringAsFixed(2)}% configurado'
+                        : 'Configurar desconto nas cobranças',
                   ),
                 ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
+              if (discountPercentage > 0)
+                Text(
+                  'Motivo: $discountReason',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
-                child: Row(
+              if (activeContract?.billingStartedAt == null) ...[
+                AppTextField(
+                  label: 'Valor do Aluguel (R\$)',
+                  controller: rentalController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  prefixIcon: Icons.attach_money,
+                  hintText: '750,00',
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Ciclo de Faturamento',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
                   children: [
-                    const Icon(Icons.info_outline, color: AppColors.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Os termos são salvos no contrato. As parcelas só serão criadas após a aprovação da vistoria de entrada.',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    _buildCycleChip(
+                      'SEMANAL',
+                      RentalType.weekly,
+                      selectedType == RentalType.weekly,
+                      () => setModalState(() {
+                        selectedType = RentalType.weekly;
+                        selectedDuration = 12;
+                        selectedDay = selectedDay != null && selectedDay! > 7
+                            ? 3
+                            : (selectedDay ?? 3);
+                      }),
+                    ),
+                    const SizedBox(width: 12),
+                    _buildCycleChip(
+                      'MENSAL',
+                      RentalType.monthly,
+                      selectedType == RentalType.monthly,
+                      () => setModalState(() {
+                        selectedType = RentalType.monthly;
+                        selectedDuration = 6;
+                        selectedDay = 10;
+                      }),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 24),
+                Text(
+                  'Tempo de Contrato (Geração de Parcelas)',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (selectedType == RentalType.weekly)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [4, 8, 12, 24, 48].map((weeks) {
+                      final isSel = selectedDuration == weeks;
+                      return ChoiceChip(
+                        label: Text(
+                          '$weeks Semanas${weeks == 12
+                              ? " (3 meses)"
+                              : weeks == 24
+                              ? " (6 meses)"
+                              : weeks == 48
+                              ? " (1 ano)"
+                              : ""}',
+                        ),
+                        selected: isSel,
+                        onSelected: (_) =>
+                            setModalState(() => selectedDuration = weeks),
+                        selectedColor: AppColors.primary,
+                        labelStyle: TextStyle(
+                          color: isSel ? Colors.white : AppColors.onSurface,
+                          fontWeight: isSel
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      );
+                    }).toList(),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [1, 3, 6, 12, 24].map((months) {
+                      final isSel = selectedDuration == months;
+                      return ChoiceChip(
+                        label: Text(
+                          '$months ${months == 1 ? "Mês" : "Meses"}${months == 12
+                              ? " (1 ano)"
+                              : months == 24
+                              ? " (2 anos)"
+                              : ""}',
+                        ),
+                        selected: isSel,
+                        onSelected: (_) =>
+                            setModalState(() => selectedDuration = months),
+                        selectedColor: AppColors.primary,
+                        labelStyle: TextStyle(
+                          color: isSel ? Colors.white : AppColors.onSurface,
+                          fontWeight: isSel
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                const SizedBox(height: 24),
+                Text(
+                  selectedType == RentalType.weekly
+                      ? 'Dia da Semana do Vencimento'
+                      : 'Dia do Mês do Vencimento',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (selectedType == RentalType.weekly)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildDayChip(
+                          'SEG',
+                          1,
+                          selectedDay == 1,
+                          () => setModalState(() => selectedDay = 1),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildDayChip(
+                          'TER',
+                          2,
+                          selectedDay == 2,
+                          () => setModalState(() => selectedDay = 2),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildDayChip(
+                          'QUA',
+                          3,
+                          selectedDay == 3,
+                          () => setModalState(() => selectedDay = 3),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildDayChip(
+                          'QUI',
+                          4,
+                          selectedDay == 4,
+                          () => setModalState(() => selectedDay = 4),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildDayChip(
+                          'SEX',
+                          5,
+                          selectedDay == 5,
+                          () => setModalState(() => selectedDay = 5),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildDayChip(
+                          'SAB',
+                          6,
+                          selectedDay == 6,
+                          () => setModalState(() => selectedDay = 6),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildDayChip(
+                          'DOM',
+                          7,
+                          selectedDay == 7,
+                          () => setModalState(() => selectedDay = 7),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  SizedBox(
+                    height: 48,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 31,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final day = index + 1;
+                        return _buildDayChip(
+                          day.toString().padLeft(2, '0'),
+                          day,
+                          selectedDay == day,
+                          () => setModalState(() => selectedDay = day),
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Os termos são salvos no contrato. As parcelas só serão criadas após a aprovação da vistoria de entrada.',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           );
         },
       ),
       actions: [
         AppButton(
-          label: 'Salvar termos do contrato',
+          label: activeContract?.billingStartedAt != null
+              ? 'Aplicar desconto'
+              : 'Salvar termos do contrato',
           onPressed: () async {
+            if (activeContract?.billingStartedAt != null) {
+              await _contractRepository.applyRecurringDiscount(
+                contractId: activeContract!.id,
+                discountPercentage: discountPercentage,
+                discountReason: discountReason,
+              );
+              if (!mounted) return;
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    discountPercentage > 0
+                        ? 'Desconto de ${discountPercentage.toStringAsFixed(2)}% aplicado às cobranças pendentes sem comprovante.'
+                        : 'Desconto removido das cobranças pendentes sem comprovante.',
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: AppColors.success,
+                ),
+              );
+              return;
+            }
+
             final newValue =
                 double.tryParse(rentalController.text.replaceAll(',', '.')) ??
                 0;
             if (newValue > 0 && selectedDay != null) {
-              final activeContract = await _contractRepository
-                  .getActiveContractByVehicle(_vehicle!.id);
               if (activeContract == null) {
-                throw StateError(
-                  'Atribua o veículo a um motorista antes de configurar a cobrança.',
+                if (!mounted) return;
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Atribua o veículo a um motorista antes de configurar a cobrança.',
+                    ),
+                    backgroundColor: AppColors.error,
+                  ),
                 );
+                return;
               }
 
               final now = DateTime.now();
@@ -1812,6 +1916,8 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     : 'mensal',
                 dueDay: selectedDay!,
                 endDate: endDate,
+                discountPercentage: discountPercentage,
+                discountReason: discountReason,
               );
 
               if (!mounted) return;
@@ -1838,6 +1944,102 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
         ),
       ],
     );
+  }
+
+  Future<({double percentage, String? reason})?> _editRecurringDiscount({
+    required double initialPercentage,
+    required String initialReason,
+  }) async {
+    final percentageController = TextEditingController(
+      text: initialPercentage == 0 ? '' : initialPercentage.toStringAsFixed(2),
+    );
+    var reason = initialReason;
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<({double percentage, String? reason})>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Desconto nas cobranças recorrentes'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: percentageController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Desconto (%)',
+                  prefixIcon: Icon(Icons.percent),
+                ),
+                validator: (value) {
+                  final percentage = double.tryParse(
+                    (value ?? '').replaceAll(',', '.'),
+                  );
+                  if (percentage == null ||
+                      percentage < 0 ||
+                      percentage >= 100) {
+                    return 'Informe um percentual entre 0 e 99,99.';
+                  }
+                  if (percentage > 0 && reason.trim().isEmpty) {
+                    return 'Informe o motivo do desconto.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                initialValue: reason,
+                minLines: 2,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Motivo do desconto',
+                  hintText: 'Descreva o motivo',
+                  prefixIcon: Icon(Icons.notes_outlined),
+                  alignLabelWithHint: true,
+                ),
+                onChanged: (value) => reason = value,
+                validator: (_) {
+                  final percentage =
+                      double.tryParse(
+                        percentageController.text.replaceAll(',', '.'),
+                      ) ??
+                      0;
+                  if (percentage > 0 && reason.trim().isEmpty) {
+                    return 'Informe o motivo do desconto.';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              final percentage = double.parse(
+                percentageController.text.replaceAll(',', '.'),
+              );
+              Navigator.pop(dialogContext, (
+                percentage: percentage,
+                reason: percentage > 0 ? reason.trim() : null,
+              ));
+            },
+            child: const Text('Aplicar'),
+          ),
+        ],
+      ),
+    );
+
+    percentageController.dispose();
+    return result;
   }
 
   Widget _buildCycleChip(
@@ -1933,9 +2135,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
           onPressed: () async {
             final newKm =
                 int.tryParse(kmController.text) ?? _vehicle!.currentKm;
-            
+
             await _vehicleRepository.updateOdometer(widget.vehicleId, newKm);
-            
+
             setState(() {
               _vehicle = _vehicle!.copyWith(
                 lastKmValue: _vehicle!.currentKm,
@@ -2022,13 +2224,17 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                           await _fetchData();
                           messenger.showSnackBar(
                             const SnackBar(
-                              content: Text('Veículo marcado em manutenção e desvinculado.'),
+                              content: Text(
+                                'Veículo marcado em manutenção e desvinculado.',
+                              ),
                               backgroundColor: AppColors.warning,
                             ),
                           );
                         } catch (e) {
                           messenger.showSnackBar(
-                            SnackBar(content: Text('Erro ao atualizar veículo: $e')),
+                            SnackBar(
+                              content: Text('Erro ao atualizar veículo: $e'),
+                            ),
                           );
                         }
                       },
@@ -2050,13 +2256,19 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                           await _fetchData();
                           messenger.showSnackBar(
                             const SnackBar(
-                              content: Text('Veículo tornado livre e desvinculado com sucesso!'),
+                              content: Text(
+                                'Veículo tornado livre e desvinculado com sucesso!',
+                              ),
                               backgroundColor: AppColors.success,
                             ),
                           );
                         } catch (e) {
                           messenger.showSnackBar(
-                            SnackBar(content: Text('Erro ao desvincular motorista: $e')),
+                            SnackBar(
+                              content: Text(
+                                'Erro ao desvincular motorista: $e',
+                              ),
+                            ),
                           );
                         }
                       },
@@ -2100,14 +2312,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: isCurrent
-                                ? AppColors.primaryContainer
-                                    .withValues(alpha: 0.1)
+                                ? AppColors.primaryContainer.withValues(
+                                    alpha: 0.1,
+                                  )
                                 : AppColors.surfaceContainerLowest,
                             borderRadius: BorderRadius.circular(12),
                             border: isCurrent
                                 ? Border.all(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.3),
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                   )
                                 : null,
                           ),
@@ -2129,8 +2343,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                                   children: [
                                     Text(
                                       displayName,
-                                      style:
-                                          AppTextStyles.labelLarge.copyWith(
+                                      style: AppTextStyles.labelLarge.copyWith(
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -2139,16 +2352,16 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                                         'CPF: ${driver.cpf}',
                                         style: AppTextStyles.labelSmall
                                             .copyWith(
-                                          color: AppColors.onSurfaceVariant,
-                                        ),
+                                              color: AppColors.onSurfaceVariant,
+                                            ),
                                       )
                                     else if (driver.email.isNotEmpty)
                                       Text(
                                         driver.email,
                                         style: AppTextStyles.labelSmall
                                             .copyWith(
-                                          color: AppColors.onSurfaceVariant,
-                                        ),
+                                              color: AppColors.onSurfaceVariant,
+                                            ),
                                       ),
                                   ],
                                 ),
@@ -2160,14 +2373,22 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                                     : () async {
                                         Navigator.pop(context);
                                         try {
-                                          final created = await context.push<bool>(
-                                            AppRoutes.adminContractForm,
-                                            extra: {'vehicleId': _vehicle!.id},
-                                          );
-                                          if (created == true) await _fetchData();
+                                          final created = await context
+                                              .push<bool>(
+                                                AppRoutes.adminContractForm,
+                                                extra: {
+                                                  'vehicleId': _vehicle!.id,
+                                                },
+                                              );
+                                          if (created == true)
+                                            await _fetchData();
                                         } catch (e) {
                                           messenger.showSnackBar(
-                                            SnackBar(content: Text('Erro ao vincular motorista: $e')),
+                                            SnackBar(
+                                              content: Text(
+                                                'Erro ao vincular motorista: $e',
+                                              ),
+                                            ),
                                           );
                                         }
                                       },
@@ -2713,7 +2934,9 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
     }
 
     // FIN-09: Usar o lucro consolidado real (apenas pagos) da View se for "Todo o Histórico"
-    final profit = _selectedYear == null ? _realProfit : (totalIncome - totalExpense);
+    final profit = _selectedYear == null
+        ? _realProfit
+        : (totalIncome - totalExpense);
     final isProfitable = profit >= 0;
 
     return Column(

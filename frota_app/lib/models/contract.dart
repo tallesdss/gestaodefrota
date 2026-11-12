@@ -19,6 +19,8 @@ class Contract {
   final String? signatureUrl;
   final DateTime? signedAt;
   final DateTime? billingStartedAt;
+  final double discountPercentage;
+  final String? discountReason;
 
   Contract({
     required this.id,
@@ -39,6 +41,8 @@ class Contract {
     this.signatureUrl,
     this.signedAt,
     this.billingStartedAt,
+    this.discountPercentage = 0,
+    this.discountReason,
   });
 
   factory Contract.fromMap(Map<String, dynamic> map) {
@@ -46,15 +50,23 @@ class Contract {
       if (val == null) return ContractStatus.active;
       final s = val.toString().toLowerCase();
       if (s == 'ativo' || s == 'active') return ContractStatus.active;
-      if (s == 'concluido' || s == 'expired' || s == 'concluded') return ContractStatus.concluded;
+      if (s == 'concluido' || s == 'expired' || s == 'concluded')
+        return ContractStatus.concluded;
       if (s == 'cancelado' || s == 'cancelled') return ContractStatus.cancelled;
-      if (s == 'inadimplente' || s == 'default') return ContractStatus.defaultStatus;
+      if (s == 'inadimplente' || s == 'default')
+        return ContractStatus.defaultStatus;
       return ContractStatus.active;
     }
 
-    final rawLocacao = map['valor_locacao'] ?? map['monthlyValue'] ?? map['weeklyValue'];
-    final rentalVal = rawLocacao != null ? (double.tryParse(rawLocacao.toString()) ?? 0.0) : 0.0;
-    final freq = (map['frequencia_cobranca'] ?? map['billingFrequency'] ?? 'semanal').toString().toLowerCase();
+    final rawLocacao =
+        map['valor_locacao'] ?? map['monthlyValue'] ?? map['weeklyValue'];
+    final rentalVal = rawLocacao != null
+        ? (double.tryParse(rawLocacao.toString()) ?? 0.0)
+        : 0.0;
+    final freq =
+        (map['frequencia_cobranca'] ?? map['billingFrequency'] ?? 'semanal')
+            .toString()
+            .toLowerCase();
 
     final double weeklyVal;
     final double monthlyVal;
@@ -64,6 +76,9 @@ class Contract {
     } else if (freq == 'semanal') {
       weeklyVal = rentalVal;
       monthlyVal = rentalVal * 4;
+    } else if (freq == 'quinzenal') {
+      monthlyVal = rentalVal;
+      weeklyVal = rentalVal / 2;
     } else {
       monthlyVal = rentalVal;
       weeklyVal = rentalVal / 4;
@@ -78,20 +93,32 @@ class Contract {
 
     return Contract(
       id: (map['id'] ?? '').toString(),
-      contractNumber: (map['numero_contrato'] ?? map['contractNumber'])?.toString(),
+      contractNumber: (map['numero_contrato'] ?? map['contractNumber'])
+          ?.toString(),
       vehicleId: (map['veiculo_id'] ?? map['vehicleId'] ?? '').toString(),
       driverId: (map['motorista_id'] ?? map['driverId'] ?? '').toString(),
       driverName: dName,
       type: (map['type'] ?? 'uber').toString(),
-      startDate: DateTime.tryParse(map['data_inicio'] ?? map['startDate'] ?? '') ?? DateTime.now(),
-      endDate: DateTime.tryParse(map['data_fim'] ?? map['endDate'] ?? '') ?? DateTime.now().add(const Duration(days: 365)),
+      startDate:
+          DateTime.tryParse(map['data_inicio'] ?? map['startDate'] ?? '') ??
+          DateTime.now(),
+      endDate:
+          DateTime.tryParse(map['data_fim'] ?? map['endDate'] ?? '') ??
+          DateTime.now().add(const Duration(days: 365)),
       weeklyValue: weeklyVal,
       monthlyValue: monthlyVal,
       status: parseStatus(map['status']),
-      depositPaid: (map['depositPaid'] ?? ((map['valor_caucao'] ?? 0.0) > 0)) as bool,
-      depositAmount: double.tryParse((map['valor_caucao'] ?? map['depositAmount'] ?? 0.0).toString()) ?? 0.0,
+      depositPaid:
+          (map['depositPaid'] ?? ((map['valor_caucao'] ?? 0.0) > 0)) as bool,
+      depositAmount:
+          double.tryParse(
+            (map['valor_caucao'] ?? map['depositAmount'] ?? 0.0).toString(),
+          ) ??
+          0.0,
       billingFrequency: freq,
-      dueDay: map['dia_vencimento'] != null ? int.tryParse(map['dia_vencimento'].toString()) : (map['dueDay'] as int?),
+      dueDay: map['dia_vencimento'] != null
+          ? int.tryParse(map['dia_vencimento'].toString())
+          : (map['dueDay'] as int?),
       signatureUrl: map['assinatura_digital_url'] ?? map['signatureUrl'],
       signedAt: map['assinado_em'] != null
           ? DateTime.tryParse(map['assinado_em'].toString())
@@ -99,6 +126,14 @@ class Contract {
       billingStartedAt: map['cobranca_iniciada_em'] != null
           ? DateTime.tryParse(map['cobranca_iniciada_em'].toString())
           : null,
+      discountPercentage:
+          double.tryParse(
+            (map['desconto_percentual'] ?? map['discountPercentage'] ?? 0)
+                .toString(),
+          ) ??
+          0,
+      discountReason: (map['motivo_desconto'] ?? map['discountReason'])
+          ?.toString(),
     );
   }
 
@@ -120,6 +155,8 @@ class Contract {
       'dueDay': dueDay,
       'signatureUrl': signatureUrl,
       'signedAt': signedAt?.toIso8601String(),
+      'discountPercentage': discountPercentage,
+      'discountReason': discountReason,
     };
   }
 
@@ -143,7 +180,8 @@ class Contract {
     }
 
     final data = <String, dynamic>{
-      'numero_contrato': contractNumber ?? 'CTR-${DateTime.now().millisecondsSinceEpoch}',
+      'numero_contrato':
+          contractNumber ?? 'CTR-${DateTime.now().millisecondsSinceEpoch}',
       'motorista_id': driverId,
       'veiculo_id': vehicleId,
       'data_inicio': startDate.toIso8601String().split('T')[0],
@@ -152,9 +190,14 @@ class Contract {
           ? weeklyValue
           : (billingFrequency == 'quinzenal' ? weeklyValue * 2 : monthlyValue),
       'valor_caucao': depositAmount,
-      'frequencia_cobranca': (billingFrequency == 'mensal' || billingFrequency == 'quinzenal') ? billingFrequency : 'semanal',
+      'frequencia_cobranca':
+          (billingFrequency == 'mensal' || billingFrequency == 'quinzenal')
+          ? billingFrequency
+          : 'semanal',
       'dia_vencimento': dueDay ?? 10,
       'status': statusStr,
+      'desconto_percentual': discountPercentage,
+      'motivo_desconto': discountPercentage > 0 ? discountReason : null,
     };
 
     if (id.isNotEmpty && id.contains('-')) {

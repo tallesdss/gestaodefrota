@@ -3,7 +3,24 @@
 
 ALTER TABLE public.contratos
     ADD COLUMN IF NOT EXISTS cobranca_iniciada_em TIMESTAMPTZ;
+ALTER TABLE public.contratos
+    ADD COLUMN IF NOT EXISTS desconto_percentual NUMERIC(5,2) NOT NULL DEFAULT 0
+        CHECK (desconto_percentual >= 0 AND desconto_percentual < 100),
+    ADD COLUMN IF NOT EXISTS motivo_desconto TEXT;
+ALTER TABLE public.lancamentos_financeiros
+    ADD COLUMN IF NOT EXISTS valor_original NUMERIC(12,2),
+    ADD COLUMN IF NOT EXISTS desconto_percentual NUMERIC(5,2) NOT NULL DEFAULT 0
+        CHECK (desconto_percentual >= 0 AND desconto_percentual < 100),
+    ADD COLUMN IF NOT EXISTS motivo_desconto TEXT;
 
+DROP FUNCTION IF EXISTS public.fn_criar_contrato_locacao(
+    UUID, UUID, VARCHAR, DATE, NUMERIC, NUMERIC,
+    public.frequencia_cobranca_enum, INT, UUID, UUID
+);
+DROP FUNCTION IF EXISTS public.fn_criar_contrato_locacao_v2(
+    UUID, UUID, VARCHAR, DATE, DATE, NUMERIC, NUMERIC,
+    public.frequencia_cobranca_enum, INT, UUID, UUID
+);
 CREATE OR REPLACE FUNCTION public.fn_criar_contrato_locacao_v2(
     p_motorista_id UUID,
     p_veiculo_id UUID,
@@ -15,7 +32,9 @@ CREATE OR REPLACE FUNCTION public.fn_criar_contrato_locacao_v2(
     p_frequencia public.frequencia_cobranca_enum,
     p_dia_vencimento INT,
     p_categoria_receita_id UUID,
-    p_operador_id UUID
+    p_operador_id UUID,
+    p_desconto_percentual NUMERIC DEFAULT 0,
+    p_motivo_desconto TEXT DEFAULT NULL
 ) RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -36,6 +55,12 @@ BEGIN
     IF p_frequencia IN ('semanal', 'quinzenal')
        AND p_dia_vencimento NOT BETWEEN 1 AND 7 THEN
         RAISE EXCEPTION 'Para cobrança semanal ou quinzenal, informe um dia da semana entre 1 e 7.';
+    END IF;
+    IF p_desconto_percentual IS NULL
+       OR p_desconto_percentual < 0
+       OR p_desconto_percentual >= 100
+       OR (p_desconto_percentual > 0 AND NULLIF(BTRIM(p_motivo_desconto), '') IS NULL) THEN
+        RAISE EXCEPTION 'Desconto deve estar entre 0 e 100%% e precisa de um motivo.';
     END IF;
 
     SELECT status
@@ -77,6 +102,8 @@ BEGIN
         valor_caucao,
         frequencia_cobranca,
         dia_vencimento,
+        desconto_percentual,
+        motivo_desconto,
         status
     ) VALUES (
         p_numero_contrato,
@@ -88,6 +115,8 @@ BEGIN
         p_valor_caucao,
         p_frequencia,
         p_dia_vencimento,
+        p_desconto_percentual,
+        CASE WHEN p_desconto_percentual > 0 THEN BTRIM(p_motivo_desconto) END,
         'ativo'
     ) RETURNING id INTO v_contrato_id;
 
@@ -123,19 +152,24 @@ $$;
 
 REVOKE ALL ON FUNCTION public.fn_criar_contrato_locacao_v2(
     UUID, UUID, VARCHAR, DATE, DATE, NUMERIC, NUMERIC,
-    public.frequencia_cobranca_enum, INT, UUID, UUID
+    public.frequencia_cobranca_enum, INT, UUID, UUID, NUMERIC, TEXT
 ) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.fn_criar_contrato_locacao_v2(
     UUID, UUID, VARCHAR, DATE, DATE, NUMERIC, NUMERIC,
-    public.frequencia_cobranca_enum, INT, UUID, UUID
+    public.frequencia_cobranca_enum, INT, UUID, UUID, NUMERIC, TEXT
 ) TO authenticated, service_role;
 
+DROP FUNCTION IF EXISTS public.fn_atualizar_termos_contrato_antes_vistoria(
+    UUID, NUMERIC, public.frequencia_cobranca_enum, INT, DATE
+);
 CREATE OR REPLACE FUNCTION public.fn_atualizar_termos_contrato_antes_vistoria(
     p_contrato_id UUID,
     p_valor_locacao NUMERIC,
     p_frequencia public.frequencia_cobranca_enum,
     p_dia_vencimento INT,
-    p_data_fim DATE
+    p_data_fim DATE,
+    p_desconto_percentual NUMERIC DEFAULT 0,
+    p_motivo_desconto TEXT DEFAULT NULL
 ) RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -164,6 +198,10 @@ BEGIN
        OR p_dia_vencimento NOT BETWEEN 1 AND 31
        OR (p_frequencia IN ('semanal', 'quinzenal')
            AND p_dia_vencimento NOT BETWEEN 1 AND 7)
+       OR p_desconto_percentual IS NULL
+       OR p_desconto_percentual < 0
+       OR p_desconto_percentual >= 100
+       OR (p_desconto_percentual > 0 AND NULLIF(BTRIM(p_motivo_desconto), '') IS NULL)
        OR p_data_fim < CURRENT_DATE THEN
         RAISE EXCEPTION 'Informe valor, vencimento e fim de contrato válidos.';
     END IF;
@@ -172,16 +210,96 @@ BEGIN
     SET valor_locacao = p_valor_locacao,
         frequencia_cobranca = p_frequencia,
         dia_vencimento = p_dia_vencimento,
+        desconto_percentual = p_desconto_percentual,
+        motivo_desconto = CASE
+            WHEN p_desconto_percentual > 0 THEN BTRIM(p_motivo_desconto)
+            ELSE NULL
+        END,
         data_fim = p_data_fim
     WHERE id = p_contrato_id;
 END;
 $$;
 
 REVOKE ALL ON FUNCTION public.fn_atualizar_termos_contrato_antes_vistoria(
-    UUID, NUMERIC, public.frequencia_cobranca_enum, INT, DATE
+    UUID, NUMERIC, public.frequencia_cobranca_enum, INT, DATE, NUMERIC, TEXT
 ) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.fn_atualizar_termos_contrato_antes_vistoria(
-    UUID, NUMERIC, public.frequencia_cobranca_enum, INT, DATE
+    UUID, NUMERIC, public.frequencia_cobranca_enum, INT, DATE, NUMERIC, TEXT
+) TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.fn_aplicar_desconto_contrato_recorrente(
+    p_contrato_id UUID,
+    p_desconto_percentual NUMERIC,
+    p_motivo_desconto TEXT
+) RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+    v_contrato public.contratos%ROWTYPE;
+BEGIN
+    IF auth.uid() IS NOT NULL AND NOT public.eh_gestor_ou_admin() THEN
+        RAISE EXCEPTION 'Apenas a gestão pode aplicar descontos.';
+    END IF;
+    IF p_desconto_percentual IS NULL
+       OR p_desconto_percentual < 0
+       OR p_desconto_percentual >= 100
+       OR (p_desconto_percentual > 0
+           AND NULLIF(BTRIM(p_motivo_desconto), '') IS NULL) THEN
+        RAISE EXCEPTION 'Desconto deve estar entre 0 e 100%% e precisa de um motivo.';
+    END IF;
+
+    SELECT *
+    INTO v_contrato
+    FROM public.contratos
+    WHERE id = p_contrato_id
+    FOR UPDATE;
+
+    IF NOT FOUND OR v_contrato.status <> 'ativo'
+       OR v_contrato.cobranca_iniciada_em IS NULL THEN
+        RAISE EXCEPTION 'O contrato precisa estar ativo e com cobrança iniciada.';
+    END IF;
+
+    UPDATE public.contratos
+    SET desconto_percentual = p_desconto_percentual,
+        motivo_desconto = CASE
+            WHEN p_desconto_percentual > 0 THEN BTRIM(p_motivo_desconto)
+            ELSE NULL
+        END
+    WHERE id = p_contrato_id;
+
+    UPDATE public.lancamentos_financeiros
+    SET valor_original = COALESCE(valor_original, valor),
+        desconto_percentual = p_desconto_percentual,
+        motivo_desconto = CASE
+            WHEN p_desconto_percentual > 0 THEN BTRIM(p_motivo_desconto)
+            ELSE NULL
+        END,
+        valor = ROUND(
+            COALESCE(valor_original, valor)
+                * (1 - p_desconto_percentual / 100),
+            2
+        ),
+        titulo = CASE
+            WHEN p_desconto_percentual > 0
+                THEN regexp_replace(titulo, ' - Desconto [0-9]+([.][0-9]+)?%', '')
+                     || format(' - Desconto %s%%', p_desconto_percentual)
+            ELSE regexp_replace(titulo, ' - Desconto [0-9]+([.][0-9]+)?%', '')
+        END
+    WHERE contrato_id = p_contrato_id
+      AND tipo = 'receita'
+      AND titulo ILIKE 'Aluguel %'
+      AND status IN ('pendente', 'atrasado')
+      AND comprovante_url IS NULL;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.fn_aplicar_desconto_contrato_recorrente(
+    UUID, NUMERIC, TEXT
+) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.fn_aplicar_desconto_contrato_recorrente(
+    UUID, NUMERIC, TEXT
 ) TO authenticated, service_role;
 
 -- Keep clients that still call the original RPC from creating rent before approval.
@@ -362,6 +480,9 @@ BEGIN
             tipo,
             titulo,
             valor,
+            valor_original,
+            desconto_percentual,
+            motivo_desconto,
             data_vencimento,
             status
         )
@@ -373,12 +494,23 @@ BEGIN
             NEW.vistoriador_id,
             'receita',
             format(
-                'Aluguel %s - Contrato %s - Parcela %s',
+                'Aluguel %s - Contrato %s - Parcela %s%s',
                 v_frequencia_label,
                 v_contrato.numero_contrato,
-                v_parcela
+                v_parcela,
+                CASE WHEN v_contrato.desconto_percentual > 0
+                    THEN format(' - Desconto %s%%', v_contrato.desconto_percentual)
+                    ELSE ''
+                END
+            ),
+            ROUND(
+                v_contrato.valor_locacao
+                    * (1 - v_contrato.desconto_percentual / 100),
+                2
             ),
             v_contrato.valor_locacao,
+            v_contrato.desconto_percentual,
+            v_contrato.motivo_desconto,
             v_vencimento,
             'pendente'
         WHERE NOT EXISTS (
@@ -460,6 +592,36 @@ CREATE TRIGGER trg_validar_lancamento_vinculado_contrato
 BEFORE INSERT ON public.lancamentos_financeiros
 FOR EACH ROW
 EXECUTE FUNCTION public.fn_validar_lancamento_vinculado_contrato();
+
+CREATE OR REPLACE VIEW public.vw_extrato_completo_motorista AS
+SELECT
+    lf.id AS lancamento_id,
+    lf.motorista_id,
+    p.nome AS motorista_nome,
+    lf.contrato_id,
+    c.numero_contrato,
+    v.placa AS veiculo_placa,
+    v.modelo AS veiculo_modelo,
+    cat.nome AS categoria_nome,
+    lf.tipo,
+    lf.titulo,
+    lf.valor,
+    lf.data_vencimento,
+    lf.data_pagamento,
+    lf.status,
+    lf.metodo_pagamento,
+    lf.pix_copia_cola,
+    lf.comprovante_url,
+    lf.criado_em,
+    lf.valor_original,
+    lf.desconto_percentual,
+    lf.motivo_desconto
+FROM public.lancamentos_financeiros lf
+LEFT JOIN public.motoristas m ON m.id = lf.motorista_id
+LEFT JOIN public.perfis p ON p.id = m.id
+LEFT JOIN public.contratos c ON c.id = lf.contrato_id
+LEFT JOIN public.veiculos v ON v.id = lf.veiculo_id
+LEFT JOIN public.categorias_despesa cat ON cat.id = lf.categoria_id;
 
 UPDATE public.contratos c
 SET cobranca_iniciada_em = (

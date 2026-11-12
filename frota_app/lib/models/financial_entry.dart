@@ -16,6 +16,9 @@ class FinancialEntry {
   final bool isPaid;
   final bool isLate;
   final bool isCancelled;
+  final double? originalAmount;
+  final double discountPercentage;
+  final String? discountReason;
   final String? pixCode;
   final String? pixQrCodeUrl;
   final String? paymentMethod;
@@ -37,6 +40,9 @@ class FinancialEntry {
     required this.isPaid,
     this.isLate = false,
     this.isCancelled = false,
+    this.originalAmount,
+    this.discountPercentage = 0,
+    this.discountReason,
     this.pixCode,
     this.pixQrCodeUrl,
     this.paymentMethod,
@@ -60,7 +66,11 @@ class FinancialEntry {
       return false;
     }
 
-    final dueDate = DateTime.tryParse((map['data_vencimento'] ?? map['date'] ?? '').toString()) ?? DateTime.now();
+    final dueDate =
+        DateTime.tryParse(
+          (map['data_vencimento'] ?? map['date'] ?? '').toString(),
+        ) ??
+        DateTime.now();
     final isPaidValue = parseIsPaid(map['isPaid'], map['status']);
     final isCancelledValue =
         map['isCancelled'] == true ||
@@ -81,7 +91,11 @@ class FinancialEntry {
         final s = statusVal.toString().toLowerCase();
         if (s == 'atrasado' || s == 'overdue') return true;
       }
-      final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      final today = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
       final dueOnly = DateTime(due.year, due.month, due.day);
       return dueOnly.isBefore(today);
     }
@@ -89,7 +103,8 @@ class FinancialEntry {
     return FinancialEntry(
       id: (map['id'] ?? map['lancamento_id'] ?? '').toString(),
       type: parseType(map['tipo'] ?? map['type']),
-      category: (map['categoria_nome'] ?? map['category'] ?? 'Geral').toString(),
+      category: (map['categoria_nome'] ?? map['category'] ?? 'Geral')
+          .toString(),
       categoryId: (map['categoria_id'] ?? map['categoryId'])?.toString(),
       contractId: (map['contrato_id'] ?? map['contractId'])?.toString(),
       vehicleId: (map['veiculo_id'] ?? map['vehicleId'])?.toString(),
@@ -97,16 +112,25 @@ class FinancialEntry {
       createdBy: (map['criado_por'] ?? map['createdBy'])?.toString(),
       amount: (map['valor'] ?? map['amount'] ?? 0.0).toDouble(),
       date: dueDate,
-      paymentDate: map['data_pagamento'] != null ? DateTime.tryParse(map['data_pagamento'].toString()) : null,
+      paymentDate: map['data_pagamento'] != null
+          ? DateTime.tryParse(map['data_pagamento'].toString())
+          : null,
       description: (map['titulo'] ?? map['description'] ?? '').toString(),
       isPaid: isPaidValue,
       isLate: isCancelledValue
           ? false
           : computeIsLate(map['isLate'], map['status'], dueDate, isPaidValue),
       isCancelled: isCancelledValue,
+      originalAmount: map['valor_original'] == null
+          ? null
+          : double.tryParse(map['valor_original'].toString()),
+      discountPercentage:
+          double.tryParse((map['desconto_percentual'] ?? 0).toString()) ?? 0,
+      discountReason: map['motivo_desconto']?.toString(),
       pixCode: (map['pix_copia_cola'] ?? map['pixCode'])?.toString(),
       pixQrCodeUrl: (map['pix_qr_code_url'] ?? map['pixQrCodeUrl'])?.toString(),
-      paymentMethod: (map['metodo_pagamento'] ?? map['paymentMethod'] ?? 'pix').toString(),
+      paymentMethod: (map['metodo_pagamento'] ?? map['paymentMethod'] ?? 'pix')
+          .toString(),
       receiptUrl: (map['comprovante_url'] ?? map['receiptUrl'])?.toString(),
     );
   }
@@ -133,6 +157,9 @@ class FinancialEntry {
       'isPaid': isPaid,
       'isLate': isLate,
       'isCancelled': isCancelled,
+      'originalAmount': originalAmount,
+      'discountPercentage': discountPercentage,
+      'discountReason': discountReason,
       'pixCode': pixCode,
       'pixQrCodeUrl': pixQrCodeUrl,
       'paymentMethod': paymentMethod,
@@ -152,7 +179,10 @@ class FinancialEntry {
     }
 
     final data = <String, dynamic>{
-      'categoria_id': categoryId ?? defaultCategoryId ?? '10000000-0000-0000-0000-000000000001',
+      'categoria_id':
+          categoryId ??
+          defaultCategoryId ??
+          '10000000-0000-0000-0000-000000000001',
       'tipo': type == FinancialType.income ? 'receita' : 'despesa',
       'titulo': description.trim(),
       'valor': amount > 0 ? amount : 0.01,
@@ -164,16 +194,30 @@ class FinancialEntry {
     if (id.isNotEmpty && id.contains('-')) {
       data['id'] = id;
     }
-    if (vehicleId != null && vehicleId!.isNotEmpty) data['veiculo_id'] = vehicleId;
-    if (driverId != null && driverId!.isNotEmpty) data['motorista_id'] = driverId;
-    if (contractId != null && contractId!.isNotEmpty) data['contrato_id'] = contractId;
-    if (createdBy != null && createdBy!.isNotEmpty) data['criado_por'] = createdBy;
+    if (vehicleId != null && vehicleId!.isNotEmpty)
+      data['veiculo_id'] = vehicleId;
+    if (driverId != null && driverId!.isNotEmpty)
+      data['motorista_id'] = driverId;
+    if (contractId != null && contractId!.isNotEmpty)
+      data['contrato_id'] = contractId;
+    if (createdBy != null && createdBy!.isNotEmpty)
+      data['criado_por'] = createdBy;
     if (isPaid) {
-      data['data_pagamento'] = (paymentDate ?? DateTime.now()).toIso8601String().split('T')[0];
+      data['data_pagamento'] = (paymentDate ?? DateTime.now())
+          .toIso8601String()
+          .split('T')[0];
     }
-    if (pixCode != null && pixCode!.isNotEmpty) data['pix_copia_cola'] = pixCode;
-    if (pixQrCodeUrl != null && pixQrCodeUrl!.isNotEmpty) data['pix_qr_code_url'] = pixQrCodeUrl;
-    if (receiptUrl != null && receiptUrl!.isNotEmpty) data['comprovante_url'] = receiptUrl;
+    if (pixCode != null && pixCode!.isNotEmpty)
+      data['pix_copia_cola'] = pixCode;
+    if (pixQrCodeUrl != null && pixQrCodeUrl!.isNotEmpty)
+      data['pix_qr_code_url'] = pixQrCodeUrl;
+    if (receiptUrl != null && receiptUrl!.isNotEmpty)
+      data['comprovante_url'] = receiptUrl;
+    if (originalAmount != null) data['valor_original'] = originalAmount;
+    if (discountPercentage > 0) {
+      data['desconto_percentual'] = discountPercentage;
+      data['motivo_desconto'] = discountReason;
+    }
 
     return data;
   }
@@ -195,6 +239,9 @@ class FinancialEntry {
     bool? isPaid,
     bool? isLate,
     bool? isCancelled,
+    double? originalAmount,
+    double? discountPercentage,
+    String? discountReason,
     String? pixCode,
     String? pixQrCodeUrl,
     String? paymentMethod,
@@ -216,6 +263,9 @@ class FinancialEntry {
       isPaid: isPaid ?? this.isPaid,
       isLate: isLate ?? this.isLate,
       isCancelled: isCancelled ?? this.isCancelled,
+      originalAmount: originalAmount ?? this.originalAmount,
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      discountReason: discountReason ?? this.discountReason,
       pixCode: pixCode ?? this.pixCode,
       pixQrCodeUrl: pixQrCodeUrl ?? this.pixQrCodeUrl,
       paymentMethod: paymentMethod ?? this.paymentMethod,

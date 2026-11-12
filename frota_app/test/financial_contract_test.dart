@@ -1,10 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frota_app/core/repositories/financial_repository.dart';
+import 'package:frota_app/models/contract.dart';
 import 'package:frota_app/models/financial_entry.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
-  final fakeClient = SupabaseClient('https://mock.supabase.co', 'fake-anon-key');
+  final fakeClient = SupabaseClient(
+    'https://mock.supabase.co',
+    'fake-anon-key',
+  );
 
   group('FinancialEntry Model Tests', () {
     test(
@@ -85,29 +89,78 @@ void main() {
         expect(entry.isPaid, isFalse);
       },
     );
+
+    test('discount metadata is retained on the discounted amount', () {
+      final entry = FinancialEntry.fromMap({
+        'id': 'entry-discounted',
+        'tipo': 'receita',
+        'valor': 675.0,
+        'valor_original': 750.0,
+        'desconto_percentual': 10,
+        'motivo_desconto': 'Desconto promocional',
+        'data_vencimento': DateTime.now()
+            .add(const Duration(days: 7))
+            .toIso8601String(),
+        'status': 'pendente',
+        'titulo': 'Aluguel Semanal com desconto',
+      });
+
+      expect(entry.amount, 675);
+      expect(entry.originalAmount, 750);
+      expect(entry.discountPercentage, 10);
+      expect(entry.discountReason, 'Desconto promocional');
+    });
+  });
+
+  group('Contract discount metadata', () {
+    test('reads percentage and reason from the database row', () {
+      final contract = Contract.fromMap({
+        'id': 'contract-1',
+        'motorista_id': 'driver-1',
+        'veiculo_id': 'vehicle-1',
+        'data_inicio': '2026-01-01',
+        'data_fim': '2026-12-31',
+        'valor_locacao': 750,
+        'valor_caucao': 0,
+        'frequencia_cobranca': 'semanal',
+        'dia_vencimento': 3,
+        'status': 'ativo',
+        'desconto_percentual': 10,
+        'motivo_desconto': 'Desconto promocional',
+      });
+
+      expect(contract.discountPercentage, 10);
+      expect(contract.discountReason, 'Desconto promocional');
+    });
   });
 
   group('FinancialRepository Contract Installments Generation', () {
-    test('Generates correct weekly installments for 12 weeks at R\$ 750,00', () async {
-      final repo = FinancialRepository(client: fakeClient);
-      final installments = await repo.generateContractInstallments(
-        driverId: 'test-driver-123',
-        vehicleId: 'test-car-999',
-        rentalValue: 750.0,
-        frequency: 'semanal',
-        dueDay: 3, // Quarta-feira
-        durationWeeks: 12,
-        startDate: DateTime(2026, 9, 1),
-        persistToDb: false,
-      );
+    test(
+      'Generates correct weekly installments for 12 weeks at R\$ 750,00',
+      () async {
+        final repo = FinancialRepository(client: fakeClient);
+        final installments = await repo.generateContractInstallments(
+          driverId: 'test-driver-123',
+          vehicleId: 'test-car-999',
+          rentalValue: 750.0,
+          frequency: 'semanal',
+          dueDay: 3, // Quarta-feira
+          durationWeeks: 12,
+          startDate: DateTime(2026, 9, 1),
+          persistToDb: false,
+        );
 
-      expect(installments.length, equals(12));
-      expect(installments.first.amount, equals(750.0));
-      expect(installments.first.description, contains('1/12'));
-      expect(installments.last.description, contains('12/12'));
-      expect(installments.first.date.weekday, equals(DateTime.wednesday));
-      expect(installments[1].date.difference(installments.first.date).inDays, equals(7));
-    });
+        expect(installments.length, equals(12));
+        expect(installments.first.amount, equals(750.0));
+        expect(installments.first.description, contains('1/12'));
+        expect(installments.last.description, contains('12/12'));
+        expect(installments.first.date.weekday, equals(DateTime.wednesday));
+        expect(
+          installments[1].date.difference(installments.first.date).inDays,
+          equals(7),
+        );
+      },
+    );
 
     test('Batch payment marks all selected entries as paid', () async {
       final repo = FinancialRepository(client: fakeClient);
@@ -125,7 +178,9 @@ void main() {
       final ids = installments.map((e) => e.id).toList();
       await repo.markBatchAsPaid(ids, paymentMethod: 'pix');
 
-      final driverEntries = await repo.getFinancialEntries(driverId: 'test-driver-batch');
+      final driverEntries = await repo.getFinancialEntries(
+        driverId: 'test-driver-batch',
+      );
       for (final entry in driverEntries) {
         expect(entry.isPaid, isTrue);
         expect(entry.isLate, isFalse);

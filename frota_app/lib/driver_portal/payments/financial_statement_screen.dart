@@ -36,7 +36,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
 
   @override
   void dispose() {
-    FinancialRepository.entriesChangedNotifier.removeListener(_onFinancialUpdated);
+    FinancialRepository.entriesChangedNotifier.removeListener(
+      _onFinancialUpdated,
+    );
     super.dispose();
   }
 
@@ -58,7 +60,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
         if (mounted) context.go(AppRoutes.login);
         return;
       }
-      List<FinancialEntry> data = await _financialRepo.getFinancialEntries(driverId: uid);
+      List<FinancialEntry> data = await _financialRepo.getFinancialEntries(
+        driverId: uid,
+      );
       if (mounted) {
         setState(() {
           _entries = data;
@@ -102,7 +106,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                   hasScrollBody: false,
                   child: Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                 )
@@ -115,11 +121,17 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: AppColors.error,
+                          ),
                           const SizedBox(height: AppSpacing.md),
                           Text(
                             _errorMessage!,
-                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.error,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppSpacing.lg),
@@ -145,15 +157,19 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                   child: AppEmptyState(
                     icon: Icons.receipt_long_outlined,
                     title: 'Nenhum lançamento',
-                    description: 'Não encontramos registros para o filtro "$_selectedFilter".',
+                    description:
+                        'Não encontramos registros para o filtro "$_selectedFilter".',
                   ),
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                  ),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _buildTransactionCard(filteredEntries[index]),
+                      (context, index) =>
+                          _buildTransactionCard(filteredEntries[index]),
                       childCount: filteredEntries.length,
                     ),
                   ),
@@ -200,7 +216,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
     final lateEntries = pendingEntries.where((e) => e.isLate).toList();
     final totalPending = pendingEntries.fold(0.0, (sum, e) => sum + e.amount);
     final totalLate = lateEntries.fold(0.0, (sum, e) => sum + e.amount);
-    final totalPaid = _entries.where((e) => e.isPaid).fold(0.0, (sum, e) => sum + e.amount);
+    final totalPaid = _entries
+        .where((e) => e.isPaid)
+        .fold(0.0, (sum, e) => sum + e.amount);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
@@ -216,7 +234,8 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: (totalLate > 0 ? AppColors.error : AppColors.primary).withValues(alpha: 0.3),
+            color: (totalLate > 0 ? AppColors.error : AppColors.primary)
+                .withValues(alpha: 0.3),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -229,7 +248,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                totalLate > 0 ? '⚠️ ATENÇÃO: DÉBITOS EM ATRASO' : 'SALDO DEVEDOR ATUAL',
+                totalLate > 0
+                    ? '⚠️ ATENÇÃO: DÉBITOS EM ATRASO'
+                    : 'SALDO DEVEDOR ATUAL',
                 style: AppTextStyles.labelMedium.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                   fontWeight: FontWeight.bold,
@@ -238,7 +259,10 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
               ),
               if (totalLate > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
@@ -286,7 +310,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
               _buildSummaryItem(
                 'EM ATRASO',
                 'R\$ ${totalLate.toStringAsFixed(2).replaceAll('.', ',')}',
-                totalLate > 0 ? const Color(0xFFFFD8A8) : Colors.white.withValues(alpha: 0.9),
+                totalLate > 0
+                    ? const Color(0xFFFFD8A8)
+                    : Colors.white.withValues(alpha: 0.9),
               ),
             ],
           ),
@@ -374,7 +400,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                   });
                 }
               },
-              selectedColor: filter == 'Atrasados' ? AppColors.error : AppColors.primary,
+              selectedColor: filter == 'Atrasados'
+                  ? AppColors.error
+                  : AppColors.primary,
               labelStyle: AppTextStyles.labelMedium.copyWith(
                 color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -442,16 +470,21 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: (entry.isPaid
-                          ? Colors.green
-                          : (entry.isLate ? AppColors.error : AppColors.primary))
-                      .withValues(alpha: 0.1),
+                  color:
+                      (entry.isPaid
+                              ? Colors.green
+                              : (entry.isLate
+                                    ? AppColors.error
+                                    : AppColors.primary))
+                          .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   entry.isPaid
                       ? Icons.check_circle_outline
-                      : (entry.isLate ? Icons.warning_amber_rounded : Icons.payments_outlined),
+                      : (entry.isLate
+                            ? Icons.warning_amber_rounded
+                            : Icons.payments_outlined),
                   color: entry.isPaid
                       ? Colors.green
                       : (entry.isLate ? AppColors.error : AppColors.primary),
@@ -520,6 +553,21 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
               ),
             ],
           ),
+          if (entry.discountPercentage > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Desconto de ${entry.discountPercentage.toStringAsFixed(2)}%'
+                '${entry.originalAmount != null ? ' (de R\$ ${entry.originalAmount!.toStringAsFixed(2).replaceAll('.', ',')})' : ''}'
+                '${entry.discountReason?.isNotEmpty == true ? ' — ${entry.discountReason}' : ''}',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
           if (entry.isOutstanding) ...[
             const SizedBox(height: AppSpacing.md),
             const Divider(height: 1),
@@ -538,7 +586,9 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                     icon: const Icon(Icons.qr_code, size: 16),
                     label: const Text('Pagar com PIX'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: entry.isLate ? AppColors.error : AppColors.primary,
+                      backgroundColor: entry.isLate
+                          ? AppColors.error
+                          : AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(
@@ -558,7 +608,11 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
                       );
                     },
                     icon: const Icon(Icons.attach_file, size: 16),
-                    label: Text(entry.isUnderReview ? 'Trocar Comprovante' : 'Anexar Comprovante'),
+                    label: Text(
+                      entry.isUnderReview
+                          ? 'Trocar Comprovante'
+                          : 'Anexar Comprovante',
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 10),

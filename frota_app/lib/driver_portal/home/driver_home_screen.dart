@@ -963,6 +963,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                       ),
                     ],
                   ),
+                  if (item.discountPercentage > 0) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Desconto de ${item.discountPercentage.toStringAsFixed(2)}%'
+                        '${item.originalAmount != null ? ' (valor original R\$ ${item.originalAmount!.toStringAsFixed(2).replaceAll('.', ',')})' : ''}'
+                        '${item.discountReason?.isNotEmpty == true ? ' — ${item.discountReason}' : ''}',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                   if (item.isOutstanding) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Row(

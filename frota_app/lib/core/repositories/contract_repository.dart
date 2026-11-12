@@ -137,6 +137,8 @@ class ContractRepository {
     required double valorCaucao,
     required String frequencia, // 'semanal', 'quinzenal', 'mensal'
     required int diaVencimento,
+    double discountPercentage = 0,
+    String? discountReason,
     String categoriaReceitaId = '10000000-0000-0000-0000-000000000002',
     String? operadorId,
   }) async {
@@ -154,6 +156,8 @@ class ContractRepository {
         'p_valor_caucao': valorCaucao,
         'p_frequencia': frequencia,
         'p_dia_vencimento': diaVencimento,
+        'p_desconto_percentual': discountPercentage,
+        'p_motivo_desconto': discountReason,
         'p_categoria_receita_id': categoriaReceitaId,
         'p_operador_id': opId,
       },
@@ -282,6 +286,39 @@ class ContractRepository {
     }
 
     final frequency = contract.billingFrequency ?? 'semanal';
+    if (current.billingStartedAt != null) {
+      final currentFrequency = current.billingFrequency ?? 'semanal';
+      final currentRentalValue = currentFrequency == 'semanal'
+          ? current.weeklyValue
+          : current.monthlyValue;
+      final newRentalValue = frequency == 'semanal'
+          ? contract.weeklyValue
+          : (frequency == 'quinzenal'
+                ? contract.weeklyValue * 2
+                : contract.monthlyValue);
+      bool isSameDate(DateTime a, DateTime b) =>
+          a.year == b.year && a.month == b.month && a.day == b.day;
+
+      if (frequency != currentFrequency ||
+          (newRentalValue - currentRentalValue).abs() >= 0.01 ||
+          contract.dueDay != current.dueDay ||
+          !isSameDate(contract.endDate, current.endDate)) {
+        throw StateError(
+          'A cobrança já começou. Valor, frequência, vencimento e vigência não podem ser alterados por esta tela.',
+        );
+      }
+
+      if (contract.discountPercentage != current.discountPercentage ||
+          contract.discountReason != current.discountReason) {
+        await applyRecurringDiscount(
+          contractId: contract.id,
+          discountPercentage: contract.discountPercentage,
+          discountReason: contract.discountReason,
+        );
+      }
+      return;
+    }
+
     await updateTermsBeforeCheckInApproval(
       contractId: contract.id,
       rentalValue: frequency == 'semanal'
@@ -292,6 +329,23 @@ class ContractRepository {
       frequency: frequency,
       dueDay: contract.dueDay ?? contract.startDate.day,
       endDate: contract.endDate,
+      discountPercentage: contract.discountPercentage,
+      discountReason: contract.discountReason,
+    );
+  }
+
+  Future<void> applyRecurringDiscount({
+    required String contractId,
+    required double discountPercentage,
+    String? discountReason,
+  }) async {
+    await _client.rpc(
+      'fn_aplicar_desconto_contrato_recorrente',
+      params: {
+        'p_contrato_id': contractId,
+        'p_desconto_percentual': discountPercentage,
+        'p_motivo_desconto': discountReason,
+      },
     );
   }
 
@@ -301,6 +355,8 @@ class ContractRepository {
     required String frequency,
     required int dueDay,
     required DateTime endDate,
+    double discountPercentage = 0,
+    String? discountReason,
   }) async {
     await _client.rpc(
       'fn_atualizar_termos_contrato_antes_vistoria',
@@ -310,6 +366,8 @@ class ContractRepository {
         'p_frequencia': frequency,
         'p_dia_vencimento': dueDay,
         'p_data_fim': endDate.toIso8601String().split('T')[0],
+        'p_desconto_percentual': discountPercentage,
+        'p_motivo_desconto': discountReason,
       },
     );
   }
@@ -325,6 +383,8 @@ class ContractRepository {
     required double depositValue,
     required String frequency,
     required int dueDay,
+    double discountPercentage = 0,
+    String? discountReason,
     String? operatorId,
   }) async {
     return createContractAtomic(
@@ -337,6 +397,8 @@ class ContractRepository {
       valorCaucao: depositValue,
       frequencia: frequency,
       diaVencimento: dueDay,
+      discountPercentage: discountPercentage,
+      discountReason: discountReason,
       operadorId: operatorId,
     );
   }
