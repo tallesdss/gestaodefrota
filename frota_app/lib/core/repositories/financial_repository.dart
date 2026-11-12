@@ -167,14 +167,12 @@ class FinancialRepository {
     if (paymentMethod != null) payload['metodo_pagamento'] = paymentMethod;
     if (receiptUrl != null) payload['comprovante_url'] = receiptUrl;
 
-    try {
-      if (_isValidUuid(entryId)) {
-        await _client
-            .from(SupabaseConfig.tabelaLancamentosFinanceiros)
-            .update(payload)
-            .eq('id', entryId);
-      }
-    } catch (_) {}
+    if (_isValidUuid(entryId)) {
+      await _client
+          .from(SupabaseConfig.tabelaLancamentosFinanceiros)
+          .update(payload)
+          .eq('id', entryId);
+    }
 
     // Atualiza memória
     for (final key in _memoryEntries.keys) {
@@ -192,6 +190,28 @@ class FinancialRepository {
       }).toList();
     }
 
+    entriesChangedNotifier.value++;
+  }
+
+  Future<void> markAsPending(String entryId) async {
+    if (_isValidUuid(entryId)) {
+      await _client
+          .from(SupabaseConfig.tabelaLancamentosFinanceiros)
+          .update({'status': 'pendente', 'data_pagamento': null})
+          .eq('id', entryId);
+    }
+
+    for (final key in _memoryEntries.keys) {
+      _memoryEntries[key] = _memoryEntries[key]!.map((entry) {
+        return entry.id == entryId
+            ? entry.copyWith(
+                isPaid: false,
+                isLate: false,
+                clearPaymentDate: true,
+              )
+            : entry;
+      }).toList();
+    }
     entriesChangedNotifier.value++;
   }
 
@@ -358,27 +378,24 @@ class FinancialRepository {
   }) async {
     final path = '$entryId/comprovante_${DateTime.now().millisecondsSinceEpoch}_$fileName';
 
-    try {
-      await _client.storage
-          .from(SupabaseConfig.bucketComprovantesPagamento)
-          .uploadBinary(
-            path,
-            bytes,
-            fileOptions: FileOptions(contentType: mimeType, upsert: true),
-          );
-
-      final signedUrl = await _client.storage
-          .from(SupabaseConfig.bucketComprovantesPagamento)
-          .createSignedUrl(path, 60 * 60 * 24 * 365);
-
-      await markAsPaid(entryId, receiptUrl: signedUrl);
-      return signedUrl;
-    } catch (_) {
-      // Fallback local se o storage do browser/mock estiver ativo
-      final fakeUrl = 'https://supabase.local/storage/$path';
-      await markAsPaid(entryId, receiptUrl: fakeUrl);
-      return fakeUrl;
+    if (!_isValidUuid(entryId)) {
+      throw ArgumentError.value(entryId, 'entryId', 'Lançamento inválido.');
     }
+
+    await _client.storage
+        .from(SupabaseConfig.bucketComprovantesPagamento)
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: mimeType, upsert: true),
+        );
+
+    final signedUrl = await _client.storage
+        .from(SupabaseConfig.bucketComprovantesPagamento)
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+
+    await _attachReceiptUrl(entryId, signedUrl);
+    return signedUrl;
   }
 
   /// Upload de comprovante em lote para quitação total de parcelas
@@ -391,25 +408,56 @@ class FinancialRepository {
     final firstId = entryIds.isNotEmpty ? entryIds.first : 'batch';
     final path = 'batch_$firstId/comprovante_${DateTime.now().millisecondsSinceEpoch}_$fileName';
 
-    try {
-      await _client.storage
-          .from(SupabaseConfig.bucketComprovantesPagamento)
-          .uploadBinary(
-            path,
-            bytes,
-            fileOptions: FileOptions(contentType: mimeType, upsert: true),
-          );
-
-      final signedUrl = await _client.storage
-          .from(SupabaseConfig.bucketComprovantesPagamento)
-          .createSignedUrl(path, 60 * 60 * 24 * 365);
-
-      await markBatchAsPaid(entryIds, receiptUrl: signedUrl);
-      return signedUrl;
-    } catch (_) {
-      final fakeUrl = 'https://supabase.local/storage/$path';
-      await markBatchAsPaid(entryIds, receiptUrl: fakeUrl);
-      return fakeUrl;
+    if (entryIds.isEmpty || entryIds.any((id) => !_isValidUuid(id))) {
+      throw ArgumentError.value(
+        entryIds,
+        'entryIds',
+        'Todos os lançamentos devem ser válidos.',
+      );
     }
+
+    await _client.storage
+        .from(SupabaseConfig.bucketComprovantesPagamento)
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: mimeType, upsert: true),
+        );
+
+    final signedUrl = await _client.storage
+        .from(SupabaseConfig.bucketComprovantesPagamento)
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+
+    for (final entryId in entryIds) {
+      await _attachReceiptUrl(entryId, signedUrl);
+    }
+    return signedUrl;
+  }
+
+  Future<void> _attachReceiptUrl(String entryId, String receiptUrl) async {
+    final response = await _client
+        .from(SupabaseConfig.tabelaLancamentosFinanceiros)
+        .update({'comprovante_url': receiptUrl})
+        .eq('id', entryId)
+        .neq('status', 'pago')
+        .neq('status', 'cancelado')
+        .select('id')
+        .maybeSingle();
+
+    if (response == null) {
+      throw StateError(
+        'O comprovante não foi vinculado: lançamento inexistente ou já pago.',
+      );
+    }
+
+    for (final key in _memoryEntries.keys) {
+      _memoryEntries[key] = _memoryEntries[key]!.map((entry) {
+        return entry.id == entryId
+            ? entry.copyWith(receiptUrl: receiptUrl)
+            : entry;
+      }).toList();
+    }
+
+    entriesChangedNotifier.value++;
   }
 }

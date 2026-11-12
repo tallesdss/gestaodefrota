@@ -148,7 +148,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           _latestCheckin = latestCheckin;
           _latestCheckout = latestCheckout;
           _allDebts = debts;
-          _pendingDebts = debts.where((e) => !e.isPaid).toList();
+          _pendingDebts = debts.where((e) => e.isOutstanding).toList();
           _timeline = timeline;
           _isLoading = false;
         });
@@ -387,9 +387,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   }
 
   Widget _buildFinancialSummaryCard(BuildContext context, double totalPending) {
-    final lateDebts = _allDebts.where((e) => !e.isPaid && e.isLate).toList();
+    final lateDebts = _allDebts
+        .where((e) => e.isOutstanding && e.isLate)
+        .toList();
     final upcomingDebts = _allDebts
-        .where((e) => !e.isPaid && !e.isLate)
+        .where((e) => e.isOutstanding && !e.isLate)
         .toList();
     final totalLate = lateDebts.fold(0.0, (acc, item) => acc + item.amount);
     final hasLate = lateDebts.isNotEmpty;
@@ -832,15 +834,19 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
             final dateStr =
                 '${item.date.day.toString().padLeft(2, '0')}/${item.date.month.toString().padLeft(2, '0')}/${item.date.year}';
 
-            final statusColor = item.isPaid
-                ? Colors.green
-                : (item.isLate ? AppColors.error : AppColors.secondary);
+            final statusColor = item.isCancelled
+                ? AppColors.onSurfaceVariant
+                : (item.isPaid
+                      ? Colors.green
+                      : (item.isLate ? AppColors.error : AppColors.secondary));
 
-            final statusLabel = item.isPaid
-                ? 'PAGO'
-                : (item.isUnderReview
-                      ? 'EM ANÁLISE'
-                      : (item.isLate ? 'ATRASADO' : 'A VENCER'));
+            final statusLabel = item.isCancelled
+                ? 'ENCERRADO'
+                : (item.isPaid
+                      ? 'PAGO'
+                      : (item.isUnderReview
+                            ? 'EM ANÁLISE'
+                            : (item.isLate ? 'ATRASADO' : 'A VENCER')));
 
             return Container(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -957,7 +963,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                       ),
                     ],
                   ),
-                  if (!item.isPaid) ...[
+                  if (item.isOutstanding) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Row(
                       children: [

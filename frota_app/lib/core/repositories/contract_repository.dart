@@ -34,10 +34,12 @@ class ContractRepository {
         status != 'todos') {
       String statusDb = status.toLowerCase();
       if (statusDb == 'ativo' || statusDb == 'active') statusDb = 'ativo';
-      if (statusDb == 'concluido' || statusDb == 'concluded')
+      if (statusDb == 'concluido' || statusDb == 'concluded') {
         statusDb = 'concluido';
-      if (statusDb == 'cancelado' || statusDb == 'cancelled')
+      }
+      if (statusDb == 'cancelado' || statusDb == 'cancelled') {
         statusDb = 'cancelado';
+      }
       query = query.eq('status', statusDb);
     }
 
@@ -130,6 +132,7 @@ class ContractRepository {
     required String veiculoId,
     required String numeroContrato,
     required DateTime dataInicio,
+    required DateTime dataFim,
     required double valorLocacao,
     required double valorCaucao,
     required String frequencia, // 'semanal', 'quinzenal', 'mensal'
@@ -146,6 +149,7 @@ class ContractRepository {
         'p_veiculo_id': veiculoId,
         'p_numero_contrato': numeroContrato,
         'p_data_inicio': dataInicio.toIso8601String().split('T')[0],
+        'p_data_fim': dataFim.toIso8601String().split('T')[0],
         'p_valor_locacao': valorLocacao,
         'p_valor_caucao': valorCaucao,
         'p_frequencia': frequencia,
@@ -254,11 +258,60 @@ class ContractRepository {
 
   /// Atualizar contrato
   Future<void> updateContract(Contract contract) async {
-    final payload = contract.toDatabaseMap();
-    await _client
-        .from(SupabaseConfig.tabelaContratos)
-        .update(payload)
-        .eq('id', contract.id);
+    final current = await getContractById(contract.id);
+    if (current == null) {
+      throw StateError('Contrato não encontrado.');
+    }
+    if (current.driverId != contract.driverId ||
+        current.vehicleId != contract.vehicleId) {
+      throw StateError(
+        'A atribuição de motorista e veículo não pode ser alterada editando o contrato.',
+      );
+    }
+
+    if (contract.status == ContractStatus.concluded) {
+      await concludeContract(contract.id);
+      return;
+    }
+    if (contract.status == ContractStatus.cancelled) {
+      await cancelContract(contract.id);
+      return;
+    }
+    if (contract.status != ContractStatus.active) {
+      throw StateError('Status de contrato inválido para edição.');
+    }
+
+    final frequency = contract.billingFrequency ?? 'semanal';
+    await updateTermsBeforeCheckInApproval(
+      contractId: contract.id,
+      rentalValue: frequency == 'semanal'
+          ? contract.weeklyValue
+          : (frequency == 'quinzenal'
+                ? contract.weeklyValue * 2
+                : contract.monthlyValue),
+      frequency: frequency,
+      dueDay: contract.dueDay ?? contract.startDate.day,
+      endDate: contract.endDate,
+    );
+  }
+
+  Future<void> updateTermsBeforeCheckInApproval({
+    required String contractId,
+    required double rentalValue,
+    required String frequency,
+    required int dueDay,
+    required DateTime endDate,
+  }) async {
+    await _client.rpc(
+      'fn_atualizar_termos_contrato_antes_vistoria',
+      params: {
+        'p_contrato_id': contractId,
+        'p_valor_locacao': rentalValue,
+        'p_frequencia': frequency,
+        'p_dia_vencimento': dueDay,
+        'p_data_fim': endDate.toIso8601String().split('T')[0],
+      },
+    );
   }
 
   /// Alias conveniente para criação de contrato com caução
@@ -267,6 +320,7 @@ class ContractRepository {
     required String vehicleId,
     required String contractNumber,
     required DateTime startDate,
+    required DateTime endDate,
     required double rentalValue,
     required double depositValue,
     required String frequency,
@@ -278,6 +332,7 @@ class ContractRepository {
       veiculoId: vehicleId,
       numeroContrato: contractNumber,
       dataInicio: startDate,
+      dataFim: endDate,
       valorLocacao: rentalValue,
       valorCaucao: depositValue,
       frequencia: frequency,

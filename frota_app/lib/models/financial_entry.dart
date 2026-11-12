@@ -15,6 +15,7 @@ class FinancialEntry {
   final String description;
   final bool isPaid;
   final bool isLate;
+  final bool isCancelled;
   final String? pixCode;
   final String? pixQrCodeUrl;
   final String? paymentMethod;
@@ -35,6 +36,7 @@ class FinancialEntry {
     required this.description,
     required this.isPaid,
     this.isLate = false,
+    this.isCancelled = false,
     this.pixCode,
     this.pixQrCodeUrl,
     this.paymentMethod,
@@ -60,8 +62,19 @@ class FinancialEntry {
 
     final dueDate = DateTime.tryParse((map['data_vencimento'] ?? map['date'] ?? '').toString()) ?? DateTime.now();
     final isPaidValue = parseIsPaid(map['isPaid'], map['status']);
-    
-    bool computeIsLate(dynamic val, dynamic statusVal, DateTime due, bool paid) {
+    final isCancelledValue =
+        map['isCancelled'] == true ||
+        const {
+          'cancelado',
+          'cancelled',
+        }.contains(map['status']?.toString().toLowerCase());
+
+    bool computeIsLate(
+      dynamic val,
+      dynamic statusVal,
+      DateTime due,
+      bool paid,
+    ) {
       if (paid) return false;
       if (val == true) return true;
       if (statusVal != null) {
@@ -87,7 +100,10 @@ class FinancialEntry {
       paymentDate: map['data_pagamento'] != null ? DateTime.tryParse(map['data_pagamento'].toString()) : null,
       description: (map['titulo'] ?? map['description'] ?? '').toString(),
       isPaid: isPaidValue,
-      isLate: computeIsLate(map['isLate'], map['status'], dueDate, isPaidValue),
+      isLate: isCancelledValue
+          ? false
+          : computeIsLate(map['isLate'], map['status'], dueDate, isPaidValue),
+      isCancelled: isCancelledValue,
       pixCode: (map['pix_copia_cola'] ?? map['pixCode'])?.toString(),
       pixQrCodeUrl: (map['pix_qr_code_url'] ?? map['pixQrCodeUrl'])?.toString(),
       paymentMethod: (map['metodo_pagamento'] ?? map['paymentMethod'] ?? 'pix').toString(),
@@ -96,7 +112,9 @@ class FinancialEntry {
   }
 
   /// Indica se o comprovante foi enviado e está aguardando baixa/confirmação
-  bool get isUnderReview => !isPaid && receiptUrl != null && receiptUrl!.isNotEmpty;
+  bool get isUnderReview =>
+      isOutstanding && receiptUrl != null && receiptUrl!.isNotEmpty;
+  bool get isOutstanding => !isPaid && !isCancelled;
 
   Map<String, dynamic> toMap() {
     return {
@@ -114,6 +132,7 @@ class FinancialEntry {
       'description': description,
       'isPaid': isPaid,
       'isLate': isLate,
+      'isCancelled': isCancelled,
       'pixCode': pixCode,
       'pixQrCodeUrl': pixQrCodeUrl,
       'paymentMethod': paymentMethod,
@@ -126,6 +145,8 @@ class FinancialEntry {
     String statusStr = 'pendente';
     if (isPaid) {
       statusStr = 'pago';
+    } else if (isCancelled) {
+      statusStr = 'cancelado';
     } else if (isLate) {
       statusStr = 'atrasado';
     }
@@ -169,9 +190,11 @@ class FinancialEntry {
     double? amount,
     DateTime? date,
     DateTime? paymentDate,
+    bool clearPaymentDate = false,
     String? description,
     bool? isPaid,
     bool? isLate,
+    bool? isCancelled,
     String? pixCode,
     String? pixQrCodeUrl,
     String? paymentMethod,
@@ -188,10 +211,11 @@ class FinancialEntry {
       createdBy: createdBy ?? this.createdBy,
       amount: amount ?? this.amount,
       date: date ?? this.date,
-      paymentDate: paymentDate ?? this.paymentDate,
+      paymentDate: clearPaymentDate ? null : (paymentDate ?? this.paymentDate),
       description: description ?? this.description,
       isPaid: isPaid ?? this.isPaid,
       isLate: isLate ?? this.isLate,
+      isCancelled: isCancelled ?? this.isCancelled,
       pixCode: pixCode ?? this.pixCode,
       pixQrCodeUrl: pixQrCodeUrl ?? this.pixQrCodeUrl,
       paymentMethod: paymentMethod ?? this.paymentMethod,

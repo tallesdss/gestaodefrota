@@ -7,24 +7,27 @@ void main() {
   final fakeClient = SupabaseClient('https://mock.supabase.co', 'fake-anon-key');
 
   group('FinancialEntry Model Tests', () {
-    test('isLate is calculated dynamically via fromMap when due date has passed and unpaid', () {
-      final pastDate = DateTime.now().subtract(const Duration(days: 3));
-      final map = {
-        'id': 'entry-1',
-        'tipo': 'receita',
-        'categoria': 'aluguel',
-        'valor': 750.0,
-        'data_vencimento': pastDate.toIso8601String(),
-        'status': 'pendente',
-        'descricao': 'Aluguel Semanal 1/4',
-      };
+    test(
+      'isLate is calculated dynamically via fromMap when due date has passed and unpaid',
+      () {
+        final pastDate = DateTime.now().subtract(const Duration(days: 3));
+        final map = {
+          'id': 'entry-1',
+          'tipo': 'receita',
+          'categoria': 'aluguel',
+          'valor': 750.0,
+          'data_vencimento': pastDate.toIso8601String(),
+          'status': 'pendente',
+          'descricao': 'Aluguel Semanal 1/4',
+        };
 
-      final entry = FinancialEntry.fromMap(map);
+        final entry = FinancialEntry.fromMap(map);
 
-      expect(entry.isLate, isTrue);
-      expect(entry.isPaid, isFalse);
-      expect(entry.amount, equals(750.0));
-    });
+        expect(entry.isLate, isTrue);
+        expect(entry.isPaid, isFalse);
+        expect(entry.amount, equals(750.0));
+      },
+    );
 
     test('isLate is false when due date is in the future', () {
       final futureDate = DateTime.now().add(const Duration(days: 5));
@@ -61,6 +64,27 @@ void main() {
       expect(entry.isLate, isFalse);
       expect(entry.isPaid, isTrue);
     });
+
+    test(
+      'cancelled future installments remain historical, not outstanding',
+      () {
+        final entry = FinancialEntry.fromMap({
+          'id': 'entry-cancelled',
+          'tipo': 'receita',
+          'valor': 750.0,
+          'data_vencimento': DateTime.now()
+              .add(const Duration(days: 7))
+              .toIso8601String(),
+          'status': 'cancelado',
+          'titulo': 'Aluguel após encerramento',
+        });
+
+        expect(entry.isCancelled, isTrue);
+        expect(entry.isOutstanding, isFalse);
+        expect(entry.isLate, isFalse);
+        expect(entry.isPaid, isFalse);
+      },
+    );
   });
 
   group('FinancialRepository Contract Installments Generation', () {

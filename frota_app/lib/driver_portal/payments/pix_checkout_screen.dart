@@ -132,8 +132,8 @@ class _PixCheckoutScreenState extends State<PixCheckoutScreen> {
                         ? const Center(child: CircularProgressIndicator())
                         : AppButton(
                             label: _isBatch
-                                ? 'CONFIRMAR QUITAÇÃO TOTAL (${_allEntries.length} PARCELAS)'
-                                : 'CONFIRMAR PAGAMENTO',
+                                ? 'ENVIAR COMPROVANTE (${_allEntries.length} PARCELAS)'
+                                : 'ENVIAR COMPROVANTE',
                             onPressed: _showConfirmation,
                             isFullWidth: true,
                           ),
@@ -566,11 +566,11 @@ class _PixCheckoutScreenState extends State<PixCheckoutScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('CONFIRMAR PAGAMENTO?', style: AppTextStyles.headlineSmall),
+        title: Text('ENVIAR COMPROVANTE?', style: AppTextStyles.headlineSmall),
         content: Text(
           _isBatch
-              ? 'Deseja confirmar a quitação de ${_allEntries.length} parcelas no valor total de R\$ ${_totalAmount.toStringAsFixed(2)}?'
-              : 'Deseja confirmar o pagamento de R\$ ${_totalAmount.toStringAsFixed(2)}?',
+              ? 'O comprovante será anexado às ${_allEntries.length} parcelas (R\$ ${_totalAmount.toStringAsFixed(2)}). O pagamento ficará pendente até a aprovação do administrador.'
+              : 'O comprovante será enviado para análise do administrador. O pagamento ficará pendente até a aprovação.',
           style: AppTextStyles.bodyMedium,
         ),
         actions: [
@@ -588,32 +588,35 @@ class _PixCheckoutScreenState extends State<PixCheckoutScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () async {
+              if (_receiptBytes == null || _selectedReceipt == null) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Anexe o comprovante antes de enviar.'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+                return;
+              }
+
               Navigator.pop(ctx); // fecha modal
               setState(() => _isUploading = true);
 
               try {
                 final entryIds = _allEntries.map((e) => e.id).toList();
 
-                if (_receiptBytes != null && _selectedReceipt != null) {
-                  if (_isBatch) {
-                    await _financialRepo.uploadBatchPaymentReceipt(
-                      entryIds: entryIds,
-                      bytes: _receiptBytes!,
-                      fileName: _selectedReceipt!.name,
-                    );
-                  } else if (entryIds.isNotEmpty) {
-                    await _financialRepo.uploadPaymentReceipt(
-                      entryId: entryIds.first,
-                      bytes: _receiptBytes!,
-                      fileName: _selectedReceipt!.name,
-                    );
-                  }
+                if (_isBatch) {
+                  await _financialRepo.uploadBatchPaymentReceipt(
+                    entryIds: entryIds,
+                    bytes: _receiptBytes!,
+                    fileName: _selectedReceipt!.name,
+                  );
                 } else {
-                  if (_isBatch) {
-                    await _financialRepo.markBatchAsPaid(entryIds, paymentMethod: 'pix');
-                  } else if (entryIds.isNotEmpty) {
-                    await _financialRepo.markAsPaid(entryIds.first, paymentMethod: 'pix');
-                  }
+                  await _financialRepo.uploadPaymentReceipt(
+                    entryId: entryIds.first,
+                    bytes: _receiptBytes!,
+                    fileName: _selectedReceipt!.name,
+                  );
                 }
 
                 if (!mounted) return;
@@ -622,8 +625,8 @@ class _PixCheckoutScreenState extends State<PixCheckoutScreen> {
                   SnackBar(
                     content: Text(
                       _isBatch
-                          ? 'Todas as ${_allEntries.length} parcelas foram quitadas com sucesso!'
-                          : 'Pagamento confirmado e comprovante enviado!',
+                          ? 'Comprovante enviado para análise de ${_allEntries.length} parcelas.'
+                          : 'Comprovante enviado. Aguarde a aprovação do administrador.',
                     ),
                     backgroundColor: AppColors.success,
                     behavior: SnackBarBehavior.floating,
@@ -640,7 +643,7 @@ class _PixCheckoutScreenState extends State<PixCheckoutScreen> {
                 );
               }
             },
-            child: const Text('CONFIRMAR'),
+            child: const Text('ENVIAR'),
           ),
         ],
       ),

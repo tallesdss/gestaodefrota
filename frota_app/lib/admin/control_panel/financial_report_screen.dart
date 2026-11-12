@@ -290,7 +290,7 @@ class _FinancialReportScreenState extends State<FinancialReportScreen> {
 
   Widget _buildStatusBreakdown() {
     final paidCount = _entries.where((e) => e.isPaid).length;
-    final pendingCount = _entries.where((e) => !e.isPaid).length;
+    final pendingCount = _entries.where((e) => e.isOutstanding).length;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),

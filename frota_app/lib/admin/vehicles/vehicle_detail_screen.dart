@@ -1770,7 +1770,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Serão geradas $selectedDuration parcelas no histórico de pagamentos do motorista de acordo com o prazo definido.',
+                        'Os termos são salvos no contrato. As parcelas só serão criadas após a aprovação da vistoria de entrada.',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
@@ -1786,46 +1786,32 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
       ),
       actions: [
         AppButton(
-          label: 'Confirmar e Gerar Parcelas',
+          label: 'Salvar termos do contrato',
           onPressed: () async {
             final newValue =
                 double.tryParse(rentalController.text.replaceAll(',', '.')) ??
                 0;
             if (newValue > 0 && selectedDay != null) {
-              final newHistory = List<RentalValueHistory>.from(
-                _vehicle!.rentalHistory,
-              );
-              if (_vehicle!.rentalValue != null) {
-                newHistory.add(
-                  RentalValueHistory(
-                    value: _vehicle!.rentalValue!,
-                    date: DateTime.now(),
-                  ),
+              final activeContract = await _contractRepository
+                  .getActiveContractByVehicle(_vehicle!.id);
+              if (activeContract == null) {
+                throw StateError(
+                  'Atribua o veículo a um motorista antes de configurar a cobrança.',
                 );
               }
 
-              setState(() {
-                _vehicle = _vehicle!.copyWith(
-                  rentalValue: newValue,
-                  rentalHistory: newHistory,
-                  rentalType: selectedType,
-                  rentalDueDay: selectedDay,
-                );
-              });
-
-              final targetDriverId = _vehicle!.currentDriverId ??
-                  _vehicle!.activeDriverId ??
-                  'dfc34aba-9a10-4da0-a38f-91b47438bde0';
-
-              final generated = await _financialRepository.generateContractInstallments(
-                driverId: targetDriverId,
-                vehicleId: _vehicle!.id,
+              final now = DateTime.now();
+              final endDate = selectedType == RentalType.weekly
+                  ? now.add(Duration(days: selectedDuration * 7))
+                  : DateTime(now.year, now.month + selectedDuration + 1, 0);
+              await _contractRepository.updateTermsBeforeCheckInApproval(
+                contractId: activeContract.id,
                 rentalValue: newValue,
-                frequency: selectedType == RentalType.weekly ? 'semanal' : 'mensal',
+                frequency: selectedType == RentalType.weekly
+                    ? 'semanal'
+                    : 'mensal',
                 dueDay: selectedDay!,
-                startDate: DateTime.now(),
-                durationWeeks: selectedType == RentalType.weekly ? selectedDuration : null,
-                durationMonths: selectedType == RentalType.monthly ? selectedDuration : null,
+                endDate: endDate,
               );
 
               if (!mounted) return;
@@ -1834,7 +1820,7 @@ class _VehicleDetailScreenState extends State<VehicleDetailScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Aluguel atualizado para R\$ ${newValue.toStringAsFixed(2)} e ${generated.length} parcelas geradas no histórico do motorista!',
+                    'Termos salvos. As parcelas serão geradas após a aprovação da vistoria de entrada.',
                   ),
                   behavior: SnackBarBehavior.floating,
                   backgroundColor: AppColors.success,

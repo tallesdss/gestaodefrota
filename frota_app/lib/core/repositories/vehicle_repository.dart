@@ -317,6 +317,7 @@ bool _isValidUuid(String? str) {
       veiculoId: vehicleId,
       numeroContrato: 'CTR-${now.microsecondsSinceEpoch}',
       dataInicio: now,
+      dataFim: now.add(const Duration(days: 365)),
       valorLocacao: rentalValue,
       valorCaucao: 0,
       frequencia: 'semanal',

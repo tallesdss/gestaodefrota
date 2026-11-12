@@ -7,9 +7,7 @@ import '../../core/widgets/app_icon.dart';
 import '../../core/widgets/app_empty_state.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/repositories/financial_repository.dart';
-import '../../core/repositories/driver_repository.dart';
 import '../../core/repositories/auth_repository.dart';
-import '../../core/repositories/contract_repository.dart';
 import '../../models/financial_entry.dart';
 import 'widgets/receipt_upload_dialog.dart';
 
@@ -81,8 +79,8 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   Widget build(BuildContext context) {
     final filteredEntries = _entries.where((e) {
       if (_selectedFilter == 'Todos') return true;
-      if (_selectedFilter == 'Atrasados') return !e.isPaid && e.isLate;
-      if (_selectedFilter == 'Pendentes') return !e.isPaid;
+      if (_selectedFilter == 'Atrasados') return e.isOutstanding && e.isLate;
+      if (_selectedFilter == 'Pendentes') return e.isOutstanding;
       if (_selectedFilter == 'Pagos') return e.isPaid;
       return true;
     }).toList();
@@ -198,7 +196,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   }
 
   Widget _buildFinancialSummary() {
-    final pendingEntries = _entries.where((e) => !e.isPaid).toList();
+    final pendingEntries = _entries.where((e) => e.isOutstanding).toList();
     final lateEntries = pendingEntries.where((e) => e.isLate).toList();
     final totalPending = pendingEntries.fold(0.0, (sum, e) => sum + e.amount);
     final totalLate = lateEntries.fold(0.0, (sum, e) => sum + e.amount);
@@ -395,15 +393,19 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
   }
 
   Widget _buildTransactionCard(FinancialEntry entry) {
-    final statusColor = entry.isPaid
-        ? Colors.green
-        : (entry.isLate ? AppColors.error : AppColors.secondary);
+    final statusColor = entry.isCancelled
+        ? AppColors.onSurfaceVariant
+        : (entry.isPaid
+              ? Colors.green
+              : (entry.isLate ? AppColors.error : AppColors.secondary));
 
-    final String statusText = entry.isPaid
-        ? 'PAGO'
-        : (entry.isUnderReview
-            ? 'EM ANÁLISE'
-            : (entry.isLate ? 'ATRASADO' : 'PENDENTE'));
+    final String statusText = entry.isCancelled
+        ? 'ENCERRADO'
+        : (entry.isPaid
+              ? 'PAGO'
+              : (entry.isUnderReview
+                    ? 'EM ANÁLISE'
+                    : (entry.isLate ? 'ATRASADO' : 'PENDENTE')));
 
     final dateStr =
         '${entry.date.day.toString().padLeft(2, '0')}/${entry.date.month.toString().padLeft(2, '0')}/${entry.date.year}';
@@ -518,7 +520,7 @@ class _FinancialStatementScreenState extends State<FinancialStatementScreen> {
               ),
             ],
           ),
-          if (!entry.isPaid) ...[
+          if (entry.isOutstanding) ...[
             const SizedBox(height: AppSpacing.md),
             const Divider(height: 1),
             const SizedBox(height: AppSpacing.sm),

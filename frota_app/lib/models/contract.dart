@@ -18,6 +18,7 @@ class Contract {
   final int? dueDay;
   final String? signatureUrl;
   final DateTime? signedAt;
+  final DateTime? billingStartedAt;
 
   Contract({
     required this.id,
@@ -37,6 +38,7 @@ class Contract {
     this.dueDay,
     this.signatureUrl,
     this.signedAt,
+    this.billingStartedAt,
   });
 
   factory Contract.fromMap(Map<String, dynamic> map) {
@@ -91,7 +93,12 @@ class Contract {
       billingFrequency: freq,
       dueDay: map['dia_vencimento'] != null ? int.tryParse(map['dia_vencimento'].toString()) : (map['dueDay'] as int?),
       signatureUrl: map['assinatura_digital_url'] ?? map['signatureUrl'],
-      signedAt: map['assinado_em'] != null ? DateTime.tryParse(map['assinado_em'].toString()) : null,
+      signedAt: map['assinado_em'] != null
+          ? DateTime.tryParse(map['assinado_em'].toString())
+          : null,
+      billingStartedAt: map['cobranca_iniciada_em'] != null
+          ? DateTime.tryParse(map['cobranca_iniciada_em'].toString())
+          : null,
     );
   }
 
@@ -141,7 +148,9 @@ class Contract {
       'veiculo_id': vehicleId,
       'data_inicio': startDate.toIso8601String().split('T')[0],
       'data_fim': endDate.toIso8601String().split('T')[0],
-      'valor_locacao': monthlyValue > 0 ? monthlyValue : weeklyValue * 4,
+      'valor_locacao': billingFrequency == 'semanal'
+          ? weeklyValue
+          : (billingFrequency == 'quinzenal' ? weeklyValue * 2 : monthlyValue),
       'valor_caucao': depositAmount,
       'frequencia_cobranca': (billingFrequency == 'mensal' || billingFrequency == 'quinzenal') ? billingFrequency : 'semanal',
       'dia_vencimento': dueDay ?? 10,

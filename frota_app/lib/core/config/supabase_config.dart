@@ -62,7 +62,7 @@ class SupabaseConfig {
   static const String viewExtratoMotorista = 'vw_extrato_completo_motorista';
 
   // --- FUNÇÕES RPC TRANSACIONAIS ---
-  static const String rpcCriarContratoLocacao = 'fn_criar_contrato_locacao';
+  static const String rpcCriarContratoLocacao = 'fn_criar_contrato_locacao_v2';
 }
 
 /// Helper global de acesso rápido ao cliente Supabase

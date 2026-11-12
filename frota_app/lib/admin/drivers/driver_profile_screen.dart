@@ -266,7 +266,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         .fold(0.0, (sum, item) => sum + item.amount);
 
     final pendingDebts = _financialEntries
-        .where((e) => e.type == FinancialType.income && !e.isPaid)
+        .where((e) => e.type == FinancialType.income && e.isOutstanding)
         .fold(0.0, (sum, item) => sum + item.amount);
 
     final saldoDevedor = _driver!.outstandingBalance > 0
@@ -644,7 +644,9 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                                 ),
                               ),
                               Text(
-                                DateFormat('dd/MM/yyyy HH:mm').format(entry.date),
+                                DateFormat(
+                                  'dd/MM/yyyy HH:mm',
+                                ).format(entry.date),
                                 style: AppTextStyles.bodySmall,
                               ),
                             ],

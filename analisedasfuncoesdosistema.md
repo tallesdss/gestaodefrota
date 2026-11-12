@@ -5,6 +5,15 @@
 >
 > **Modelo de Pagamento Definido:** Sem gateway PIX — Admin disponibiliza chave PIX; motorista anexa comprovante manualmente.
 
+## Fluxo operacional de atribuição, vistoria e cobrança
+
+- O administrador atribui um veículo por meio de um contrato ativo; essa atribuição libera o check-in, mas ainda não cria cobranças recorrentes.
+- O motorista envia a vistoria de entrada e o administrador a aprova. A aprovação inicia as parcelas semanais, quinzenais ou mensais previstas até o fim do contrato.
+- Cada comprovante fica associado ao respectivo lançamento; o lançamento só passa para pago quando a administração confirmar o comprovante.
+- Ao concluir ou cancelar o contrato, parcelas futuras são canceladas e permanecem no histórico. Valores pagos e débitos já vencidos permanecem preservados; não são criadas novas cobranças.
+- O histórico de contratos, vistorias, uso do veículo e pagamentos continua consultável após a desvinculação.
+- A migração correspondente é `docs/migrations/driver_assignment_billing_lifecycle.sql`.
+
 ---
 
 ## 📊 RESUMO DA SITUAÇÃO ATUAL

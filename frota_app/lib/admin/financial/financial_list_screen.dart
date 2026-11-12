@@ -38,19 +38,25 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
   }
 
   Future<void> _togglePaymentStatus(FinancialEntry entry) async {
+    if (entry.isCancelled) return;
     final newPaid = !entry.isPaid;
-    setState(() {
-      final index = _entries.indexWhere((e) => e.id == entry.id);
-      if (index != -1) {
-        _entries[index] = _entries[index].copyWith(isPaid: newPaid);
-      }
-    });
-
     try {
       if (newPaid) {
         await _repository.markAsPaid(entry.id, paymentDate: DateTime.now());
+      } else {
+        await _repository.markAsPending(entry.id);
       }
-    } catch (_) {}
+      await _fetchFinancials();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Não foi possível atualizar o pagamento: $error'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
 
@@ -106,21 +112,22 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
       title: 'Ações de Lançamento',
       content: Column(
         children: [
-          ListTile(
-            leading: Icon(
-              entry.isPaid
-                  ? Icons.pending_actions_outlined
-                  : Icons.check_circle_outline,
-              color: AppColors.primary,
+          if (!entry.isCancelled)
+            ListTile(
+              leading: Icon(
+                entry.isPaid
+                    ? Icons.pending_actions_outlined
+                    : Icons.check_circle_outline,
+                color: AppColors.primary,
+              ),
+              title: Text(
+                entry.isPaid ? 'Marcar como Pendente' : 'Marcar como Pago',
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _togglePaymentStatus(entry);
+              },
             ),
-            title: Text(
-              entry.isPaid ? 'Marcar como Pendente' : 'Marcar como Pago',
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _togglePaymentStatus(entry);
-            },
-          ),
           ListTile(
             leading: const Icon(
               Icons.edit_outlined,
@@ -143,7 +150,7 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
               _confirmDelete(entry);
             },
           ),
-          if (entry.receiptUrl != null && !entry.isPaid)
+          if (entry.receiptUrl != null && entry.isOutstanding)
             ListTile(
               leading: const Icon(Icons.receipt_long, color: Colors.blue),
               title: const Text('Ver Comprovante e Aprovar', style: TextStyle(color: Colors.blue)),
@@ -158,7 +165,17 @@ class _FinancialListScreenState extends State<FinancialListScreen> {
                     children: [
                       const Text('O motorista anexou um comprovante para este pagamento. Deseja aprovar?'),
                       const SizedBox(height: 8),
-                      Text('URL: ${entry.receiptUrl}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          entry.receiptUrl!,
+                          height: 220,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Text(
+                            'Não foi possível visualizar o comprovante.',
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   actions: [

@@ -9,7 +9,6 @@ import '../../models/contract.dart';
 import '../../models/vehicle.dart';
 import '../../models/driver.dart';
 import '../../core/repositories/contract_repository.dart';
-import '../../core/config/supabase_config.dart';
 
 class ContractFormScreen extends StatefulWidget {
   final Contract? contract;
@@ -45,7 +44,7 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
   late ContractStatus _selectedStatus;
   late bool _depositPaid;
   late String _selectedType;
-  String _selectedFrequency = 'semanal';
+  late String _selectedFrequency;
 
   @override
   void initState() {
@@ -66,12 +65,35 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
     _selectedStatus = widget.contract?.status ?? ContractStatus.active;
     _depositPaid = widget.contract?.depositPaid ?? false;
     _selectedType = widget.contract?.type ?? 'UBER';
+    _selectedFrequency = widget.contract?.billingFrequency ?? 'semanal';
   }
 
   Future<void> _fetchLists() async {
     final v = await _vehicleRepo.getVehicles(status: 'disponivel');
     final allD = await _driverRepo.getDrivers(status: 'ativo');
-    final d = allD.where((driver) => driver.currentVehicleId == null).toList();
+    final d = allD
+        .where(
+          (driver) =>
+              driver.currentVehicleId == null ||
+              driver.id == widget.contract?.driverId,
+        )
+        .toList();
+    if (widget.contract != null) {
+      final assignedVehicle = await _vehicleRepo.getVehicleById(
+        widget.contract!.vehicleId,
+      );
+      if (assignedVehicle != null &&
+          !v.any((vehicle) => vehicle.id == assignedVehicle.id)) {
+        v.add(assignedVehicle);
+      }
+      final assignedDriver = await _driverRepo.getDriverById(
+        widget.contract!.driverId,
+      );
+      if (assignedDriver != null &&
+          !d.any((driver) => driver.id == assignedDriver.id)) {
+        d.add(assignedDriver);
+      }
+    }
     setState(() {
       _vehicles = v;
       _drivers = d;
@@ -232,6 +254,8 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
 
                                 final contract = Contract(
                                   id: widget.contract?.id ?? '',
+                                  contractNumber:
+                                      widget.contract?.contractNumber,
                                   driverId: _selectedDriverId!,
                                   vehicleId: _selectedVehicleId!,
                                   weeklyValue: weekly,
@@ -241,6 +265,13 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                   status: _selectedStatus,
                                   depositPaid: _depositPaid,
                                   type: _selectedType,
+                                  billingFrequency: _selectedFrequency,
+                                  dueDay:
+                                      widget.contract?.dueDay ??
+                                      (_selectedFrequency == 'semanal' ||
+                                              _selectedFrequency == 'quinzenal'
+                                          ? _startDate.weekday
+                                          : _startDate.day),
                                 );
                                 final rentalValue = _selectedFrequency == 'semanal'
                                     ? weekly
@@ -249,43 +280,39 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
                                         : monthly);
                                 final isNewContract = widget.contract == null ||
                                     widget.contract!.id.isEmpty;
-                                var contractId = contract.id;
-
                                 if (!isNewContract) {
                                   await ContractRepository().updateContract(contract);
                                 } else {
-                                  contractId = await ContractRepository().createContractWithDeposit(
-                                    driverId: _selectedDriverId!,
-                                    vehicleId: _selectedVehicleId!,
-                                    contractNumber: 'CTR-${DateTime.now().millisecondsSinceEpoch}',
-                                    startDate: _startDate,
-                                    rentalValue: rentalValue,
-                                    depositValue: _depositPaid ? weekly * 2 : 0.0,
-                                    frequency: _selectedFrequency,
-                                    dueDay: _startDate.day,
-                                  );
-                                }
-
-                                if (isNewContract) {
-                                  await SupabaseConfig.client.rpc(
-                                    'fn_gerar_parcelas_contrato',
-                                    params: {
-                                      'p_contrato_id': contractId,
-                                      'p_valor_locacao': rentalValue,
-                                      'p_frequencia': _selectedFrequency,
-                                      'p_dia_vencimento': _startDate.day,
-                                      'p_data_inicio': _startDate.toIso8601String().split('T')[0],
-                                      'p_num_parcelas': _selectedFrequency == 'semanal'
-                                          ? 52
-                                          : (_selectedFrequency == 'quinzenal' ? 26 : 12),
-                                    },
-                                  );
+                                  await ContractRepository()
+                                      .createContractWithDeposit(
+                                        driverId: _selectedDriverId!,
+                                        vehicleId: _selectedVehicleId!,
+                                        contractNumber:
+                                            'CTR-${DateTime.now().millisecondsSinceEpoch}',
+                                        startDate: _startDate,
+                                        endDate: _endDate,
+                                        rentalValue: rentalValue,
+                                        depositValue: _depositPaid
+                                            ? weekly * 2
+                                            : 0.0,
+                                        frequency: _selectedFrequency,
+                                        dueDay:
+                                            _selectedFrequency == 'semanal' ||
+                                                _selectedFrequency ==
+                                                    'quinzenal'
+                                            ? _startDate.weekday
+                                            : _startDate.day,
+                                      );
                                 }
 
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Contrato e parcelas geradas com sucesso no Supabase!'),
+                                  SnackBar(
+                                    content: Text(
+                                      isNewContract
+                                          ? 'Veículo atribuído. As cobranças começam após a aprovação da vistoria de entrada.'
+                                          : 'Alterações do contrato salvas.',
+                                    ),
                                     backgroundColor: AppColors.success,
                                   ),
                                 );
@@ -353,7 +380,9 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
           child: Text('${v.brand} ${v.model} (${v.plate})'),
         );
       }).toList(),
-      onChanged: (val) => setState(() => _selectedVehicleId = val),
+      onChanged: widget.contract == null
+          ? (val) => setState(() => _selectedVehicleId = val)
+          : null,
       decoration: _inputDecoration('Veículo', Icons.directions_car_outlined),
     );
   }
@@ -365,7 +394,9 @@ class _ContractFormScreenState extends State<ContractFormScreen> {
       items: _drivers.map((d) {
         return DropdownMenuItem<String>(value: d.id, child: Text(d.name));
       }).toList(),
-      onChanged: (val) => setState(() => _selectedDriverId = val),
+      onChanged: widget.contract == null
+          ? (val) => setState(() => _selectedDriverId = val)
+          : null,
       decoration: _inputDecoration('Motorista', Icons.person_outline),
     );
   }

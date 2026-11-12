@@ -24,7 +24,7 @@ class ReportGenerator {
         .fold(0.0, (sum, e) => sum + e.amount);
 
     final totalPending = entries
-        .where((e) => !e.isPaid)
+        .where((e) => e.isOutstanding)
         .fold(0.0, (sum, e) => sum + e.amount);
 
     pdf.addPage(
